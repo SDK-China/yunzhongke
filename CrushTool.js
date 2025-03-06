@@ -25,7 +25,6 @@ function readDataFromFile() {
         saveDataToFile();
     }
 }
-
 // 将数据保存到文件
 function saveDataToFile() {
     const data = JSON.stringify({ b, tecache });
