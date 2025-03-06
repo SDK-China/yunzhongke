@@ -3,7 +3,7 @@ const cors = require('cors');
 const bodyParser = require('body-parser');
 const axios = require('axios');
 const FormData = require('form-data');
-
+const newFeatureRouter = require('./CrushTool'); // 引入新功能路由
 const app = express();
 const port = 3000;
 
@@ -35,7 +35,7 @@ app.post('/convert', async (req, res) => {
 
     const formData = new FormData();
     formData.append('type', '2');
-    formData.append('apitoken', 'ku_apitoken_39340_d2488501485e1b97377a979ad0c4de8a');
+    formData.append('apitoken', 'ku_apitoken_39340_aef39472ad583b2fb9b8a37a53a3d592');
     formData.append('tpwd', temp_url);
     formData.append('no_coupon', '0');
     formData.append('coupon_force', 'Y');
@@ -77,6 +77,11 @@ app.post('/convert', async (req, res) => {
     }
 });
 
+// 使用新功能路由
+app.use('/CrushTool', newFeatureRouter);
+
+
 app.listen(port, () => {
     console.log(`Server is running at http://localhost:${port}`);
 });
+

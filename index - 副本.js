@@ -3,11 +3,9 @@ const cors = require('cors');
 const bodyParser = require('body-parser');
 const axios = require('axios');
 const FormData = require('form-data');
-const https = require('https');
-const fs = require('fs');
 
 const app = express();
-const port = 3000; // 确保与前端请求的端口一致
+const port = 3000;
 
 app.use(cors());
 app.use(bodyParser.json());
@@ -37,7 +35,7 @@ app.post('/convert', async (req, res) => {
 
     const formData = new FormData();
     formData.append('type', '2');
-    formData.append('apitoken', 'ku_apitoken_39340_d2488501485e1b97377a979ad0c4de8a');
+    formData.append('apitoken', 'ku_apitoken_39340_aef39472ad583b2fb9b8a37a53a3d592');
     formData.append('tpwd', temp_url);
     formData.append('no_coupon', '0');
     formData.append('coupon_force', 'Y');
@@ -79,11 +77,6 @@ app.post('/convert', async (req, res) => {
     }
 });
 
-const httpsOptions = {
-    key: fs.readFileSync('/path/to/your/privkey.pem'), // 替换为您的证书路径
-    cert: fs.readFileSync('/path/to/your/fullchain.pem') // 替换为您的证书路径
-};
-
-https.createServer(httpsOptions, app).listen(port, () => {
-    console.log(`Server is running at https://localhost:${port}`);
+app.listen(port, () => {
+    console.log(`Server is running at http://localhost:${port}`);
 });
