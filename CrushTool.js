@@ -1,9 +1,11 @@
 const express = require('express');
 const router = express.Router();
 const axios = require('axios');
+const bodyParser = require('body-parser');
 
-// 从环境变量获取 GitHub 相关信息
-const GITHUB_TOKEN = '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';
+// 使用 body-parser 中间件解析 JSON 请求体
+router.use(bodyParser.json());
+
 const GITHUB_OWNER = 'SDK-China';
 const GITHUB_REPO = 'yunzhongke';
 const DATA_FILE_PATH = 'data.json';
@@ -14,13 +16,13 @@ let tecache = 1;
 const k = 'SSFAdTQ65NyoVS';
 
 // 从 GitHub 获取 data.json 文件内容并更新本地变量
-async function getFileFromGitHub() {
+async function getFileFromGitHub(token) {
     try {
         const response = await axios.get(
             `https://api.github.com/repos/${GITHUB_OWNER}/${GITHUB_REPO}/contents/${DATA_FILE_PATH}`,
             {
                 headers: {
-                    Authorization: `Bearer ${GITHUB_TOKEN}`
+                    Authorization: `Bearer ${token}`
                 }
             }
         );
@@ -31,7 +33,7 @@ async function getFileFromGitHub() {
     } catch (error) {
         if (error.response && error.response.status === 404) {
             // 如果文件不存在，使用默认值并保存到 GitHub
-            await saveDataToGitHub();
+            await saveDataToGitHub(token);
         } else {
             console.error('Error getting file from GitHub:', error);
         }
@@ -39,7 +41,7 @@ async function getFileFromGitHub() {
 }
 
 // 将数据保存到 GitHub 的 data.json 文件
-async function saveDataToGitHub() {
+async function saveDataToGitHub(token) {
     try {
         const content = JSON.stringify({ b, tecache });
         const base64Content = Buffer.from(content).toString('base64');
@@ -51,7 +53,7 @@ async function saveDataToGitHub() {
                 `https://api.github.com/repos/${GITHUB_OWNER}/${GITHUB_REPO}/contents/${DATA_FILE_PATH}`,
                 {
                     headers: {
-                        Authorization: `Bearer ${GITHUB_TOKEN}`
+                        Authorization: `Bearer ${token}`
                     }
                 }
             );
@@ -76,7 +78,7 @@ async function saveDataToGitHub() {
             data,
             {
                 headers: {
-                    Authorization: `Bearer ${GITHUB_TOKEN}`
+                    Authorization: `Bearer ${token}`
                 }
             }
         );
@@ -85,30 +87,31 @@ async function saveDataToGitHub() {
     }
 }
 
-// 启动时从 GitHub 获取数据
-getFileFromGitHub();
-
 // 处理 POST 请求，用于更新 b 和 tecache 的值
 router.post('/', async (req, res) => {
-    const { newB, newTecache } = req.body;
+    const { newB, newTecache, token } = req.body;
 
-    // 检查请求体中是否包含 newB 和 newTecache
-    if (newB!== undefined && newTecache!== undefined) {
+    // 检查请求体中是否包含 newB、newTecache 和 token
+    if (newB!== undefined && newTecache!== undefined && token) {
         // 更新 b 和 tecache 的值
         b = newB;
         tecache = newTecache;
         // 保存数据到 GitHub
-        await saveDataToGitHub();
+        await saveDataToGitHub(token);
         res.json({ message: 'b and tecache values have been updated successfully.' });
     } else {
-        res.status(400).json({ message: 'Both newB and newTecache are required in the request body.' });
+        res.status(400).json({ message: 'Both newB, newTecache and token are required in the request body.' });
     }
 });
 
 // 处理 GET 请求，用于返回 b、tecache 和 k 的值
 router.get('/', async (req, res) => {
+    const token = req.query.token;
+    if (!token) {
+        return res.status(400).json({ message: 'Token is required in the query string.' });
+    }
     // 从 GitHub 获取最新数据
-    await getFileFromGitHub();
+    await getFileFromGitHub(token);
     res.json({ b, tecache, k });
 });
 
