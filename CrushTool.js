@@ -3,7 +3,7 @@ const router = express.Router();
 const axios = require('axios');
 
 // 从环境变量获取 GitHub 相关信息
-const GITHUB_TOKEN = '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';
+const GITHUB_TOKEN = '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';
 const GITHUB_OWNER = 'SDK-China';
 const GITHUB_REPO = 'yunzhongke';
 const DATA_FILE_PATH = 'data.json';
