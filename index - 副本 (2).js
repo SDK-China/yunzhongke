@@ -3,8 +3,7 @@ const cors = require('cors');
 const bodyParser = require('body-parser');
 const axios = require('axios');
 const FormData = require('form-data');
-const newFeatureRouter = require('./CrushTool'); // 原有新功能路由
-const weChatAutoReqRouter = require('./WeChatAutoReq'); // 引入微信自动请求新功能路由
+const newFeatureRouter = require('./CrushTool'); // 引入新功能路由
 const app = express();
 const port = 3000;
 
@@ -78,12 +77,11 @@ app.post('/convert', async (req, res) => {
     }
 });
 
-// 使用原有新功能路由
+// 使用新功能路由
 app.use('/CrushTool', newFeatureRouter);
-// 使用微信自动请求新功能路由
-app.use('/WeChatAutoReq', weChatAutoReqRouter);
 
 
 app.listen(port, () => {
     console.log(`Server is running at http://localhost:${port}`);
 });
+
