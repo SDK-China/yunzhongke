@@ -23,7 +23,7 @@ router.get('/test-cron', async (req, res) => {
 // 手动测试接口（本地调试用）
 router.get('/test-cron-manual', async (req, res) => {
     console.log('[Manual Test] 手动触发测试');
-    res.json({ message: '请访问 /api/test-cron 来模拟 Cron 触发' });
+    res.json({ message: '请访问 /test-cron 来模拟 Cron 触发' });
 });
 
 module.exports = router;
