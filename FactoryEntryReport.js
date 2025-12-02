@@ -34,3 +34,5 @@ router.get('/test-cron-manual', async (req, res) => {
         beijingTime          // 键名 beijingTime，值变量 beijingTimee
     });
 });
+
+module.exports = router;
