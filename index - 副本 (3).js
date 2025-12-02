@@ -5,8 +5,6 @@ const axios = require('axios');
 const FormData = require('form-data');
 const newFeatureRouter = require('./CrushTool'); // 原有新功能路由
 const weChatAutoReqRouter = require('./WeChatAutoReq'); // 引入微信自动请求新功能路由
-const factoryEntryReportRouter = require('./FactoryEntryReport'); // 引入入厂报备功能路由
-
 const app = express();
 const port = 3000;
 
@@ -84,8 +82,7 @@ app.post('/convert', async (req, res) => {
 app.use('/CrushTool', newFeatureRouter);
 // 使用微信自动请求新功能路由
 app.use('/WeChatAutoReq', weChatAutoReqRouter);
-// 引入入厂报备功能路由
-app.use('/FactoryEntryReport', factoryEntryReportRouter);
+
 
 app.listen(port, () => {
     console.log(`Server is running at http://localhost:${port}`);
