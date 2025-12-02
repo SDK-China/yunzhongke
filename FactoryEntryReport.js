@@ -22,8 +22,15 @@ router.get('/test-cron', async (req, res) => {
 
 // 手动测试接口（本地调试用）
 router.get('/test-cron-manual', async (req, res) => {
-    console.log('[Manual Test] 手动触发测试');
-    res.json({ message: '请访问 /test-cron 来模拟 Cron 触发' });
-});
+    const beijingTime = new Date().toLocaleString('zh-CN', {
+        timeZone: 'Asia/Shanghai',
+        hour12: false
+    });
+    console.log('[Manual Test] 手动触发测试', beijingTime);
 
-module.exports = router;
+    // 只回一次 json
+    res.json({
+        message: '请访问 /api/test-cron 来模拟 Cron 触发',
+        beijingTime          // 键名 beijingTime，值变量 beijingTime
+    });
+});
