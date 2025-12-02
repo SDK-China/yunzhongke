@@ -14,8 +14,6 @@
     ],
     "crons": [
         {
-            "path": "/FactoryEntryReport/test-cron",
-            "schedule": "*/1 * * * *"
         }
     ]
 }
