@@ -31,6 +31,6 @@ router.get('/test-cron-manual', async (req, res) => {
     // 只回一次 json
     res.json({
         message: '请访问 /api/test-cron 来模拟 Cron 触发',
-        beijingTime          // 键名 beijingTime，值变量 beijingTime
+        beijingTime          // 键名 beijingTime，值变量 beijingTimee
     });
 });
