@@ -198,6 +198,7 @@ router.get('/visitor-status', async (req, res) => {
                             }
 
                             outputLines.push(`${icon} ${dateDisplay} | 审批:${item.rPersonName}${statusText}`);
+
                         });
                     }
 
@@ -216,7 +217,6 @@ router.get('/visitor-status', async (req, res) => {
                             outputLines.push(`⚪ ${dateDisplay} | 审批:${item.rPersonName}`);
                         });
                     }
-
                 } else {
                     outputLines.push(`\n⚪ ${idTail} 无记录`);
                 }
@@ -224,10 +224,10 @@ router.get('/visitor-status', async (req, res) => {
             } catch (reqErr) {
                 outputLines.push(`\n❌ ${idTail} 查询失败`);
             }
-
             // 稍微延迟
             await delay(1);
         }
+        outputLines.push(`\n【本消息由Melody自动发送】`);
 
         res.header('Content-Type', 'text/plain; charset=utf-8');
         res.send(outputLines.join('\n'));
