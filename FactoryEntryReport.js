@@ -22,22 +22,19 @@ const CONFIG = {
 // 辅助函数：延迟 (防止请求过快)
 const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
-// 辅助函数：格式化时间戳 (毫秒 -> 北京时间字符串)
-const formatTime = (ts) => {
-    if (!ts) return '未知时间';
-    // 接口返回的是字符串时间戳，转为数字
-    return new Date(parseInt(ts)).toLocaleString('zh-CN', { 
-        timeZone: 'Asia/Shanghai', 
-        hour12: false 
-    });
+// 辅助函数：格式化日期 (毫秒 -> YYYY/MM/DD)
+const formatDate = (ts) => {
+    if (!ts) return '--';
+    const d = new Date(parseInt(ts));
+    return `${d.getFullYear()}/${d.getMonth() + 1}/${d.getDate()}`;
 };
 
-// --- 新功能路由：批量查询访客状态 ---
+// --- 新功能路由：批量查询访客状态 (简洁版) ---
 // 访问地址: 域名/FactoryEntryReport/visitor-status
 router.get('/visitor-status', async (req, res) => {
     const targetUrl = 'https://dingtalk.avaryholding.com:8443/dingplus/visitorConnector/visitorStatus';
     
-    // 这里的 Headers 严格复刻了你的抓包数据
+    // 复刻请求头
     const headers = {
         "Host": "dingtalk.avaryholding.com:8443",
         "Connection": "keep-alive",
@@ -58,12 +55,11 @@ router.get('/visitor-status', async (req, res) => {
         "Accept-Language": "zh-CN,zh;q=0.9,en-US;q=0.8,en;q=0.7"
     };
 
-    // 初始化输出文本
-    let outputText = `查询时间：${new Date().toLocaleString('zh-CN', {timeZone: 'Asia/Shanghai'})}\n`;
-    outputText += `========================================\n\n`;
+    let outputLines = [];
+    outputLines.push(`🕒 查询时间：${new Date().toLocaleString('zh-CN', {timeZone: 'Asia/Shanghai'})}`);
+    outputLines.push(''); // 空行
 
     try {
-        // 遍历每一个身份证号
         for (const id of CONFIG.visitorIdNos) {
             const body = {
                 visitorIdNo: id,
@@ -71,64 +67,55 @@ router.get('/visitor-status', async (req, res) => {
                 acToken: CONFIG.acToken
             };
 
-            // 记录后端日志
-            console.log(`[Visitor Check] 正在查询: ${id}`);
+            const idTail = id.length > 4 ? id.slice(-4) : id; // 获取身份证后四位
 
             try {
-                // 发起请求，设置10秒超时
-                const response = await axios.post(targetUrl, body, { headers, timeout: 10000 });
+                const response = await axios.post(targetUrl, body, { headers, timeout: 8000 });
                 const resData = response.data;
 
-                // 检查接口返回状态
-                if (resData.code === 200 && Array.isArray(resData.data)) {
+                if (resData.code === 200 && Array.isArray(resData.data) && resData.data.length > 0) {
                     const records = resData.data;
-                    
-                    if (records.length > 0) {
-                        outputText += `🆔 身份证尾号 [${id.slice(-4)}]: 找到 ${records.length} 条记录\n`;
-                        
-                        // 遍历该身份证下的每一条记录
-                        records.forEach((item, index) => {
-                            const name = item.visitorName || '未知';
-                            const approver = item.rPersonName || '未知';
-                            const timeRange = `${formatTime(item.dateStart)} 至 ${formatTime(item.dateEnd)}`;
-                            
-                            // 状态判断逻辑
-                            let statusLabel = "";
-                            if (String(item.flowStatus) === "1") {
-                                statusLabel = "  🔥【审核中】"; // 重点高亮
-                            } else {
-                                // 可以在这里添加其他状态的判断，目前仅按需显示
-                                // statusLabel = " [已通过/历史]";
-                            }
+                    const visitorName = records[0].visitorName || '未知';
 
-                            // 格式化单行输出
-                            outputText += `   ${index + 1}. 申请人: ${name} | 审批人: ${approver} | 时间: ${timeRange}${statusLabel}\n`;
-                        });
-                    } else {
-                        outputText += `🆔 身份证尾号 [${id.slice(-4)}]: 无记录\n`;
-                    }
+                    // 标题行：姓名 + 身份证尾号
+                    outputLines.push(`👤 ${visitorName} (${idTail})`);
+
+                    // 遍历记录
+                    records.forEach(item => {
+                        const approver = item.rPersonName || '未知';
+                        const start = formatDate(item.dateStart);
+                        const end = formatDate(item.dateEnd);
+                        const isPending = String(item.flowStatus) === "1"; // 状态1为审核中
+
+                        // 格式： 审批:王晗 | 2025/12/3-2026/12/3 [审核中]
+                        let line = `   - 审批: ${approver} | ${start} 至 ${end}`;
+                        if (isPending) {
+                            line += ` 🔥[审核中]`;
+                        }
+                        outputLines.push(line);
+                    });
+                    outputLines.push(''); // 每个有记录的人之间加个空行，方便阅读
+
                 } else {
-                    outputText += `🆔 身份证 [${id}]: 接口异常 (Code: ${resData.code})\n`;
+                    // 无记录的情况，尽量简洁
+                    outputLines.push(`⚪ ...${idTail} 无记录`);
                 }
 
             } catch (reqErr) {
-                console.error(`查询失败 ${id}:`, reqErr.message);
-                outputText += `🆔 身份证 [${id}]: 请求超时或失败 (${reqErr.message})\n`;
+                outputLines.push(`❌ ...${idTail} 查询出错`);
             }
 
-            outputText += "\n----------------------------------------\n"; // 分隔线
-
-            // 延迟 300ms，避免触发频率限制
-            await delay(300);
+            // 延迟 300ms
+            await delay(1);
         }
 
-        // 发送纯文本响应，浏览器会直接渲染文字
+        // 最终输出
         res.header('Content-Type', 'text/plain; charset=utf-8');
-        res.send(outputText);
+        res.send(outputLines.join('\n'));
 
     } catch (err) {
-        console.error('总流程异常:', err);
-        res.status(500).send('服务器内部错误');
+        console.error('System Error:', err);
+        res.status(500).send('Internal Server Error');
     }
 });
 
