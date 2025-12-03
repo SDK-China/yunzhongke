@@ -22,17 +22,27 @@ const CONFIG = {
 // 辅助函数：延迟
 const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
-// 辅助函数：只获取日期字符串 YYYY/MM/DD
-const getDateStr = (ts) => {
-    if (!ts) return '';
-    const d = new Date(parseInt(ts));
-    const year = d.getFullYear();
-    const month = (d.getMonth() + 1).toString().padStart(2, '0');
-    const day = d.getDate().toString().padStart(2, '0');
-    return `${year}/${month}/${day}`;
+// 辅助函数：获取北京时间下的“天数ID”
+const getBeijingDayId = (ts) => {
+    return Math.floor((parseInt(ts) + 28800000) / 86400000);
 };
 
-// --- 新功能路由：批量查询访客状态 (极简版) ---
+// 辅助函数：日期格式化 (MM/DD) - 极简模式
+const getShortDate = (ts) => {
+    if (!ts) return '';
+    const d = new Date(parseInt(ts));
+    const m = (d.getMonth() + 1).toString().padStart(2, '0');
+    const day = d.getDate().toString().padStart(2, '0');
+    return `${m}/${day}`; // 只返回 12/05 这种格式
+};
+
+// 辅助函数：获取状态的大类
+// 1=审核中, 其他(5,6,7...)=已通过/历史
+const getStatusCategory = (status) => {
+    return String(status) === '1' ? 'PENDING' : 'APPROVED';
+};
+
+// --- 新功能路由：批量查询访客状态 (高亮规范版) ---
 router.get('/visitor-status', async (req, res) => {
     const targetUrl = 'https://dingtalk.avaryholding.com:8443/dingplus/visitorConnector/visitorStatus';
     
@@ -56,9 +66,17 @@ router.get('/visitor-status', async (req, res) => {
         "Accept-Language": "zh-CN,zh;q=0.9,en-US;q=0.8,en;q=0.7"
     };
 
-    // 获取当前查询时间 (简短格式)
+    // 获取当前查询时间
     const now = new Date();
-    const timeStr = `${now.getMonth() + 1}/${now.getDate()} ${now.getHours()}:${now.getMinutes().toString().padStart(2, '0')}`;
+    const currentTs = now.getTime();
+    const todayDayId = getBeijingDayId(currentTs);
+    
+    const timeStr = now.toLocaleString('zh-CN', { 
+        timeZone: 'Asia/Shanghai',
+        year: 'numeric', month: '2-digit', day: '2-digit', 
+        hour: '2-digit', minute: '2-digit', second: '2-digit',
+        hour12: false
+    });
     
     let outputLines = [];
     outputLines.push(`🕒 查询时间: ${timeStr}`);
@@ -81,28 +99,88 @@ router.get('/visitor-status', async (req, res) => {
                     const records = resData.data;
                     const visitorName = records[0].visitorName || '未知';
 
-                    // 姓名行
                     outputLines.push(`\n👤 ${visitorName} (${idTail})`);
 
-                    // 记录行 (最多显示最近5条，防止过长)
-                    records.slice(0, 5).forEach(item => {
+                    // 1. 分组：按 "审批人 + 状态大类" 归类
+                    // 注意：这里用 getStatusCategory，这样状态 5,6,7 可以混在一起合并
+                    const groups = {};
+                    records.forEach(item => {
+                        const statusCat = getStatusCategory(item.flowStatus);
+                        const key = `${item.rPersonName || '未知'}_${statusCat}`;
+                        if (!groups[key]) groups[key] = [];
+                        groups[key].push(item);
+                    });
+
+                    // 2. 组内合并
+                    let allRanges = [];
+                    Object.values(groups).forEach(groupList => {
+                        groupList.sort((a, b) => b.dateStart - a.dateStart); // 倒序
+                        
+                        let currentRange = { ...groupList[0], rangeStart: groupList[0].dateStart, rangeEnd: groupList[0].dateEnd };
+
+                        for (let i = 1; i < groupList.length; i++) {
+                            const nextItem = groupList[i];
+                            const diffDays = getBeijingDayId(currentRange.rangeStart) - getBeijingDayId(nextItem.dateEnd);
+                            
+                            if (diffDays <= 1) { // 连续
+                                currentRange.rangeStart = nextItem.dateStart;
+                            } else {
+                                allRanges.push(currentRange);
+                                currentRange = { ...nextItem, rangeStart: nextItem.dateStart, rangeEnd: nextItem.dateEnd };
+                            }
+                        }
+                        allRanges.push(currentRange);
+                    });
+
+                    // 3. 全局排序
+                    allRanges.sort((a, b) => b.rangeStart - a.rangeStart);
+
+                    // 4. 筛选与展示
+                    // 规则：显示所有[审核中]、所有[今日/未来有效]、以及最近的3条历史
+                    let displayedCount = 0;
+                    
+                    allRanges.forEach(item => {
+                        const startDayId = getBeijingDayId(item.rangeStart);
+                        const endDayId = getBeijingDayId(item.rangeEnd);
+                        const isPending = String(item.flowStatus) === '1';
+                        
+                        // 判断是否今日或未来
+                        const isFuture = startDayId > todayDayId;
+                        const isTodayActive = (todayDayId >= startDayId && todayDayId <= endDayId);
+                        
+                        // 筛选逻辑: 必须显示的 (审核中/今日/未来) OR 最近的3条历史
+                        const isMustShow = isPending || isFuture || isTodayActive;
+                        if (!isMustShow && displayedCount >= 3) return; // 超过3条历史就不显示了
+                        if (!isMustShow) displayedCount++;
+
+                        // 准备显示内容
                         const approver = item.rPersonName || '未知';
-                        const start = getDateStr(item.dateStart);
-                        const end = getDateStr(item.dateEnd);
-                        const isPending = String(item.flowStatus) === "1"; 
+                        const startStr = getShortDate(item.rangeStart);
+                        const endStr = getShortDate(item.rangeEnd);
+                        
+                        // 日期显示优化
+                        let dateDisplay = (startStr === endStr) ? startStr : `${startStr}-${endStr}`;
+                        
+                        // 图标与状态逻辑
+                        let icon = "⚪"; // 默认历史
+                        let statusText = "";
 
-                        // 如果开始结束是同一天，只显示一个日期
-                        let dateDisplay = (start === end) ? start : `${start}-${end.slice(5)}`; // 跨天时结束日期不显示年份
+                        if (isPending) {
+                            icon = "🟡";
+                            statusText = " [审核中🔥]";
+                        } else if (isTodayActive) {
+                            icon = "🟢"; // 今日有效
+                            statusText = " [今日生效]";
+                        } else if (isFuture) {
+                            icon = "🔵"; // 未来预约
+                            statusText = " [已预约/当日生效]";
+                        }
 
-                        // 状态标签
-                        let statusTag = isPending ? " 🔥[审核中]" : "";
-
-                        // 极简格式: • 日期 | 审批:人 [状态]
-                        outputLines.push(`• ${dateDisplay} | 审批:${approver}${statusTag}`);
+                        // 格式化输出
+                        outputLines.push(`${icon} ${dateDisplay} | 审批:${approver}${statusText}`);
                     });
 
                 } else {
-                    // 无记录不显示，或者显示极简信息，这里选择显示极简信息证明查过了
                     outputLines.push(`\n⚪ ${idTail} 无记录`);
                 }
 
@@ -110,7 +188,7 @@ router.get('/visitor-status', async (req, res) => {
                 outputLines.push(`\n❌ ${idTail} 查询失败`);
             }
 
-            await delay(300);
+            await delay(1);
         }
 
         res.header('Content-Type', 'text/plain; charset=utf-8');
