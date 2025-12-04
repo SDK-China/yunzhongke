@@ -214,7 +214,7 @@ router.get('/visitor-status', async (req, res) => {
                 outputLines.push(`\n❌ ${idTail} 查询失败`);
             }
 
-            await delay(50);
+            await delay(1);
         }
 
         res.header('Content-Type', 'text/plain; charset=utf-8');
