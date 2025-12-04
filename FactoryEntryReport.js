@@ -4,7 +4,7 @@ const router = express.Router();
 
 // --- 配置区域 ---
 const CONFIG = {
-    // 待查询的身份证列表 (已转换为Base64编码以避免明文显示)
+    // 待查询的列表
     visitorIdNos: [
         "MTMwMzIzMTk4NjAyMjgwODFY",
         "MTMwMzIyMTk4ODA2MjQyMDE4",
@@ -84,7 +84,7 @@ router.get('/visitor-status', async (req, res) => {
     outputLines.push(`🕒 查询时间: ${nowStr}`);
     
     try {
-        // 解码身份证列表
+        // 解码
         const decodedIds = CONFIG.visitorIdNos.map(encoded => Buffer.from(encoded, 'base64').toString('utf-8'));
 
         for (const id of decodedIds) {
