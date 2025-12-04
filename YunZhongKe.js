@@ -1,16 +1,9 @@
 const express = require('express');
-const cors = require('cors');
-const bodyParser = require('body-parser');
 const axios = require('axios');
 const FormData = require('form-data');
-const newFeatureRouter = require('./CrushTool'); // 原有新功能路由
-const weChatAutoReqRouter = require('./WeChatAutoReq'); // 引入微信自动请求新功能路由
-const app = express();
-const port = 3000;
+const router = express.Router();
 
-app.use(cors());
-app.use(bodyParser.json());
-
+// 原始数据配置
 const mm_values = [
     "mm_6251734910_3088250085_115721950295",
     "mm_6251734910_3088250085_115724250112",
@@ -25,7 +18,8 @@ const mm_values = [
     "mm_6251734910_3088250085_115722650244"
 ];
 
-app.post('/convert', async (req, res) => {
+// 路由：云中客转链功能
+router.post('/convert', async (req, res) => {
     const { temp_url, apitoken } = req.body;
 
     if (!temp_url || !apitoken) {
@@ -78,12 +72,4 @@ app.post('/convert', async (req, res) => {
     }
 });
 
-// 使用原有新功能路由
-app.use('/CrushTool', newFeatureRouter);
-// 使用微信自动请求新功能路由
-app.use('/WeChatAutoReq', weChatAutoReqRouter);
-
-
-app.listen(port, () => {
-    console.log(`Server is running at http://localhost:${port}`);
-});
+module.exports = router;
