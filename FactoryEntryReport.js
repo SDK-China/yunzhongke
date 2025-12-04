@@ -4,15 +4,15 @@ const router = express.Router();
 
 // --- 配置区域 ---
 const CONFIG = {
-    // 待查询的身份证列表
+    // 待查询的身份证列表 (已转换为Base64编码以避免明文显示)
     visitorIdNos: [
-        "13032319860228081X",
-        "130322198806242018",
-        "130425198908290314",
-        "230230200301012135",
-        "131121198901055011",
-        "410423198907221530",
-        "03071768"
+        "MTMwMzIzMTk4NjAyMjgwODFY",
+        "MTMwMzIyMTk4ODA2MjQyMDE4",
+        "MTMwNDI1MTk4OTA4MjkwMzE0",
+        "MjMwMjMwMjAwMzAxMDEyMTM1",
+        "MTMxMTIxMTk4OTAxMDU1MDEx",
+        "NDEwNDIzMTk4OTA3MjIxNTMw",
+        "MDMwNzE3Njg="
     ],
     // 其他固定参数
     regPerson: "17614625112",
@@ -40,24 +40,19 @@ const getFormattedDate = (ts) => {
     return `${y}/${m}/${day}`;
 };
 
-// 辅助函数：判断记录类型 (PENDING=审核中, ACTIVE=今日有效, FUTURE=未来, HISTORY=历史)
+// 辅助函数：判断记录类型
 const getRecordType = (item, todayId) => {
-    if (String(item.flowStatus) === '1') return 'PENDING'; // 审核中
+    if (String(item.flowStatus) === '1') return 'PENDING';
     
-    const startId = getBeijingDayId(item.rangeStart || item.dateStart);
-    const endId = getBeijingDayId(item.rangeEnd || item.dateEnd);
+    const startId = getBeijingDayId(item.rangeStart);
+    const endId = getBeijingDayId(item.rangeEnd);
 
-    // 如果结束时间早于今天，是历史
     if (endId < todayId) return 'HISTORY';
-    
-    // 如果开始时间晚于今天，是未来预约
     if (startId > todayId) return 'FUTURE';
-    
-    // 剩下的就是包含今天的（今日有效）
     return 'ACTIVE';
 };
 
-// --- 新功能路由：批量查询访客状态 (分层置顶版) ---
+// --- 新功能路由：批量查询访客状态 (最终修复版) ---
 router.get('/visitor-status', async (req, res) => {
     const targetUrl = 'https://dingtalk.avaryholding.com:8443/dingplus/visitorConnector/visitorStatus';
     
@@ -81,9 +76,7 @@ router.get('/visitor-status', async (req, res) => {
         "Accept-Language": "zh-CN,zh;q=0.9,en-US;q=0.8,en;q=0.7"
     };
 
-    // 获取当前查询时间 (YYYY/MM/DD HH:mm:ss)
     const now = new Date();
-    // 简单粗暴转北京时间字符串
     const nowStr = new Date(now.getTime() + 28800000).toISOString().replace(/T/, ' ').replace(/\..+/, '');
     const todayDayId = getBeijingDayId(now.getTime());
     
@@ -91,7 +84,10 @@ router.get('/visitor-status', async (req, res) => {
     outputLines.push(`🕒 查询时间: ${nowStr}`);
     
     try {
-        for (const id of CONFIG.visitorIdNos) {
+        // 解码身份证列表
+        const decodedIds = CONFIG.visitorIdNos.map(encoded => Buffer.from(encoded, 'base64').toString('utf-8'));
+
+        for (const id of decodedIds) {
             const body = {
                 visitorIdNo: id,
                 regPerson: CONFIG.regPerson,
@@ -110,22 +106,18 @@ router.get('/visitor-status', async (req, res) => {
 
                     outputLines.push(`\n👤 ${visitorName} (${idTail})`);
 
-                    // --- 1. 分组与合并逻辑 ---
-                    // 按照 "审批人_状态类型" 分组 (例如: 王晗_APPROVED, 王晗_PENDING)
+                    // 1. 分组与合并
                     const groups = {};
                     records.forEach(item => {
-                        // 状态分类：1是审核中，其他都视为通过/历史(APPROVED)
                         const statusType = String(item.flowStatus) === '1' ? 'PENDING' : 'APPROVED';
                         const key = `${item.rPersonName || '未知'}_${statusType}`;
                         if (!groups[key]) groups[key] = [];
                         groups[key].push(item);
                     });
 
-                    // 组内合并连续日期
                     let mergedList = [];
                     Object.values(groups).forEach(groupList => {
-                        // 按开始时间倒序排列 (最新的在前)
-                        groupList.sort((a, b) => b.dateStart - a.dateStart);
+                        groupList.sort((a, b) => b.dateStart - a.dateStart); // 倒序
                         
                         let currentRange = {
                             ...groupList[0],
@@ -135,14 +127,11 @@ router.get('/visitor-status', async (req, res) => {
 
                         for (let i = 1; i < groupList.length; i++) {
                             const nextItem = groupList[i];
-                            // 检查是否连续: 上一个区间的开始天 - 下一个记录的结束天 <= 1
                             const diffDays = getBeijingDayId(currentRange.rangeStart) - getBeijingDayId(nextItem.dateEnd);
                             
                             if (diffDays <= 1) { 
-                                // 连续或重叠，合并：更新开始时间为更早的时间
                                 currentRange.rangeStart = nextItem.dateStart;
                             } else {
-                                // 不连续，归档当前区间，开启新区间
                                 mergedList.push(currentRange);
                                 currentRange = { 
                                     ...nextItem, 
@@ -154,69 +143,69 @@ router.get('/visitor-status', async (req, res) => {
                         mergedList.push(currentRange);
                     });
 
-                    // --- 2. 分类显示逻辑 ---
-                    // 我们把合并后的记录分成两堆：重点关注(Active/Future/Pending) 和 历史(History)
+                    // 2. 严格分类
                     let priorityList = [];
                     let historyList = [];
 
                     mergedList.forEach(item => {
                         const type = getRecordType(item, todayDayId);
+                        const enhancedItem = { ...item, _type: type };
+                        
                         if (type === 'HISTORY') {
-                            historyList.push(item);
+                            historyList.push(enhancedItem);
                         } else {
-                            priorityList.push({ ...item, _type: type });
+                            priorityList.push(enhancedItem);
                         }
                     });
 
-                    // 排序：重点列表按时间正序(离现在最近的在前)或倒序均可，这里按倒序(最远的未来在最上，或者最近的在最上)
-                    // 建议：重点列表按时间倒序(最新的在上面)
+                    // 3. 排序: 
+                    // 重点列表：按开始时间倒序（远的未来 -> 近的未来 -> 今天）
                     priorityList.sort((a, b) => b.rangeStart - a.rangeStart);
-                    // 历史列表按时间倒序
+                    // 历史列表：按开始时间倒序（最近的历史 -> 远古历史）
                     historyList.sort((a, b) => b.rangeStart - a.rangeStart);
 
-                    // --- 3. 打印输出 ---
-                    
-                    // 打印重点关注区
-                    if (priorityList.length > 0) {
-                        priorityList.forEach(item => {
-                            const startStr = getFormattedDate(item.rangeStart);
-                            const endStr = getFormattedDate(item.rangeEnd);
-                            let dateDisplay = (startStr === endStr) ? startStr.slice(5) : `${startStr.slice(5)}-${endStr.slice(5)}`;
-                            
-                            let icon = "";
-                            let statusText = "";
-                            
-                            if (item._type === 'PENDING') {
-                                icon = "🟡"; // 黄色等待
-                                statusText = " [审核中🔥]";
-                            } else if (item._type === 'ACTIVE') {
-                                icon = "🟢"; // 绿色通行
-                                statusText = " [今日有效]";
-                            } else if (item._type === 'FUTURE') {
-                                icon = "🔵"; // 蓝色预约
-                                statusText = " [已预约]";
-                            }
+                    // 4. 打印输出
+                    // 重点记录（全部显示，不限制数量）
+                    priorityList.forEach(item => {
+                        const startStr = getFormattedDate(item.rangeStart);
+                        const endStr = getFormattedDate(item.rangeEnd);
+                        // 如果是当年，去掉年份
+                        const currentYear = new Date().getFullYear();
+                        const displayStart = startStr.startsWith(currentYear) ? startStr.slice(5) : startStr;
+                        const displayEnd = endStr.startsWith(currentYear) ? endStr.slice(5) : endStr;
 
-                            outputLines.push(`${icon} ${dateDisplay} | 审批:${item.rPersonName}${statusText}`);
-
-                        });
-                    }
-
-                    // 打印历史记录区 (如果有重点记录，历史记录稍微隔开一点)
-                    const maxHistory = 3; // 只显示最近3条历史
-                    if (historyList.length > 0) {
-                        // 如果上面有内容，加个虚线分隔，更清晰
-                        // if (priorityList.length > 0) outputLines.push(`   --- 历史记录 (最近${maxHistory}条) ---`);
+                        let dateDisplay = (startStr === endStr) ? displayStart : `${displayStart}-${displayEnd}`;
                         
-                        historyList.slice(0, maxHistory).forEach(item => {
-                            const startStr = getFormattedDate(item.rangeStart);
-                            const endStr = getFormattedDate(item.rangeEnd);
-                            let dateDisplay = (startStr === endStr) ? startStr.slice(5) : `${startStr.slice(5)}-${endStr.slice(5)}`;
-                            
-                            // 历史记录用灰色圆圈，不显示状态文字，保持简洁
-                            outputLines.push(`⚪ ${dateDisplay} | 审批:${item.rPersonName}`);
-                        });
-                    }
+                        let icon = "⚪";
+                        let statusText = "";
+                        
+                        if (item._type === 'PENDING') {
+                            icon = "🟡";
+                            statusText = " [审核中🔥]";
+                        } else if (item._type === 'ACTIVE') {
+                            icon = "🟢";
+                            statusText = " [今日生效]";
+                        } else if (item._type === 'FUTURE') {
+                            icon = "🔵";
+                            statusText = " [已预约]";
+                        }
+
+                        outputLines.push(`${icon} ${dateDisplay} | 审批:${item.rPersonName}${statusText}`);
+                    });
+
+                    // 历史记录（限制显示最近3条）
+                    historyList.slice(0, 3).forEach(item => {
+                        const startStr = getFormattedDate(item.rangeStart);
+                        const endStr = getFormattedDate(item.rangeEnd);
+                        const currentYear = new Date().getFullYear();
+                        const displayStart = startStr.startsWith(currentYear) ? startStr.slice(5) : startStr;
+                        const displayEnd = endStr.startsWith(currentYear) ? endStr.slice(5) : endStr;
+
+                        let dateDisplay = (startStr === endStr) ? displayStart : `${displayStart}-${displayEnd}`;
+                        
+                        outputLines.push(`⚪ ${dateDisplay} | 审批:${item.rPersonName}`);
+                    });
+
                 } else {
                     outputLines.push(`\n⚪ ${idTail} 无记录`);
                 }
@@ -224,10 +213,9 @@ router.get('/visitor-status', async (req, res) => {
             } catch (reqErr) {
                 outputLines.push(`\n❌ ${idTail} 查询失败`);
             }
-            // 稍微延迟
-            await delay(1);
+
+            await delay(50);
         }
-        outputLines.push(`\n【本消息由Melody自动发送】`);
 
         res.header('Content-Type', 'text/plain; charset=utf-8');
         res.send(outputLines.join('\n'));
