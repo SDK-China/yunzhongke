@@ -1,7 +1,7 @@
 /**
  * FactoryEntryReport.js
- * 自动续期入厂申请脚本 (智能追赶修正版)
- * 修正：无记录或过期用户强制从“今天”开始申请，避免漏掉今天或申请过去无效日期。
+ * 自动续期入厂申请脚本 (错峰并发稳定版)
+ * 优化：使用错峰发射(Staggered)策略，在Vercel云端环境下规避WAF拦截，同时保持高速执行
  */
 
 const express = require('express');
@@ -13,7 +13,7 @@ const decode = (str) => Buffer.from(str, 'base64').toString('utf-8');
 
 // --- 配置区域 ---
 const CONFIG = {
-    // 基础请求头
+    // 基础请求头 (源自 request.txt)
     headers: {
         "Host": "iw68lh.aliwork.com",
         "content-type": "application/x-www-form-urlencoded",
@@ -31,6 +31,7 @@ const CONFIG = {
         "referer": "https://iw68lh.aliwork.com/o/fk_ybfk?account=17614625112&company=%E5%AE%8F%E5%90%AF%E8%83%9C%E7%B2%BE%E5%AF%86%E7%94%B5%E5%AD%90(%E7%A7%A6%E7%9A%87%E5%B2%9B)%E6%9C%89%E9%99%90%E5%85%AC%E5%8F%B8&part=%E7%A7%A6%E7%9A%87%E5%B2%9B%E5%9B%AD%E5%8C%BA&applyType=%E4%B8%80%E8%88%AC%E8%AE%BF%E5%AE%A2",
         "accept-encoding": "gzip, deflate, br, zstd",
         "accept-language": "zh-CN,zh;q=0.9,en-US;q=0.8,en;q=0.7",
+        // 注意：Cookie 可能会过期，请定期更新
         "cookie": "tianshu_corp_user=ding2b4c83bec54a29c6f2c783f7214b6d69_FREEUSER; tianshu_csrf_token=e7daa879-7b83-40f7-8335-1a262747f2c9; c_csrf=e7daa879-7b83-40f7-8335-1a262747f2c9; cookie_visitor_id=zfGITZnn; cna=QhOGIdjbQ3ABASQOBEFsQ0YG; xlly_s=1; tianshu_app_type=APP_GRVPTEOQ6D4B7FLZFYNJ; JSESSIONID=BF2C6304A367F22183E99C3E5B5181C4; tfstk=gOZxf6D0ah_YmbR2H5blSie9vWyOMa2qeSyBjfcD57F8iJ8615qgycFzMIcmSS4-67N-GjmfQ1Fun54imlewXAw__tlG3a243co1t6qOx-yqEsPFbo36NgwrKxT1rqiRmR_At6jhqZ9SXsC3nq6jmbMZNxMXlE6-VAH6fcgjG36-CAAX5jN_FThrQAOXfhG5VAkB5ci_186-QbGsfqN_FTHZNf91kGhG5b-Tu6E2PQTVe3t72x3x1HG9XDqyxFGLhbtMyWMxkt2jwht_4PdnXxc1VBhaV5nIku6MWXnrwAHYDOYE_yDTCvnBhny8G7ZKRufyjfsyqkqd5-AnU0LfeTLw7qMrh42tpxCQDiM-tTfH7FuY8YhheTLw7qMreXXrUF8Zky5..; isg=BJCQbJGPzSIDPJDoHxPbfgneatziWXSjkwUE44pgG-BuxflvPmhTMY7zmMuAWSx7"
     },
     url: "https://iw68lh.aliwork.com/o/HW9663A19D6M1QDL6D7GNAO1L2ZC2NBXQHOXL3?_api=nattyFetch&_mock=false&_stamp=",
@@ -224,9 +225,12 @@ const getAllStatuses = async () => {
         })();
         
         promises.push(p);
+        
+        // 核心：错峰发射，仅等待 50ms 就继续下一个
         await delay(50);
     }
     
+    // 等待所有请求真的完成
     await Promise.all(promises);
     return statuses;
 };
@@ -289,6 +293,7 @@ const submitApplication = async (groupDateTs, personIds) => {
         const url = CONFIG.url + Date.now();
         const res = await axios.post(url, postData, { headers: CONFIG.headers });
         
+        // 修正判断逻辑：success 在根节点
         if (res.data && res.data.success === true) {
             const formInstId = res.data.content ? res.data.content.formInstId : "未知ID";
             console.log(`✅ [${targetDateStr}] 申请成功! 实例ID: ${formInstId}`);
@@ -300,187 +305,167 @@ const submitApplication = async (groupDateTs, personIds) => {
     }
 };
 
-/**
- * 核心逻辑：计算统一发包计划 (Catch-up Strategy)
- * 返回结构: { summary: [], requests: [] }
- */
-const calculatePlan = (idStatusMap) => {
-    const nowMs = Date.now();
-    // 计算北京时间“今天”的0点时间戳，确保比较基准一致
-    // 逻辑：当前时间+8小时 -> 取UTC的0点 -> 再减去8小时
-    const todayObj = new Date(nowMs + 28800000);
-    todayObj.setUTCHours(0, 0, 0, 0);
-    const todayStartTs = todayObj.getTime() - 28800000;
-    const todayId = getBeijingDayId(nowMs);
+// --- 调试接口 (仅生成数据，不发送请求) ---
+router.get('/debug', async (req, res) => {
+    try {
+        // 1. 获取当前状态
+        const idStatusMap = await getAllStatuses();
+        const nowMs = Date.now();
+        const todayId = getBeijingDayId(nowMs);
+        
+        // 准备视图数据
+        let viewData = {
+            summary: [],
+            requests: []
+        };
 
-    const validUsers = [];
-    const summary = [];
-    
-    let maxNextStartTs = 0; // 记录最晚的起始时间
+        // 2. 状态概览与分组策略
+        const groupRequests = {};
 
-    // 1. 分析所有人状态
-    for (const [id, lastDateTs] of Object.entries(idStatusMap)) {
-        const idBase64 = Buffer.from(id).toString('base64');
-        const personInfo = PERSON_DB[idBase64];
-        const name = personInfo ? personInfo[2].fieldData.value : "未知人员";
+        for (const [id, lastDateTs] of Object.entries(idStatusMap)) {
+            // 修复乱码：根据 ID 去 DB 查姓名
+            const idBase64 = Buffer.from(id).toString('base64');
+            const personInfo = PERSON_DB[idBase64];
+            const name = personInfo ? personInfo[2].fieldData.value : "未知人员"; 
 
-        let nextStartTs = 0;
-        let formattedLastDate = "无记录";
-        let statusText = "";
-        let statusClass = "";
-        let needsRenew = false;
-        let lastDayId = 0;
+            let lastDayId = 0;
+            let nextStartTs = 0;
+            let statusText = "";
+            let statusClass = "";
+            let formattedLastDate = "无记录";
 
-        // 计算下一次起始时间
-        if (lastDateTs === 0) {
-            // 【修正1】无记录的新用户，从“今天”开始申请，而不是明天
-            lastDayId = todayId; // 视为今天到期（逻辑上）
-            nextStartTs = todayStartTs; // 下次开始：今天
-            formattedLastDate = "新用户/无记录";
-        } else {
-            lastDayId = getBeijingDayId(lastDateTs);
-            const d = new Date(lastDateTs + 28800000);
-            d.setUTCDate(d.getUTCDate() + 1);
-            d.setUTCHours(0,0,0,0);
-            nextStartTs = d.getTime() - 28800000;
-            formattedLastDate = getFormattedDate(lastDateTs);
-        }
+            if (lastDateTs === 0) {
+                lastDayId = todayId; 
+                // 明天 00:00 (北京时间)
+                const tomorrow = new Date(nowMs + 28800000);
+                tomorrow.setUTCDate(tomorrow.getUTCDate() + 1);
+                tomorrow.setUTCHours(0,0,0,0);
+                nextStartTs = tomorrow.getTime() - 28800000;
+                formattedLastDate = "新用户/无记录";
+            } else {
+                lastDayId = getBeijingDayId(lastDateTs);
+                
+                // 修复日期计算：基于北京时间加1天
+                // 逻辑：timestamp -> +8h -> UTC Date -> add 1 day -> set 00:00 -> -8h -> timestamp
+                const d = new Date(lastDateTs + 28800000); // 转为北京时间对象
+                d.setUTCDate(d.getUTCDate() + 1);          // 加1天
+                d.setUTCHours(0,0,0,0);                    // 设为0点
+                nextStartTs = d.getTime() - 28800000;      // 还原为时间戳
+                
+                formattedLastDate = getFormattedDate(lastDateTs);
+            }
 
-        const diff = lastDayId - todayId;
+            const diff = lastDayId - todayId;
+            
+            // 状态判断逻辑
+            if (diff < 0) {
+                statusText = `已过期 ${Math.abs(diff)} 天`;
+                statusClass = "expired";
+            } else if (diff <= 2) {
+                statusText = `即将到期 (剩 ${diff} 天)`;
+                statusClass = "warning";
+            } else {
+                statusText = `正常 (剩 ${diff} 天)`;
+                statusClass = "success";
+            }
 
-        // 判断是否需要续期 (<=2天)
-        if (diff < 0) {
-            statusText = `已过期 ${Math.abs(diff)} 天`;
-            statusClass = "expired";
-            needsRenew = true;
-        } else if (diff <= 2) {
-            statusText = `即将到期 (剩 ${diff} 天)`;
-            statusClass = "warning";
-            needsRenew = true;
-        } else {
-            statusText = `正常 (剩 ${diff} 天)`;
-            statusClass = "success";
-        }
+            // 存入概览
+            viewData.summary.push({
+                name,
+                idMask: id.substring(0, 4) + "***" + id.substring(id.length - 4),
+                lastDate: formattedLastDate,
+                status: statusText,
+                class: statusClass,
+                renew: diff <= 2 // 是否触发续期
+            });
 
-        summary.push({
-            name,
-            idMask: id.substring(0, 4) + "***" + id.substring(id.length - 4),
-            lastDate: formattedLastDate,
-            status: statusText,
-            class: statusClass,
-            renew: needsRenew
-        });
-
-        if (needsRenew) {
-            validUsers.push({ id, nextStartTs });
-            if (nextStartTs > maxNextStartTs) {
-                maxNextStartTs = nextStartTs;
+            // 如果符合条件，加入生成队列
+            if (diff <= 2) {
+                if (!groupRequests[nextStartTs]) {
+                    groupRequests[nextStartTs] = [];
+                }
+                groupRequests[nextStartTs].push(id);
             }
         }
-    }
 
-    if (validUsers.length === 0) {
-        return { summary, requests: [] };
-    }
-
-    const requests = [];
-
-    // 2. 生成计划：追赶 + 齐射
-    const minNextStartTs = Math.min(...validUsers.map(u => u.nextStartTs));
-    
-    // 【修正2】循环游标必须从“今天”开始，防止申请过去的时间。
-    // 如果某人 nextStartTs 是前天（过期），这里取 Math.max(前天, 今天) = 今天。
-    // 这样下面的 filter 判断 (前天 <= 今天) 依然成立，该人会直接加入今天的申请包。
-    let cursorTs = Math.max(minNextStartTs, todayStartTs);
-    
-    // 结束时间是 基准线 + 6天 (共7天齐射)
-    // 如果 maxNextStartTs 小于今天（全员过期），则以今天为基准往后推
-    const effectiveMaxStart = Math.max(maxNextStartTs, todayStartTs);
-    const endTs = effectiveMaxStart + (6 * 86400000); 
-
-    let dayCount = 1;
-
-    while (cursorTs <= endTs) {
-        // 找出今天需要申请的人
-        // 规则：用户的 nextStartTs <= cursorTs 即表示“应该已开始”
-        const todaysGroup = validUsers
-            .filter(u => u.nextStartTs <= cursorTs)
-            .map(u => u.id);
+        // 3. 模拟生成未来7天的数据包
+        const tasks = Object.entries(groupRequests);
         
-        if (todaysGroup.length > 0) {
-            const personNames = todaysGroup.map(pid => {
+        for (const [startTimestampStr, ids] of tasks) {
+            let currentTs = parseInt(startTimestampStr);
+            
+            const personNames = ids.map(pid => {
                 const pidBase64 = Buffer.from(pid).toString('base64');
                 return PERSON_DB[pidBase64] ? PERSON_DB[pidBase64][2].fieldData.value : pid;
             }).join(", ");
 
-            const tableRows = [];
-            todaysGroup.forEach(pid => {
-                const idBase64 = Buffer.from(pid).toString('base64');
-                if (PERSON_DB[idBase64]) tableRows.push(PERSON_DB[idBase64]);
-            });
+            // 模拟循环7天
+            for (let i = 0; i < 7; i++) {
+                // --- 核心：构造数据包 ---
+                const tableRows = [];
+                ids.forEach(pid => {
+                    const idBase64 = Buffer.from(pid).toString('base64');
+                    if (PERSON_DB[idBase64]) tableRows.push(PERSON_DB[idBase64]);
+                });
 
-            if (tableRows.length > 0) {
-                const finalForm = [
-                    ...FORM_BASE,
-                    {
+                if (tableRows.length > 0) {
+                    const tableField = {
                         "componentName": "TableField",
                         "fieldId": "tableField_lxv44os5",
                         "label": "人员信息",
                         "fieldData": { "value": tableRows },
                         "listNum": 50
-                    },
-                    ...FORM_TAIL.slice(0, 4), 
-                    {
+                    };
+                    const dateField = {
                         "componentName": "DateField",
                         "fieldId": "dateField_lxn9o9fh",
                         "label": "到访日期",
-                        "fieldData": { "value": cursorTs },
+                        "fieldData": { "value": currentTs },
                         "format": "yyyy-MM-dd"
-                    },
-                    ...FORM_TAIL.slice(4)     
-                ];
+                    };
+                    
+                    const finalForm = [
+                        ...FORM_BASE,
+                        tableField,
+                        ...FORM_TAIL.slice(0, 4), 
+                        dateField,
+                        ...FORM_TAIL.slice(4)     
+                    ];
 
-                const jsonStr = JSON.stringify(finalForm, null, 2); 
-                const encodedValue = encodeURIComponent(JSON.stringify(finalForm));
-                const fullPostBody = `_csrf_token=${CONFIG.csrf_token}&formUuid=${CONFIG.formUuid}&appType=${CONFIG.appType}&value=${encodedValue}&_schemaVersion=653`;
+                    const jsonStr = JSON.stringify(finalForm, null, 2); 
+                    const encodedValue = encodeURIComponent(JSON.stringify(finalForm));
+                    const fullPostBody = `_csrf_token=${CONFIG.csrf_token}&formUuid=${CONFIG.formUuid}&appType=${CONFIG.appType}&value=${encodedValue}&_schemaVersion=653`;
 
-                requests.push({
-                    ts: cursorTs,
-                    dayIndex: dayCount++,
-                    targetDate: getFormattedDate(cursorTs),
-                    people: personNames,
-                    ids: todaysGroup, 
-                    rawJson: jsonStr,
-                    encodedBody: fullPostBody
-                });
+                    // 存入结果
+                    viewData.requests.push({
+                        dayIndex: i + 1,
+                        targetDate: getFormattedDate(currentTs),
+                        people: personNames,
+                        rawJson: jsonStr,
+                        encodedBody: fullPostBody
+                    });
+                }
+                
+                // 加一天 (86400000ms)
+                currentTs += 86400000;
             }
         }
 
-        // 加一天
-        cursorTs += 86400000;
-    }
-
-    return { summary, requests };
-};
-
-// --- 调试接口 (仅生成数据，不发送请求) ---
-router.get('/debug', async (req, res) => {
-    try {
-        const idStatusMap = await getAllStatuses();
-        const plan = calculatePlan(idStatusMap);
-
+        // 4. 生成 HTML 页面
         const html = `
         <!DOCTYPE html>
         <html>
         <head>
             <meta charset="utf-8">
             <meta name="viewport" content="width=device-width, initial-scale=1">
-            <title>申请插件调试面板 (Smart Sync)</title>
+            <title>申请插件调试面板</title>
             <style>
                 body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background: #f5f7fa; padding: 20px; color: #333; }
                 .container { max-width: 1000px; margin: 0 auto; background: #fff; padding: 30px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
                 h1 { border-bottom: 2px solid #eaeaea; padding-bottom: 10px; margin-bottom: 20px; color: #1a1a1a; }
                 h2 { margin-top: 30px; color: #444; font-size: 1.2rem; }
+                
+                /* 表格样式 */
                 table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
                 th, td { text-align: left; padding: 12px; border-bottom: 1px solid #eee; }
                 th { background: #fafafa; font-weight: 600; color: #666; }
@@ -488,28 +473,33 @@ router.get('/debug', async (req, res) => {
                 .expired { background: #ffebee; color: #c62828; }
                 .warning { background: #fff8e1; color: #f57f17; }
                 .success { background: #e8f5e9; color: #2e7d32; }
+                
+                /* 数据包卡片 */
                 .request-card { border: 1px solid #e1e4e8; border-radius: 8px; margin-bottom: 15px; overflow: hidden; }
                 .card-header { background: #f6f8fa; padding: 10px 15px; border-bottom: 1px solid #e1e4e8; display: flex; justify-content: space-between; align-items: center; }
                 .card-header strong { color: #24292e; }
                 .card-header span { font-size: 0.9rem; color: #586069; }
+                
+                /* 折叠区域 */
                 details { padding: 0; }
                 summary { padding: 10px 15px; cursor: pointer; background: #fff; list-style: none; font-weight: 500; color: #0366d6; outline: none; }
                 summary:hover { background: #fbfbfc; }
                 summary::-webkit-details-marker { display: none; }
                 summary::before { content: '▶'; display: inline-block; margin-right: 8px; font-size: 0.8rem; transition: transform 0.2s; }
                 details[open] summary::before { transform: rotate(90deg); }
+                details[open] summary { border-bottom: 1px solid #eee; }
+                
                 .code-block { background: #282c34; color: #abb2bf; padding: 15px; overflow-x: auto; font-family: Consolas, Monaco, monospace; font-size: 0.85rem; margin: 0; white-space: pre-wrap; word-break: break-all; }
                 .json-block { color: #98c379; }
                 .url-block { color: #61afef; }
+                
                 .empty-tip { text-align: center; padding: 40px; color: #999; background: #fafafa; border-radius: 8px; border: 1px dashed #ddd; }
             </style>
         </head>
         <body>
             <div class="container">
-                <h1>🐞 Debug 调试面板 (智能追赶修正模式)</h1>
-                <p style="color: #666; margin-bottom: 20px;">
-                    <strong>策略说明：</strong> 过期或无记录用户强制从今天开始申请，直到追平最晚日期，随后所有人合并齐射。
-                </p>
+                <h1>🐞 Debug 调试面板 (安全模式)</h1>
+                <p style="color: #666; margin-bottom: 20px;">此模式下仅模拟数据生成，<strong>绝对不会</strong>向服务器发送任何申请请求。</p>
 
                 <h2>👥 1. 人员状态概览</h2>
                 <table>
@@ -523,7 +513,7 @@ router.get('/debug', async (req, res) => {
                         </tr>
                     </thead>
                     <tbody>
-                        ${plan.summary.map(item => `
+                        ${viewData.summary.map(item => `
                         <tr>
                             <td><strong>${item.name}</strong></td>
                             <td>${item.idMask}</td>
@@ -535,13 +525,13 @@ router.get('/debug', async (req, res) => {
                     </tbody>
                 </table>
 
-                <h2>📦 2. 待发送数据包模拟 (${plan.requests.length} 个请求)</h2>
-                ${plan.requests.length === 0 ? 
+                <h2>📦 2. 待发送数据包模拟 (${viewData.requests.length} 个请求)</h2>
+                ${viewData.requests.length === 0 ? 
                     '<div class="empty-tip">✨ 当前没有人员需要续期，因此没有生成数据包。</div>' : 
-                    plan.requests.map(req => `
+                    viewData.requests.map(req => `
                     <div class="request-card">
                         <div class="card-header">
-                            <strong>[Day ${req.dayIndex}] 申请日期: ${req.targetDate}</strong>
+                            <strong>申请日期: ${req.targetDate}</strong>
                             <span>包含人员: ${req.people}</span>
                         </div>
                         
@@ -576,39 +566,88 @@ router.get('/auto-renew', async (req, res) => {
     const log = (msg) => { console.log(msg); logs.push(msg); };
     
     try {
-        log("=== 开始自动续期流程 (Smart Catch-up Fixed) ===");
+        log("=== 开始自动续期流程 (Staggered Mode) ===");
         
+        // 1. 获取状态 (错峰并发)
         const idStatusMap = await getAllStatuses();
-        const plan = calculatePlan(idStatusMap);
-        
-        plan.summary.forEach(s => {
-            if (s.renew) {
-                log(`⚡ 人员 [${s.name}] 需要续期 (最后日期: ${s.lastDate})`);
-            } else {
-                log(`⚪ 人员 [${s.name}] 暂无需续期`);
-            }
-        });
+        const nowMs = Date.now();
+        const todayId = getBeijingDayId(nowMs);
 
-        if (plan.requests.length === 0) {
+        // 2. 分组策略：Key = 需要申请的起始日期ID, Value = [personId1, personId2...]
+        const groupRequests = {};
+
+        for (const [id, lastDateTs] of Object.entries(idStatusMap)) {
+            // 策略：如果无记录，假设它是新来的，从明天开始申请
+            let lastDayId = 0;
+            let nextStartTs = 0;
+
+            if (lastDateTs === 0) {
+                lastDayId = todayId; // 视为今天到期
+                // 明天 00:00 (北京时间)
+                const tomorrow = new Date(nowMs + 28800000);
+                tomorrow.setUTCDate(tomorrow.getUTCDate() + 1);
+                tomorrow.setUTCHours(0,0,0,0);
+                nextStartTs = tomorrow.getTime() - 28800000;
+            } else {
+                lastDayId = getBeijingDayId(lastDateTs);
+                
+                // 修复日期计算：基于北京时间加1天
+                // 逻辑：timestamp -> +8h -> UTC Date -> add 1 day -> set 00:00 -> -8h -> timestamp
+                const d = new Date(lastDateTs + 28800000); // 转为北京时间对象
+                d.setUTCDate(d.getUTCDate() + 1);          // 加1天
+                d.setUTCHours(0,0,0,0);                    // 设为0点
+                nextStartTs = d.getTime() - 28800000;      // 还原为时间戳
+            }
+
+            const diff = lastDayId - todayId;
+            
+            // 判断条件：最后一天距离今天 <= 2天
+            if (diff <= 2) {
+                log(`⚡ 人员 [${decode(Buffer.from(id).toString('base64'))}] 符合续期条件 (剩 ${diff} 天)`);
+                
+                if (!groupRequests[nextStartTs]) {
+                    groupRequests[nextStartTs] = [];
+                }
+                groupRequests[nextStartTs].push(id);
+            } else {
+                log(`⚪ 人员 [${decode(Buffer.from(id).toString('base64'))}] 暂无需续期 (剩 ${diff} 天)`);
+            }
+        }
+
+        // 3. 执行批量申请
+        const tasks = Object.entries(groupRequests);
+        if (tasks.length === 0) {
             log("✨ 没有需要续期的人员。");
             res.send(logs.join('\n'));
             return;
         }
 
-        log(`📝 计划生成完成，共 ${plan.requests.length} 个请求包，开始执行...`);
+        // 收集所有提交任务的Promise
+        const allSubmitPromises = [];
 
-        const promises = [];
-        for (const reqTask of plan.requests) {
-            const p = (async () => {
-                await submitApplication(reqTask.ts, reqTask.ids);
-            })();
-            promises.push(p);
-            await delay(50);
+        for (const [startTimestampStr, ids] of tasks) {
+            let currentTs = parseInt(startTimestampStr);
+            
+            // 循环申请 7 天
+            for (let i = 0; i < 7; i++) {
+                // 创建任务但不等待，存入数组
+                const p = (async () => {
+                    await submitApplication(currentTs, ids);
+                })();
+                allSubmitPromises.push(p);
+                
+                // 加一天
+                currentTs += 86400000;
+                
+                // 错峰发射：仅等待 50ms
+                await delay(50);
+            }
         }
 
-        log(`🚀 已启动 ${promises.length} 个提交任务，正在等待服务器响应...`);
+        log(`🚀 已启动 ${allSubmitPromises.length} 个并发提交任务，等待完成...`);
         
-        await Promise.all(promises);
+        // 统一等待所有提交完成
+        await Promise.all(allSubmitPromises);
 
         log("=== 流程结束 ===");
         res.send(logs.join('\n'));
