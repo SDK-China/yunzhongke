@@ -1,8 +1,7 @@
 /**
  * FactoryEntryReport.js
- * 自动续期入厂申请脚本 (修复版)
- * 功能：查询访客状态 -> 判断最后日期 -> 对即将到期的人员自动续期7天
- * 包含 /debug 调试接口
+ * 自动续期入厂申请脚本 (最终修复版)
+ * 修复：成功状态判断逻辑、日期跨天计算逻辑
  */
 
 const express = require('express');
@@ -183,7 +182,7 @@ const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 // 辅助函数：北京时间天数ID (用于比较)
 const getBeijingDayId = (ts) => Math.floor((parseInt(ts) + 28800000) / 86400000);
 
-// 辅助函数：格式化日期字符串
+// 辅助函数：格式化日期字符串 (假定输入为UTC时间戳+8小时偏移)
 const getFormattedDate = (ts) => {
     const date = new Date(parseInt(ts) + 28800000);
     return date.toISOString().split('T')[0];
@@ -247,13 +246,13 @@ const submitApplication = async (groupDateTs, personIds) => {
 
     if (tableRows.length === 0) return;
 
-    // --- 核心修复：将 listNum 移入 TableField 对象内部 ---
+    // 组合完整表单
     const tableField = {
         "componentName": "TableField",
         "fieldId": "tableField_lxv44os5",
         "label": "人员信息",
         "fieldData": { "value": tableRows },
-        "listNum": 50 // 修正位置：listNum 是 tableField 的属性
+        "listNum": 50 // 属性修正
     };
 
     const dateField = {
@@ -264,11 +263,9 @@ const submitApplication = async (groupDateTs, personIds) => {
         "format": "yyyy-MM-dd"
     };
 
-    // 重新拼接以保序，且移除了独立的 {"listNum": 50} 对象
     const finalForm = [
         ...FORM_BASE,
         tableField,
-        // 这里删除了错误的 {"listNum": 50}
         ...FORM_TAIL.slice(0, 4), // 接待人信息
         dateField,
         ...FORM_TAIL.slice(4)     // 签核和保安
@@ -288,8 +285,10 @@ const submitApplication = async (groupDateTs, personIds) => {
         const url = CONFIG.url + Date.now();
         const res = await axios.post(url, postData, { headers: CONFIG.headers });
         
-        if (res.data && res.data.content && res.data.content.success) {
-            console.log(`✅ [${targetDateStr}] 申请成功! 实例ID: ${res.data.content.instId}`);
+        // 修正判断逻辑：success 在根节点
+        if (res.data && res.data.success === true) {
+            const formInstId = res.data.content ? res.data.content.formInstId : "未知ID";
+            console.log(`✅ [${targetDateStr}] 申请成功! 实例ID: ${formInstId}`);
         } else {
             console.log(`❌ [${targetDateStr}] 申请可能失败:`, JSON.stringify(res.data).substring(0, 100));
         }
@@ -329,14 +328,21 @@ router.get('/debug', async (req, res) => {
 
             if (lastDateTs === 0) {
                 lastDayId = todayId; 
-                nextStartTs = new Date().setHours(0,0,0,0) + 86400000;
+                // 明天 00:00 (北京时间)
+                const tomorrow = new Date(nowMs + 28800000);
+                tomorrow.setUTCDate(tomorrow.getUTCDate() + 1);
+                tomorrow.setUTCHours(0,0,0,0);
+                nextStartTs = tomorrow.getTime() - 28800000;
                 formattedLastDate = "新用户/无记录";
             } else {
                 lastDayId = getBeijingDayId(lastDateTs);
-                const d = new Date(lastDateTs);
-                d.setDate(d.getDate() + 1);
-                d.setHours(0,0,0,0);
-                nextStartTs = d.getTime();
+                
+                // 修复日期计算：基于北京时间加1天
+                const d = new Date(lastDateTs + 28800000); // 转为北京时间对象
+                d.setUTCDate(d.getUTCDate() + 1);          // 加1天
+                d.setUTCHours(0,0,0,0);                    // 设为0点
+                nextStartTs = d.getTime() - 28800000;      // 还原为时间戳
+                
                 formattedLastDate = getFormattedDate(lastDateTs);
             }
 
@@ -386,7 +392,7 @@ router.get('/debug', async (req, res) => {
 
             // 模拟循环7天
             for (let i = 0; i < 7; i++) {
-                // --- 核心：构造数据包 (同步 submitApplication 的逻辑) ---
+                // --- 核心：构造数据包 ---
                 const tableRows = [];
                 ids.forEach(pid => {
                     const idBase64 = Buffer.from(pid).toString('base64');
@@ -394,13 +400,12 @@ router.get('/debug', async (req, res) => {
                 });
 
                 if (tableRows.length > 0) {
-                    // 构造表单 (应用修复)
                     const tableField = {
                         "componentName": "TableField",
                         "fieldId": "tableField_lxv44os5",
                         "label": "人员信息",
                         "fieldData": { "value": tableRows },
-                        "listNum": 50 // 修复：在对象内部
+                        "listNum": 50
                     };
                     const dateField = {
                         "componentName": "DateField",
@@ -410,18 +415,16 @@ router.get('/debug', async (req, res) => {
                         "format": "yyyy-MM-dd"
                     };
                     
-                    // 组装完整表单 (应用修复)
                     const finalForm = [
                         ...FORM_BASE,
                         tableField,
-                        // 移除独立的 listNum 对象
                         ...FORM_TAIL.slice(0, 4), 
                         dateField,
                         ...FORM_TAIL.slice(4)     
                     ];
 
-                    const jsonStr = JSON.stringify(finalForm, null, 2); // 美化JSON
-                    const encodedValue = encodeURIComponent(JSON.stringify(finalForm)); // 真实发送用的编码
+                    const jsonStr = JSON.stringify(finalForm, null, 2); 
+                    const encodedValue = encodeURIComponent(JSON.stringify(finalForm));
                     const fullPostBody = `_csrf_token=${CONFIG.csrf_token}&formUuid=${CONFIG.formUuid}&appType=${CONFIG.appType}&value=${encodedValue}&_schemaVersion=653`;
 
                     // 存入结果
@@ -434,7 +437,7 @@ router.get('/debug', async (req, res) => {
                     });
                 }
                 
-                // 加一天
+                // 加一天 (86400000ms)
                 currentTs += 86400000;
             }
         }
@@ -507,7 +510,7 @@ router.get('/debug', async (req, res) => {
                             <td>${item.idMask}</td>
                             <td>${item.lastDate}</td>
                             <td><span class="status-badge ${item.class}">${item.status}</span></td>
-                            <td>${item.renew ? '⚪待申请' : '✅ 跳过'}</td>
+                            <td>${item.renew ? '✅ 待生成' : '⚪ 跳过'}</td>
                         </tr>
                         `).join('')}
                     </tbody>
@@ -571,13 +574,20 @@ router.get('/auto-renew', async (req, res) => {
 
             if (lastDateTs === 0) {
                 lastDayId = todayId; // 视为今天到期
-                nextStartTs = new Date().setHours(0,0,0,0) + 86400000; // 明天 00:00
+                // 明天 00:00 (北京时间)
+                const tomorrow = new Date(nowMs + 28800000);
+                tomorrow.setUTCDate(tomorrow.getUTCDate() + 1);
+                tomorrow.setUTCHours(0,0,0,0);
+                nextStartTs = tomorrow.getTime() - 28800000;
             } else {
                 lastDayId = getBeijingDayId(lastDateTs);
-                const d = new Date(lastDateTs);
-                d.setDate(d.getDate() + 1);
-                d.setHours(0,0,0,0);
-                nextStartTs = d.getTime();
+                
+                // 修复日期计算：基于北京时间加1天
+                // 逻辑：timestamp -> +8h -> UTC Date -> add 1 day -> set 00:00 -> -8h -> timestamp
+                const d = new Date(lastDateTs + 28800000); // 转为北京时间对象
+                d.setUTCDate(d.getUTCDate() + 1);          // 加1天
+                d.setUTCHours(0,0,0,0);                    // 设为0点
+                nextStartTs = d.getTime() - 28800000;      // 还原为时间戳
             }
 
             const diff = lastDayId - todayId;
