@@ -1,7 +1,7 @@
 /**
  * FactoryEntryReport.js
- * 自动续期入厂申请脚本 (最终修复版)
- * 修复：成功状态判断逻辑、日期跨天计算逻辑
+ * 自动续期入厂申请脚本 (并发极速版)
+ * 优化：将所有网络请求改为并发执行，解决 Vercel 10s 超时问题
  */
 
 const express = require('express');
@@ -57,7 +57,6 @@ const CONFIG = {
 };
 
 // --- 人员数据模板 (Base64加密处理) ---
-// Key 为 Base64 编码的身份证号
 const PERSON_DB = {
     // 康伟强
     "MTMwMzIzMTk4NjAyMjgwODFY": [
@@ -145,7 +144,7 @@ const PERSON_DB = {
     ]
 };
 
-// --- 表单基础结构 (除 tableField 和 dateField 以外的部分) ---
+// --- 表单基础结构 ---
 const FORM_BASE = [
     {"componentName":"SerialNumberField","fieldId":"serialNumberField_lxn9o9dx","label":"单号信息","fieldData":{}},
     {"componentName":"TextField","fieldId":"textField_lxn9o9e0","label":"申请类型","fieldData":{"value":"一般访客"}},
@@ -176,62 +175,58 @@ const FORM_TAIL = [
     {"componentName":"TextField","fieldId":"textField_m4c5a41a","label":"门岗保安","fieldData":{"value":"15232353238"}}
 ];
 
-// 辅助函数：延迟
-const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
-
-// 辅助函数：北京时间天数ID (用于比较)
+// 辅助函数：北京时间天数ID
 const getBeijingDayId = (ts) => Math.floor((parseInt(ts) + 28800000) / 86400000);
 
-// 辅助函数：格式化日期字符串 (假定输入为UTC时间戳+8小时偏移)
+// 辅助函数：格式化日期字符串
 const getFormattedDate = (ts) => {
     const date = new Date(parseInt(ts) + 28800000);
     return date.toISOString().split('T')[0];
 };
 
-// 1. 查询所有人的状态
+// 1. 并发查询所有人的状态
 const getAllStatuses = async () => {
-    console.log("🔍 开始批量查询人员状态...");
+    console.log("🔍 开始批量并发查询人员状态...");
     const statuses = {};
     const decodedIds = CONFIG.query.visitorIdNos.map(id => decode(id));
 
-    for (const id of decodedIds) {
-        // 安全打印
+    // 构造请求数组
+    const promises = decodedIds.map(async (id) => {
         const idMask = id.substring(0, 4) + "****" + id.substring(id.length - 4);
         try {
             const res = await axios.post(CONFIG.query.queryUrl, {
                 visitorIdNo: id,
                 regPerson: CONFIG.query.regPerson,
                 acToken: CONFIG.query.acToken
-            });
-            
+            }, { timeout: 5000 }); // 设置单个请求超时
+
             if (res.data.code === 200 && res.data.data) {
-                // 找出最大的 dateEnd
                 let maxEnd = 0;
                 res.data.data.forEach(record => {
                     const end = parseInt(record.dateEnd || record.rangeEnd);
                     if (end > maxEnd) maxEnd = end;
                 });
                 statuses[id] = maxEnd;
-                console.log(`   [${idMask}] 最新记录结束时间: ${getFormattedDate(maxEnd)}`);
+                console.log(`   [${idMask}] 状态获取成功: ${getFormattedDate(maxEnd)}`);
             } else {
-                console.log(`   [${idMask}] 无记录或查询失败`);
+                console.log(`   [${idMask}] 无记录或失败`);
                 statuses[id] = 0;
             }
         } catch (e) {
-            console.error(`   [${idMask}] 查询出错: ${e.message}`);
+            console.error(`   [${idMask}] 网络错误: ${e.message}`);
             statuses[id] = 0;
         }
-        // 简单防抖
-        await delay(10);
-    }
+    });
+
+    // 等待所有查询完成
+    await Promise.all(promises);
     return statuses;
 };
 
-// 2. 构造并发送申请
-const submitApplication = async (groupDateTs, personIds) => {
-    // 构造人员列表 TableField
-    const tableRows = [];
+// 2. 构造申请任务（不直接发送，返回Promise）
+const createSubmitTask = async (groupDateTs, personIds) => {
     const names = [];
+    const tableRows = [];
     
     personIds.forEach(id => {
         const idBase64 = Buffer.from(id).toString('base64');
@@ -239,20 +234,17 @@ const submitApplication = async (groupDateTs, personIds) => {
         if (personData) {
             tableRows.push(personData);
             names.push(personData[2].fieldData.value);
-        } else {
-            console.error(`❌ 未找到 ID 为 ${id} 的模板数据`);
         }
     });
 
-    if (tableRows.length === 0) return;
+    if (tableRows.length === 0) return null;
 
-    // 组合完整表单
     const tableField = {
         "componentName": "TableField",
         "fieldId": "tableField_lxv44os5",
         "label": "人员信息",
         "fieldData": { "value": tableRows },
-        "listNum": 50 // 属性修正
+        "listNum": 50
     };
 
     const dateField = {
@@ -266,56 +258,44 @@ const submitApplication = async (groupDateTs, personIds) => {
     const finalForm = [
         ...FORM_BASE,
         tableField,
-        ...FORM_TAIL.slice(0, 4), // 接待人信息
+        ...FORM_TAIL.slice(0, 4),
         dateField,
-        ...FORM_TAIL.slice(4)     // 签核和保安
+        ...FORM_TAIL.slice(4)
     ];
 
-    // 序列化 + URL 编码
     const jsonStr = JSON.stringify(finalForm);
     const encodedValue = encodeURIComponent(jsonStr);
-    
     const postData = `_csrf_token=${CONFIG.csrf_token}&formUuid=${CONFIG.formUuid}&appType=${CONFIG.appType}&value=${encodedValue}&_schemaVersion=653`;
-    
-    // 发送请求
     const targetDateStr = getFormattedDate(groupDateTs);
-    console.log(`🚀 正在为 [${names.join(', ')}] 提交申请 -> 日期: ${targetDateStr}`);
 
-    try {
-        const url = CONFIG.url + Date.now();
-        const res = await axios.post(url, postData, { headers: CONFIG.headers });
-        
-        // 修正判断逻辑：success 在根节点
+    console.log(`🚀 发起并发申请 -> [${names.join(',')}] -> ${targetDateStr}`);
+
+    return axios.post(CONFIG.url + Date.now(), postData, { 
+        headers: CONFIG.headers,
+        timeout: 8000 
+    }).then(res => {
         if (res.data && res.data.success === true) {
             const formInstId = res.data.content ? res.data.content.formInstId : "未知ID";
-            console.log(`✅ [${targetDateStr}] 申请成功! 实例ID: ${formInstId}`);
+            return `✅ [${targetDateStr}] 成功 (${formInstId})`;
         } else {
-            console.log(`❌ [${targetDateStr}] 申请可能失败:`, JSON.stringify(res.data).substring(0, 100));
+            return `❌ [${targetDateStr}] 失败: ${JSON.stringify(res.data).substring(0, 50)}...`;
         }
-    } catch (e) {
-        console.error(`❌ [${targetDateStr}] 请求网络错误: ${e.message}`);
-    }
+    }).catch(e => {
+        return `❌ [${targetDateStr}] 网络错误: ${e.message}`;
+    });
 };
 
-// --- 调试接口 (仅生成数据，不发送请求) ---
+// --- 调试接口 ---
 router.get('/debug', async (req, res) => {
     try {
-        // 1. 获取当前状态
-        const idStatusMap = await getAllStatuses();
+        const idStatusMap = await getAllStatuses(); // 现已支持并发
         const nowMs = Date.now();
         const todayId = getBeijingDayId(nowMs);
         
-        // 准备视图数据
-        let viewData = {
-            summary: [],
-            requests: []
-        };
-
-        // 2. 状态概览与分组策略
+        let viewData = { summary: [], requests: [] };
         const groupRequests = {};
 
         for (const [id, lastDateTs] of Object.entries(idStatusMap)) {
-            // 修复乱码：根据 ID 去 DB 查姓名
             const idBase64 = Buffer.from(id).toString('base64');
             const personInfo = PERSON_DB[idBase64];
             const name = personInfo ? personInfo[2].fieldData.value : "未知人员"; 
@@ -328,7 +308,6 @@ router.get('/debug', async (req, res) => {
 
             if (lastDateTs === 0) {
                 lastDayId = todayId; 
-                // 明天 00:00 (北京时间)
                 const tomorrow = new Date(nowMs + 28800000);
                 tomorrow.setUTCDate(tomorrow.getUTCDate() + 1);
                 tomorrow.setUTCHours(0,0,0,0);
@@ -336,19 +315,15 @@ router.get('/debug', async (req, res) => {
                 formattedLastDate = "新用户/无记录";
             } else {
                 lastDayId = getBeijingDayId(lastDateTs);
-                
-                // 修复日期计算：基于北京时间加1天
-                const d = new Date(lastDateTs + 28800000); // 转为北京时间对象
-                d.setUTCDate(d.getUTCDate() + 1);          // 加1天
-                d.setUTCHours(0,0,0,0);                    // 设为0点
-                nextStartTs = d.getTime() - 28800000;      // 还原为时间戳
-                
+                const d = new Date(lastDateTs + 28800000);
+                d.setUTCDate(d.getUTCDate() + 1);
+                d.setUTCHours(0,0,0,0);
+                nextStartTs = d.getTime() - 28800000;
                 formattedLastDate = getFormattedDate(lastDateTs);
             }
 
             const diff = lastDayId - todayId;
             
-            // 状态判断逻辑
             if (diff < 0) {
                 statusText = `已过期 ${Math.abs(diff)} 天`;
                 statusClass = "expired";
@@ -360,17 +335,15 @@ router.get('/debug', async (req, res) => {
                 statusClass = "success";
             }
 
-            // 存入概览
             viewData.summary.push({
                 name,
                 idMask: id.substring(0, 4) + "***" + id.substring(id.length - 4),
                 lastDate: formattedLastDate,
                 status: statusText,
                 class: statusClass,
-                renew: diff <= 2 // 是否触发续期
+                renew: diff <= 2 
             });
 
-            // 如果符合条件，加入生成队列
             if (diff <= 2) {
                 if (!groupRequests[nextStartTs]) {
                     groupRequests[nextStartTs] = [];
@@ -379,20 +352,16 @@ router.get('/debug', async (req, res) => {
             }
         }
 
-        // 3. 模拟生成未来7天的数据包
         const tasks = Object.entries(groupRequests);
         
         for (const [startTimestampStr, ids] of tasks) {
             let currentTs = parseInt(startTimestampStr);
-            
             const personNames = ids.map(pid => {
                 const pidBase64 = Buffer.from(pid).toString('base64');
                 return PERSON_DB[pidBase64] ? PERSON_DB[pidBase64][2].fieldData.value : pid;
             }).join(", ");
 
-            // 模拟循环7天
             for (let i = 0; i < 7; i++) {
-                // --- 核心：构造数据包 ---
                 const tableRows = [];
                 ids.forEach(pid => {
                     const idBase64 = Buffer.from(pid).toString('base64');
@@ -427,7 +396,6 @@ router.get('/debug', async (req, res) => {
                     const encodedValue = encodeURIComponent(JSON.stringify(finalForm));
                     const fullPostBody = `_csrf_token=${CONFIG.csrf_token}&formUuid=${CONFIG.formUuid}&appType=${CONFIG.appType}&value=${encodedValue}&_schemaVersion=653`;
 
-                    // 存入结果
                     viewData.requests.push({
                         dayIndex: i + 1,
                         targetDate: getFormattedDate(currentTs),
@@ -436,13 +404,10 @@ router.get('/debug', async (req, res) => {
                         encodedBody: fullPostBody
                     });
                 }
-                
-                // 加一天 (86400000ms)
                 currentTs += 86400000;
             }
         }
 
-        // 4. 生成 HTML 页面
         const html = `
         <!DOCTYPE html>
         <html>
@@ -455,8 +420,6 @@ router.get('/debug', async (req, res) => {
                 .container { max-width: 1000px; margin: 0 auto; background: #fff; padding: 30px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
                 h1 { border-bottom: 2px solid #eaeaea; padding-bottom: 10px; margin-bottom: 20px; color: #1a1a1a; }
                 h2 { margin-top: 30px; color: #444; font-size: 1.2rem; }
-                
-                /* 表格样式 */
                 table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
                 th, td { text-align: left; padding: 12px; border-bottom: 1px solid #eee; }
                 th { background: #fafafa; font-weight: 600; color: #666; }
@@ -464,26 +427,14 @@ router.get('/debug', async (req, res) => {
                 .expired { background: #ffebee; color: #c62828; }
                 .warning { background: #fff8e1; color: #f57f17; }
                 .success { background: #e8f5e9; color: #2e7d32; }
-                
-                /* 数据包卡片 */
                 .request-card { border: 1px solid #e1e4e8; border-radius: 8px; margin-bottom: 15px; overflow: hidden; }
                 .card-header { background: #f6f8fa; padding: 10px 15px; border-bottom: 1px solid #e1e4e8; display: flex; justify-content: space-between; align-items: center; }
-                .card-header strong { color: #24292e; }
-                .card-header span { font-size: 0.9rem; color: #586069; }
-                
-                /* 折叠区域 */
                 details { padding: 0; }
                 summary { padding: 10px 15px; cursor: pointer; background: #fff; list-style: none; font-weight: 500; color: #0366d6; outline: none; }
                 summary:hover { background: #fbfbfc; }
-                summary::-webkit-details-marker { display: none; }
-                summary::before { content: '▶'; display: inline-block; margin-right: 8px; font-size: 0.8rem; transition: transform 0.2s; }
-                details[open] summary::before { transform: rotate(90deg); }
-                details[open] summary { border-bottom: 1px solid #eee; }
-                
                 .code-block { background: #282c34; color: #abb2bf; padding: 15px; overflow-x: auto; font-family: Consolas, Monaco, monospace; font-size: 0.85rem; margin: 0; white-space: pre-wrap; word-break: break-all; }
                 .json-block { color: #98c379; }
                 .url-block { color: #61afef; }
-                
                 .empty-tip { text-align: center; padding: 40px; color: #999; background: #fafafa; border-radius: 8px; border: 1px dashed #ddd; }
             </style>
         </head>
@@ -491,142 +442,88 @@ router.get('/debug', async (req, res) => {
             <div class="container">
                 <h1>🐞 Debug 调试面板 (安全模式)</h1>
                 <p style="color: #666; margin-bottom: 20px;">此模式下仅模拟数据生成，<strong>绝对不会</strong>向服务器发送任何申请请求。</p>
-
                 <h2>👥 1. 人员状态概览</h2>
                 <table>
-                    <thead>
-                        <tr>
-                            <th>姓名</th>
-                            <th>ID (Masked)</th>
-                            <th>最新有效日期</th>
-                            <th>当前状态</th>
-                            <th>操作</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        ${viewData.summary.map(item => `
-                        <tr>
-                            <td><strong>${item.name}</strong></td>
-                            <td>${item.idMask}</td>
-                            <td>${item.lastDate}</td>
-                            <td><span class="status-badge ${item.class}">${item.status}</span></td>
-                            <td>${item.renew ? '⚪ 待请求' : '✅ 跳过'}</td>
-                        </tr>
-                        `).join('')}
-                    </tbody>
+                    <thead><tr><th>姓名</th><th>ID (Masked)</th><th>最新有效日期</th><th>当前状态</th><th>操作</th></tr></thead>
+                    <tbody>${viewData.summary.map(item => `<tr><td><strong>${item.name}</strong></td><td>${item.idMask}</td><td>${item.lastDate}</td><td><span class="status-badge ${item.class}">${item.status}</span></td><td>${item.renew ? '⚪ 待请求' : '✅ 跳过'}</td></tr>`).join('')}</tbody>
                 </table>
-
                 <h2>📦 2. 待发送数据包模拟 (${viewData.requests.length} 个请求)</h2>
-                ${viewData.requests.length === 0 ? 
-                    '<div class="empty-tip">✨ 当前没有人员需要续期，因此没有生成数据包。</div>' : 
-                    viewData.requests.map(req => `
-                    <div class="request-card">
-                        <div class="card-header">
-                            <strong>申请日期: ${req.targetDate}</strong>
-                            <span>包含人员: ${req.people}</span>
-                        </div>
-                        
-                        <details>
-                            <summary>查看原始 JSON 数据 (Human Readable)</summary>
-                            <pre class="code-block json-block">${req.rawJson}</pre>
-                        </details>
-                        
-                        <details>
-                            <summary>查看 URL 编码发送体 (Ready to Send)</summary>
-                            <pre class="code-block url-block">${req.encodedBody}</pre>
-                        </details>
-                    </div>
-                    `).join('')
-                }
+                ${viewData.requests.length === 0 ? '<div class="empty-tip">✨ 无需续期。</div>' : viewData.requests.map(req => `<div class="request-card"><div class="card-header"><strong>申请日期: ${req.targetDate}</strong><span>包含人员: ${req.people}</span></div><details><summary>查看原始 JSON</summary><pre class="code-block json-block">${req.rawJson}</pre></details><details><summary>查看 URL 编码</summary><pre class="code-block url-block">${req.encodedBody}</pre></details></div>`).join('')}
             </div>
         </body>
-        </html>
-        `;
-
+        </html>`;
         res.send(html);
-
     } catch (err) {
         console.error(err);
         res.status(500).send(`Debug Error: ${err.message}`);
     }
 });
 
-// --- 主逻辑路由 ---
+// --- 主逻辑路由 (极速版) ---
 router.get('/auto-renew', async (req, res) => {
     const logs = [];
     const log = (msg) => { console.log(msg); logs.push(msg); };
     
     try {
-        log("=== 开始自动续期流程 ===");
+        log("=== 开始极速自动续期 (Vercel Optimized) ===");
         
-        // 1. 获取状态
+        // 1. 获取状态 (并发)
         const idStatusMap = await getAllStatuses();
         const nowMs = Date.now();
         const todayId = getBeijingDayId(nowMs);
 
-        // 2. 分组策略：Key = 需要申请的起始日期ID, Value = [personId1, personId2...]
+        // 2. 分组策略
         const groupRequests = {};
-
         for (const [id, lastDateTs] of Object.entries(idStatusMap)) {
-            // 策略：如果无记录，假设它是新来的，从明天开始申请
             let lastDayId = 0;
             let nextStartTs = 0;
 
             if (lastDateTs === 0) {
-                lastDayId = todayId; // 视为今天到期
-                // 明天 00:00 (北京时间)
+                lastDayId = todayId; 
                 const tomorrow = new Date(nowMs + 28800000);
                 tomorrow.setUTCDate(tomorrow.getUTCDate() + 1);
                 tomorrow.setUTCHours(0,0,0,0);
                 nextStartTs = tomorrow.getTime() - 28800000;
             } else {
                 lastDayId = getBeijingDayId(lastDateTs);
-                
-                // 修复日期计算：基于北京时间加1天
-                // 逻辑：timestamp -> +8h -> UTC Date -> add 1 day -> set 00:00 -> -8h -> timestamp
-                const d = new Date(lastDateTs + 28800000); // 转为北京时间对象
-                d.setUTCDate(d.getUTCDate() + 1);          // 加1天
-                d.setUTCHours(0,0,0,0);                    // 设为0点
-                nextStartTs = d.getTime() - 28800000;      // 还原为时间戳
+                const d = new Date(lastDateTs + 28800000);
+                d.setUTCDate(d.getUTCDate() + 1);
+                d.setUTCHours(0,0,0,0);
+                nextStartTs = d.getTime() - 28800000;
             }
 
             const diff = lastDayId - todayId;
-            
-            // 判断条件：最后一天距离今天 <= 2天
             if (diff <= 2) {
-                log(`⚡ 人员 [${decode(Buffer.from(id).toString('base64'))}] 符合续期条件 (剩 ${diff} 天)`);
-                
-                if (!groupRequests[nextStartTs]) {
-                    groupRequests[nextStartTs] = [];
-                }
+                log(`⚡ ${decode(Buffer.from(id).toString('base64'))} (剩 ${diff} 天) -> 加入队列`);
+                if (!groupRequests[nextStartTs]) groupRequests[nextStartTs] = [];
                 groupRequests[nextStartTs].push(id);
-            } else {
-                log(`⚪ 人员 [${decode(Buffer.from(id).toString('base64'))}] 暂无需续期 (剩 ${diff} 天)`);
             }
         }
 
-        // 3. 执行批量申请
+        // 3. 执行批量申请 (全并发)
         const tasks = Object.entries(groupRequests);
+        const allPromises = [];
+
         if (tasks.length === 0) {
-            log("✨ 没有需要续期的人员。");
+            log("✨ 暂无需要续期的人员。");
             res.send(logs.join('\n'));
             return;
         }
 
         for (const [startTimestampStr, ids] of tasks) {
             let currentTs = parseInt(startTimestampStr);
-            
-            // 循环申请 7 天
+            // 直接生成未来7天的所有请求Promise，不等待
             for (let i = 0; i < 7; i++) {
-                await submitApplication(currentTs, ids);
-                
-                // 加一天
+                allPromises.push(createSubmitTask(currentTs, ids));
                 currentTs += 86400000;
-                
-                // 间隔 50ms
-                await delay(50);
             }
         }
+
+        log(`🚀 正在并发处理 ${allPromises.length} 个申请请求...`);
+        
+        // 等待所有请求完成
+        const results = await Promise.all(allPromises);
+        results.forEach(r => log(r));
 
         log("=== 流程结束 ===");
         res.send(logs.join('\n'));
