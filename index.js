@@ -1,6 +1,7 @@
 const express = require('express'); // 关键修正：必须引入 express
 const cors = require('cors');
 const bodyParser = require('body-parser');
+const path = require('path');
 
 // --- 引入各功能模块 ---
 const crushToolRouter = require('./CrushTool');             // 原有新功能
@@ -39,7 +40,16 @@ app.use('/visitorApprovalQuery', visitorApprovalQueryRouter);
 
 // --- 根路由测试 (可选) ---
 app.get('/', (req, res) => {
-    res.send('YunZhongKe Server is running.');
+    res.send('🚀🚀🚀YunZhongKe Server is running.🚀🚀🚀');
+});
+
+// --- 静态文件处理 ---
+app.get('/favicon.ico', (req, res) => {
+    // 如果您确实上传了 favicon.ico 到根目录
+    res.sendFile(path.join(__dirname, 'favicon.ico'));
+
+    // 如果您没有文件，只是想消除 404 报错，可以用这行代替：
+    // res.status(204).end(); 
 });
 
 // --- 启动服务器 ---
