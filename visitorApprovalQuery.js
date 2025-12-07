@@ -19,11 +19,7 @@ const CONFIG = {
     acToken: "E5EF067A42A792436902EB275DCCA379812FF4A4A8A756BE0A1659704557309F"
 };
 
-// 辅助函数：延迟
-const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
-
-// 辅助函数：获取北京时间下的“天数ID” (用于判断日期连续和比较)
-// 计算方式：(时间戳 + 8小时时区偏移) / 一天的毫秒数，向下取整
+// 辅助函数：获取北京时间下的“天数ID”
 const getBeijingDayId = (ts) => {
     return Math.floor((parseInt(ts) + 28800000) / 86400000);
 };
@@ -52,10 +48,136 @@ const getRecordType = (item, todayId) => {
     return 'ACTIVE';
 };
 
-// --- 新功能路由：批量查询访客状态 (最终修复版) ---
-router.get('/visitor-status', async (req, res) => {
+// --- 并发核心处理函数 ---
+const fetchSingleVisitorStatus = async (id, headers, todayDayId) => {
     const targetUrl = 'https://dingtalk.avaryholding.com:8443/dingplus/visitorConnector/visitorStatus';
-    
+    const idTail = id.length > 4 ? id.slice(-4) : id;
+    const lines = []; // 存储当前用户的输出行
+
+    const body = {
+        visitorIdNo: id,
+        regPerson: CONFIG.regPerson,
+        acToken: CONFIG.acToken
+    };
+
+    try {
+        const response = await axios.post(targetUrl, body, { headers, timeout: 8000 });
+        const resData = response.data;
+
+        if (resData.code === 200 && Array.isArray(resData.data) && resData.data.length > 0) {
+            const records = resData.data;
+            const visitorName = records[0].visitorName || '未知';
+
+            lines.push(`\n👤 ${visitorName} (${idTail})`);
+
+            // 1. 分组与合并逻辑 (保持原样)
+            const groups = {};
+            records.forEach(item => {
+                const statusType = String(item.flowStatus) === '1' ? 'PENDING' : 'APPROVED';
+                const key = `${item.rPersonName || '未知'}_${statusType}`;
+                if (!groups[key]) groups[key] = [];
+                groups[key].push(item);
+            });
+
+            let mergedList = [];
+            Object.values(groups).forEach(groupList => {
+                groupList.sort((a, b) => b.dateStart - a.dateStart); // 倒序
+                
+                let currentRange = {
+                    ...groupList[0],
+                    rangeStart: groupList[0].dateStart,
+                    rangeEnd: groupList[0].dateEnd
+                };
+
+                for (let i = 1; i < groupList.length; i++) {
+                    const nextItem = groupList[i];
+                    const diffDays = getBeijingDayId(currentRange.rangeStart) - getBeijingDayId(nextItem.dateEnd);
+                    
+                    if (diffDays <= 1) { 
+                        currentRange.rangeStart = nextItem.dateStart;
+                    } else {
+                        mergedList.push(currentRange);
+                        currentRange = { 
+                            ...nextItem, 
+                            rangeStart: nextItem.dateStart, 
+                            rangeEnd: nextItem.dateEnd 
+                        };
+                    }
+                }
+                mergedList.push(currentRange);
+            });
+
+            // 2. 严格分类
+            let priorityList = [];
+            let historyList = [];
+
+            mergedList.forEach(item => {
+                const type = getRecordType(item, todayDayId);
+                const enhancedItem = { ...item, _type: type };
+                
+                if (type === 'HISTORY') {
+                    historyList.push(enhancedItem);
+                } else {
+                    priorityList.push(enhancedItem);
+                }
+            });
+
+            // 3. 排序
+            priorityList.sort((a, b) => b.rangeStart - a.rangeStart);
+            historyList.sort((a, b) => b.rangeStart - a.rangeStart);
+
+            // 4. 生成输出内容
+            priorityList.forEach(item => {
+                const startStr = getFormattedDate(item.rangeStart);
+                const endStr = getFormattedDate(item.rangeEnd);
+                const currentYear = new Date().getFullYear();
+                const displayStart = startStr.startsWith(currentYear) ? startStr.slice(5) : startStr;
+                const displayEnd = endStr.startsWith(currentYear) ? endStr.slice(5) : endStr;
+
+                let dateDisplay = (startStr === endStr) ? displayStart : `${displayStart}-${displayEnd}`;
+                
+                let icon = "⚪";
+                let statusText = "";
+                
+                if (item._type === 'PENDING') {
+                    icon = "🟡";
+                    statusText = " [审核中🔥]";
+                } else if (item._type === 'ACTIVE') {
+                    icon = "🟢";
+                    statusText = " [今日生效]";
+                } else if (item._type === 'FUTURE') {
+                    icon = "🔵";
+                    statusText = " [已预约]";
+                }
+
+                lines.push(`${icon} ${dateDisplay} | 审批:${item.rPersonName}${statusText}`);
+            });
+
+            historyList.slice(0, 3).forEach(item => {
+                const startStr = getFormattedDate(item.rangeStart);
+                const endStr = getFormattedDate(item.rangeEnd);
+                const currentYear = new Date().getFullYear();
+                const displayStart = startStr.startsWith(currentYear) ? startStr.slice(5) : startStr;
+                const displayEnd = endStr.startsWith(currentYear) ? endStr.slice(5) : endStr;
+
+                let dateDisplay = (startStr === endStr) ? displayStart : `${displayStart}-${displayEnd}`;
+                
+                lines.push(`⚪ ${dateDisplay} | 审批:${item.rPersonName}`);
+            });
+
+        } else {
+            lines.push(`\n⚪ ${idTail} 无记录`);
+        }
+
+    } catch (reqErr) {
+        lines.push(`\n❌ ${idTail} 查询失败`);
+    }
+
+    return lines;
+};
+
+// --- 新功能路由：批量查询访客状态 (并发极速版) ---
+router.get('/visitor-status', async (req, res) => {
     const headers = {
         "Host": "dingtalk.avaryholding.com:8443",
         "Connection": "keep-alive",
@@ -80,151 +202,34 @@ router.get('/visitor-status', async (req, res) => {
     const nowStr = new Date(now.getTime() + 28800000).toISOString().replace(/T/, ' ').replace(/\..+/, '');
     const todayDayId = getBeijingDayId(now.getTime());
     
-    let outputLines = [];
-    outputLines.push(`🕒 查询时间: ${nowStr}`);
+    // 初始化输出内容
+    let finalOutput = [];
+    finalOutput.push(`🕒 查询时间: ${nowStr}`);
     
     try {
-        // 解码
+        // 解码身份证列表
         const decodedIds = CONFIG.visitorIdNos.map(encoded => Buffer.from(encoded, 'base64').toString('utf-8'));
 
-        for (const id of decodedIds) {
-            const body = {
-                visitorIdNo: id,
-                regPerson: CONFIG.regPerson,
-                acToken: CONFIG.acToken
-            };
+        // --- 核心优化：使用 Promise.all 并发执行 ---
+        // map 返回一个 Promise 数组，每个 Promise 对应一个人的查询任务
+        const tasks = decodedIds.map(id => fetchSingleVisitorStatus(id, headers, todayDayId));
+        
+        // 等待所有任务完成
+        const results = await Promise.all(tasks);
 
-            const idTail = id.length > 4 ? id.slice(-4) : id;
-
-            try {
-                const response = await axios.post(targetUrl, body, { headers, timeout: 8000 });
-                const resData = response.data;
-
-                if (resData.code === 200 && Array.isArray(resData.data) && resData.data.length > 0) {
-                    const records = resData.data;
-                    const visitorName = records[0].visitorName || '未知';
-
-                    outputLines.push(`\n👤 ${visitorName} (${idTail})`);
-
-                    // 1. 分组与合并
-                    const groups = {};
-                    records.forEach(item => {
-                        const statusType = String(item.flowStatus) === '1' ? 'PENDING' : 'APPROVED';
-                        const key = `${item.rPersonName || '未知'}_${statusType}`;
-                        if (!groups[key]) groups[key] = [];
-                        groups[key].push(item);
-                    });
-
-                    let mergedList = [];
-                    Object.values(groups).forEach(groupList => {
-                        groupList.sort((a, b) => b.dateStart - a.dateStart); // 倒序
-                        
-                        let currentRange = {
-                            ...groupList[0],
-                            rangeStart: groupList[0].dateStart,
-                            rangeEnd: groupList[0].dateEnd
-                        };
-
-                        for (let i = 1; i < groupList.length; i++) {
-                            const nextItem = groupList[i];
-                            const diffDays = getBeijingDayId(currentRange.rangeStart) - getBeijingDayId(nextItem.dateEnd);
-                            
-                            if (diffDays <= 1) { 
-                                currentRange.rangeStart = nextItem.dateStart;
-                            } else {
-                                mergedList.push(currentRange);
-                                currentRange = { 
-                                    ...nextItem, 
-                                    rangeStart: nextItem.dateStart, 
-                                    rangeEnd: nextItem.dateEnd 
-                                };
-                            }
-                        }
-                        mergedList.push(currentRange);
-                    });
-
-                    // 2. 严格分类
-                    let priorityList = [];
-                    let historyList = [];
-
-                    mergedList.forEach(item => {
-                        const type = getRecordType(item, todayDayId);
-                        const enhancedItem = { ...item, _type: type };
-                        
-                        if (type === 'HISTORY') {
-                            historyList.push(enhancedItem);
-                        } else {
-                            priorityList.push(enhancedItem);
-                        }
-                    });
-
-                    // 3. 排序: 
-                    // 重点列表：按开始时间倒序（远的未来 -> 近的未来 -> 今天）
-                    priorityList.sort((a, b) => b.rangeStart - a.rangeStart);
-                    // 历史列表：按开始时间倒序（最近的历史 -> 远古历史）
-                    historyList.sort((a, b) => b.rangeStart - a.rangeStart);
-
-                    // 4. 打印输出
-                    // 重点记录（全部显示，不限制数量）
-                    priorityList.forEach(item => {
-                        const startStr = getFormattedDate(item.rangeStart);
-                        const endStr = getFormattedDate(item.rangeEnd);
-                        // 如果是当年，去掉年份
-                        const currentYear = new Date().getFullYear();
-                        const displayStart = startStr.startsWith(currentYear) ? startStr.slice(5) : startStr;
-                        const displayEnd = endStr.startsWith(currentYear) ? endStr.slice(5) : endStr;
-
-                        let dateDisplay = (startStr === endStr) ? displayStart : `${displayStart}-${displayEnd}`;
-                        
-                        let icon = "⚪";
-                        let statusText = "";
-                        
-                        if (item._type === 'PENDING') {
-                            icon = "🟡";
-                            statusText = " [审核中🔥]";
-                        } else if (item._type === 'ACTIVE') {
-                            icon = "🟢";
-                            statusText = " [今日生效]";
-                        } else if (item._type === 'FUTURE') {
-                            icon = "🔵";
-                            statusText = " [已预约]";
-                        }
-
-                        outputLines.push(`${icon} ${dateDisplay} | 审批:${item.rPersonName}${statusText}`);
-                    });
-
-                    // 历史记录（限制显示最近3条）
-                    historyList.slice(0, 3).forEach(item => {
-                        const startStr = getFormattedDate(item.rangeStart);
-                        const endStr = getFormattedDate(item.rangeEnd);
-                        const currentYear = new Date().getFullYear();
-                        const displayStart = startStr.startsWith(currentYear) ? startStr.slice(5) : startStr;
-                        const displayEnd = endStr.startsWith(currentYear) ? endStr.slice(5) : endStr;
-
-                        let dateDisplay = (startStr === endStr) ? displayStart : `${displayStart}-${displayEnd}`;
-                        
-                        outputLines.push(`⚪ ${dateDisplay} | 审批:${item.rPersonName}`);
-                    });
-
-                } else {
-                    outputLines.push(`\n⚪ ${idTail} 无记录`);
-                }
-
-            } catch (reqErr) {
-                outputLines.push(`\n❌ ${idTail} 查询失败`);
-            }
-
-            await delay(1);
-        }
+        // 将所有人的结果展平并加入最终输出
+        // Promise.all 保证了 results 的顺序与 decodedIds 的顺序一致
+        results.forEach(lines => {
+            finalOutput = finalOutput.concat(lines);
+        });
 
         res.header('Content-Type', 'text/plain; charset=utf-8');
-        res.send(outputLines.join('\n'));
+        res.send(finalOutput.join('\n'));
 
     } catch (err) {
         console.error('System Error:', err);
-        res.status(500).send('Server Error');
+        res.status(500).send('Server Error: ' + err.message);
     }
 });
-
 
 module.exports = router;
