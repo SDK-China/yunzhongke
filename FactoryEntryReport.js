@@ -1,7 +1,9 @@
 /**
  * FactoryEntryReport.js
- * 自动续期入厂申请脚本 (智能追赶 + 模拟调试版)
- * 更新：Debug界面美化、增加全员模拟续期功能、日志优化。
+ * 自动续期入厂申请脚本 (智能追赶 + 安全熔断版)
+ * 更新：
+ * 1. 增加安全熔断机制：查询报错、全无记录、多数无记录时自动终止，防止乱发包。
+ * 2. 优化日志输出，明确失败原因。
  */
 
 const express = require('express');
@@ -186,49 +188,103 @@ const getFormattedDate = (ts) => {
     return date.toISOString().split('T')[0];
 };
 
-// 1. 查询所有人的状态
+/**
+ * 1. 查询所有人的状态 (增加安全统计)
+ * 返回结构: { statusMap: {}, stats: { total, success, error, hasData, noData } }
+ */
 const getAllStatuses = async () => {
     console.log("🔍 开始批量查询人员状态...");
-    const statuses = {};
+    
+    const statusMap = {};
     const decodedIds = CONFIG.query.visitorIdNos.map(id => decode(id));
-    const promises = [];
+    
+    // 安全统计计数器
+    const stats = {
+        total: decodedIds.length,
+        success: 0,  // 接口请求成功
+        error: 0,    // 接口请求失败/网络错误
+        hasData: 0,  // 返回了有效记录
+        noData: 0    // 返回空数组(无记录)
+    };
 
-    for (const id of decodedIds) {
+    const promises = decodedIds.map(async (id) => {
         const idMask = id.substring(0, 4) + "****" + id.substring(id.length - 4);
-        
-        // 创建 Promise 但不等待它完成（立即推入数组）
-        const p = (async () => {
-            try {
-                const res = await axios.post(CONFIG.query.queryUrl, {
-                    visitorIdNo: id,
-                    regPerson: CONFIG.query.regPerson,
-                    acToken: CONFIG.query.acToken
-                });
-                
-                if (res.data.code === 200 && res.data.data) {
-                    let maxEnd = 0;
+        let maxEnd = 0;
+        let isSuccess = false;
+        let hasRecord = false;
+
+        try {
+            const res = await axios.post(CONFIG.query.queryUrl, {
+                visitorIdNo: id,
+                regPerson: CONFIG.query.regPerson,
+                acToken: CONFIG.query.acToken
+            });
+            
+            if (res.data.code === 200) {
+                isSuccess = true;
+                if (res.data.data && res.data.data.length > 0) {
+                    hasRecord = true;
                     res.data.data.forEach(record => {
                         const end = parseInt(record.dateEnd || record.rangeEnd);
                         if (end > maxEnd) maxEnd = end;
                     });
-                    statuses[id] = maxEnd;
                     console.log(`   [${idMask}] 最新记录结束时间: ${getFormattedDate(maxEnd)}`);
                 } else {
-                    console.log(`   [${idMask}] 无记录或查询失败`);
-                    statuses[id] = 0;
+                    console.log(`   [${idMask}] 无有效记录 (Empty Data)`);
                 }
-            } catch (e) {
-                console.error(`   [${idMask}] 查询出错: ${e.message}`);
-                statuses[id] = 0;
+            } else {
+                console.error(`   [${idMask}] API错误: Code ${res.data.code}`);
             }
-        })();
-        
-        promises.push(p);
-        await delay(50);
-    }
+        } catch (e) {
+            console.error(`   [${idMask}] 网络/请求出错: ${e.message}`);
+        }
+
+        // 更新统计
+        if (isSuccess) {
+            stats.success++;
+            if (hasRecord) stats.hasData++;
+            else stats.noData++;
+        } else {
+            stats.error++;
+        }
+
+        // 无论成功失败，返回结果供映射
+        return { id, maxEnd };
+    });
+
+    // 等待所有查询完成
+    const results = await Promise.all(promises);
     
-    await Promise.all(promises);
-    return statuses;
+    // 构建映射表
+    results.forEach(r => {
+        statusMap[r.id] = r.maxEnd;
+    });
+
+    console.log("📊 查询统计:", JSON.stringify(stats));
+    return { statusMap, stats };
+};
+
+/**
+ * 核心逻辑：安全检查
+ * 判断是否应该继续执行发包逻辑
+ */
+const checkSafeToRun = (stats) => {
+    // 规则 1: 任何网络错误或API错误 -> 终止
+    if (stats.error > 0) {
+        return { safe: false, reason: `查询接口报错 (Error Count: ${stats.error})，可能接口已挂或网络波动。` };
+    }
+
+    // 规则 2: 所有查询成功，但全部无记录 -> 终止 (极有可能是 Cookie 失效或接口格式变更)
+    if (stats.total > 0 && stats.hasData === 0) {
+        return { safe: false, reason: "严重警告：所有人员均无记录！(可能 Cookie 失效或 API 结构变更)" };
+    }
+
+    // 规则 3: 多数无记录 (超过50%) -> 终止 (防止将老员工误判为新员工进行重置)
+    if (stats.noData > (stats.total / 2)) {
+        return { safe: false, reason: `异常警告：超过半数人员无记录 (${stats.noData}/${stats.total})，疑似数据源异常。` };
+    }
+
+    return { safe: true, reason: "状态正常" };
 };
 
 // 2. 构造并发送申请
@@ -464,7 +520,11 @@ const calculatePlan = (idStatusMap) => {
 router.get('/debug', async (req, res) => {
     try {
         // 1. 获取真实状态并计算
-        const realStatusMap = await getAllStatuses();
+        const { statusMap: realStatusMap, stats } = await getAllStatuses();
+        
+        // 运行安全检查
+        const safetyCheck = checkSafeToRun(stats);
+
         const realPlan = calculatePlan(realStatusMap);
 
         // 2. 生成模拟状态（假设所有人都没有记录/已过期）
@@ -475,13 +535,18 @@ router.get('/debug', async (req, res) => {
         });
         const simulatedPlan = calculatePlan(simulatedStatusMap);
 
+        // 安全检查的 HTML 徽章
+        const safetyBadge = safetyCheck.safe 
+            ? `<span style="background:#ecfdf5; color:#059669; padding:5px 10px; border-radius:4px; border:1px solid #a7f3d0;">✅ 安全 (Ready to Send)</span>`
+            : `<span style="background:#fef2f2; color:#dc2626; padding:5px 10px; border-radius:4px; border:1px solid #fecaca;">❌ 熔断 (BLOCKED)</span>`;
+
         const html = `
         <!DOCTYPE html>
         <html>
         <head>
             <meta charset="utf-8">
             <meta name="viewport" content="width=device-width, initial-scale=1">
-            <title>申请插件调试面板 (Smart Sync)</title>
+            <title>申请插件调试面板 (Safe Mode)</title>
             <style>
                 body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background: #f0f2f5; padding: 20px; color: #333; }
                 .container { max-width: 1100px; margin: 0 auto; }
@@ -518,6 +583,7 @@ router.get('/debug', async (req, res) => {
                 details > summary::marker { display: none; }
                 
                 .sim-banner { background: #e0f2fe; color: #0369a1; padding: 15px; border-radius: 8px; margin-bottom: 20px; font-weight: 500; border: 1px solid #bae6fd; }
+                .error-banner { background: #fee2e2; color: #991b1b; padding: 15px; border-radius: 8px; margin-bottom: 20px; font-weight: bold; border: 1px solid #fca5a5; }
                 .tag-real { background: #dbeafe; color: #1e40af; padding: 2px 6px; border-radius: 4px; font-size: 0.7rem; margin-right: 5px; }
                 .tag-sim { background: #f3e8ff; color: #6b21a8; padding: 2px 6px; border-radius: 4px; font-size: 0.7rem; margin-right: 5px; }
             </style>
@@ -536,8 +602,17 @@ router.get('/debug', async (req, res) => {
                 <h1>🔧 申请插件高级调试面板</h1>
 
                 <div class="card">
-                    <h2><span class="tag-real">LIVE</span> 实时状态概览</h2>
-                    <p style="color:#666; font-size: 0.9rem; margin-bottom: 15px;">基于从服务器查询到的最新数据。</p>
+                    <h2>
+                        <span class="tag-real">LIVE</span> 实时状态概览 
+                        <div style="margin-left:auto; font-size:1rem;">${safetyBadge}</div>
+                    </h2>
+                    
+                    ${!safetyCheck.safe ? `<div class="error-banner">⛔ 系统已熔断，原因：${safetyCheck.reason}</div>` : ''}
+
+                    <p style="color:#666; font-size: 0.9rem; margin-bottom: 15px;">
+                        查询统计: 总数 ${stats.total} | 成功 ${stats.success} | 错误 ${stats.error} | 有记录 ${stats.hasData} | 无记录 ${stats.noData}
+                    </p>
+
                     <table>
                         <thead>
                             <tr>
@@ -628,10 +703,24 @@ router.get('/auto-renew', async (req, res) => {
     const results = [];
     
     try {
-        log("=== 🚀 开始自动续期流程 (Smart Catch-up Fixed) ===");
+        log("=== 🚀 开始自动续期流程 (Smart Catch-up with Safety Lock) ===");
         
-        const idStatusMap = await getAllStatuses();
-        const plan = calculatePlan(idStatusMap);
+        // 1. 获取状态 & 统计
+        const { statusMap, stats } = await getAllStatuses();
+        
+        // 2. 执行安全熔断检查
+        const safetyCheck = checkSafeToRun(stats);
+        if (!safetyCheck.safe) {
+            log(`⛔ [严重] 安全熔断触发，终止执行！`);
+            log(`❌ 原因: ${safetyCheck.reason}`);
+            log(`📊 统计: 总数 ${stats.total}, 报错 ${stats.error}, 无记录 ${stats.noData}`);
+            
+            res.type('text/plain').send(`❌ ABORTED: ${safetyCheck.reason}\n\nSee logs for details:\n` + logs.join('\n'));
+            return;
+        }
+
+        // 3. 计算计划
+        const plan = calculatePlan(statusMap);
         
         if (plan.requests.length === 0) {
             log("✨ 所有人员状态正常，无需续期。");
@@ -641,6 +730,7 @@ router.get('/auto-renew', async (req, res) => {
 
         log(`📝 计划生成完成，共 ${plan.requests.length} 个请求包，开始执行...`);
 
+        // 4. 执行计划
         for (const reqTask of plan.requests) {
             // 串行执行以保证顺序和日志清晰
             const result = await submitApplication(reqTask.ts, reqTask.ids);
