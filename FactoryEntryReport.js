@@ -1,7 +1,7 @@
 /**
  * FactoryEntryReport.js
- * 自动续期入厂申请脚本 (智能追赶修正版)
- * 修正：无记录或过期用户强制从“今天”开始申请，避免漏掉今天或申请过去无效日期。
+ * 自动续期入厂申请脚本 (智能追赶 + 模拟调试版)
+ * 更新：Debug界面美化、增加全员模拟续期功能、日志优化。
  */
 
 const express = require('express');
@@ -248,7 +248,7 @@ const submitApplication = async (groupDateTs, personIds) => {
         }
     });
 
-    if (tableRows.length === 0) return;
+    if (tableRows.length === 0) return null;
 
     // 组合完整表单
     const tableField = {
@@ -283,6 +283,8 @@ const submitApplication = async (groupDateTs, personIds) => {
     
     // 发送请求
     const targetDateStr = getFormattedDate(groupDateTs);
+    const maskedNames = names.map(n => n.length > 1 ? n[0] + "*" + n.substring(2) : n).join(",");
+    
     console.log(`🚀 正在为 [${names.join(', ')}] 提交申请 -> 日期: ${targetDateStr}`);
 
     try {
@@ -292,11 +294,14 @@ const submitApplication = async (groupDateTs, personIds) => {
         if (res.data && res.data.success === true) {
             const formInstId = res.data.content ? res.data.content.formInstId : "未知ID";
             console.log(`✅ [${targetDateStr}] 申请成功! 实例ID: ${formInstId}`);
+            return { success: true, date: targetDateStr, names: names.join(" "), id: formInstId };
         } else {
             console.log(`❌ [${targetDateStr}] 申请可能失败:`, JSON.stringify(res.data).substring(0, 100));
+            return { success: false, date: targetDateStr, names: names.join(" "), msg: "API返回失败" };
         }
     } catch (e) {
         console.error(`❌ [${targetDateStr}] 请求网络错误: ${e.message}`);
+        return { success: false, date: targetDateStr, names: names.join(" "), msg: e.message };
     }
 };
 
@@ -306,8 +311,6 @@ const submitApplication = async (groupDateTs, personIds) => {
  */
 const calculatePlan = (idStatusMap) => {
     const nowMs = Date.now();
-    // 计算北京时间“今天”的0点时间戳，确保比较基准一致
-    // 逻辑：当前时间+8小时 -> 取UTC的0点 -> 再减去8小时
     const todayObj = new Date(nowMs + 28800000);
     todayObj.setUTCHours(0, 0, 0, 0);
     const todayStartTs = todayObj.getTime() - 28800000;
@@ -333,9 +336,9 @@ const calculatePlan = (idStatusMap) => {
 
         // 计算下一次起始时间
         if (lastDateTs === 0) {
-            // 【修正1】无记录的新用户，从“今天”开始申请，而不是明天
-            lastDayId = todayId; // 视为今天到期（逻辑上）
-            nextStartTs = todayStartTs; // 下次开始：今天
+            // 【修正1】无记录的新用户，从“今天”开始申请
+            lastDayId = todayId; 
+            nextStartTs = todayStartTs; 
             formattedLastDate = "新用户/无记录";
         } else {
             lastDayId = getBeijingDayId(lastDateTs);
@@ -388,21 +391,16 @@ const calculatePlan = (idStatusMap) => {
     // 2. 生成计划：追赶 + 齐射
     const minNextStartTs = Math.min(...validUsers.map(u => u.nextStartTs));
     
-    // 【修正2】循环游标必须从“今天”开始，防止申请过去的时间。
-    // 如果某人 nextStartTs 是前天（过期），这里取 Math.max(前天, 今天) = 今天。
-    // 这样下面的 filter 判断 (前天 <= 今天) 依然成立，该人会直接加入今天的申请包。
+    // 【修正2】循环游标必须从“今天”开始
     let cursorTs = Math.max(minNextStartTs, todayStartTs);
     
     // 结束时间是 基准线 + 6天 (共7天齐射)
-    // 如果 maxNextStartTs 小于今天（全员过期），则以今天为基准往后推
     const effectiveMaxStart = Math.max(maxNextStartTs, todayStartTs);
     const endTs = effectiveMaxStart + (6 * 86400000); 
 
     let dayCount = 1;
 
     while (cursorTs <= endTs) {
-        // 找出今天需要申请的人
-        // 规则：用户的 nextStartTs <= cursorTs 即表示“应该已开始”
         const todaysGroup = validUsers
             .filter(u => u.nextStartTs <= cursorTs)
             .map(u => u.id);
@@ -456,18 +454,26 @@ const calculatePlan = (idStatusMap) => {
             }
         }
 
-        // 加一天
         cursorTs += 86400000;
     }
 
     return { summary, requests };
 };
 
-// --- 调试接口 (仅生成数据，不发送请求) ---
+// --- 调试接口 (包含实际状态分析和全员失效模拟) ---
 router.get('/debug', async (req, res) => {
     try {
-        const idStatusMap = await getAllStatuses();
-        const plan = calculatePlan(idStatusMap);
+        // 1. 获取真实状态并计算
+        const realStatusMap = await getAllStatuses();
+        const realPlan = calculatePlan(realStatusMap);
+
+        // 2. 生成模拟状态（假设所有人都没有记录/已过期）
+        const simulatedStatusMap = {};
+        CONFIG.query.visitorIdNos.forEach(idBase64 => {
+             // 模拟状态：0 表示无记录，强制从今天开始申请
+             simulatedStatusMap[decode(idBase64)] = 0;
+        });
+        const simulatedPlan = calculatePlan(simulatedStatusMap);
 
         const html = `
         <!DOCTYPE html>
@@ -477,86 +483,97 @@ router.get('/debug', async (req, res) => {
             <meta name="viewport" content="width=device-width, initial-scale=1">
             <title>申请插件调试面板 (Smart Sync)</title>
             <style>
-                body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background: #f5f7fa; padding: 20px; color: #333; }
-                .container { max-width: 1000px; margin: 0 auto; background: #fff; padding: 30px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
-                h1 { border-bottom: 2px solid #eaeaea; padding-bottom: 10px; margin-bottom: 20px; color: #1a1a1a; }
-                h2 { margin-top: 30px; color: #444; font-size: 1.2rem; }
-                table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
-                th, td { text-align: left; padding: 12px; border-bottom: 1px solid #eee; }
-                th { background: #fafafa; font-weight: 600; color: #666; }
-                .status-badge { padding: 4px 8px; border-radius: 4px; font-size: 0.85rem; font-weight: 500; }
-                .expired { background: #ffebee; color: #c62828; }
-                .warning { background: #fff8e1; color: #f57f17; }
-                .success { background: #e8f5e9; color: #2e7d32; }
-                .request-card { border: 1px solid #e1e4e8; border-radius: 8px; margin-bottom: 15px; overflow: hidden; }
-                .card-header { background: #f6f8fa; padding: 10px 15px; border-bottom: 1px solid #e1e4e8; display: flex; justify-content: space-between; align-items: center; }
-                .card-header strong { color: #24292e; }
-                .card-header span { font-size: 0.9rem; color: #586069; }
-                details { padding: 0; }
-                summary { padding: 10px 15px; cursor: pointer; background: #fff; list-style: none; font-weight: 500; color: #0366d6; outline: none; }
-                summary:hover { background: #fbfbfc; }
-                summary::-webkit-details-marker { display: none; }
-                summary::before { content: '▶'; display: inline-block; margin-right: 8px; font-size: 0.8rem; transition: transform 0.2s; }
-                details[open] summary::before { transform: rotate(90deg); }
-                .code-block { background: #282c34; color: #abb2bf; padding: 15px; overflow-x: auto; font-family: Consolas, Monaco, monospace; font-size: 0.85rem; margin: 0; white-space: pre-wrap; word-break: break-all; }
+                body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background: #f0f2f5; padding: 20px; color: #333; }
+                .container { max-width: 1100px; margin: 0 auto; }
+                .card { background: #fff; padding: 25px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); margin-bottom: 25px; }
+                
+                h1 { margin: 0 0 20px 0; color: #1f2937; font-size: 1.5rem; border-left: 5px solid #3b82f6; padding-left: 15px; }
+                h2 { margin-top: 0; color: #4b5563; font-size: 1.2rem; display: flex; align-items: center; gap: 10px; }
+                
+                table { width: 100%; border-collapse: separate; border-spacing: 0; margin-bottom: 20px; border: 1px solid #e5e7eb; border-radius: 8px; overflow: hidden; }
+                th, td { text-align: left; padding: 12px 15px; border-bottom: 1px solid #e5e7eb; }
+                th { background: #f9fafb; font-weight: 600; color: #6b7280; font-size: 0.9rem; }
+                tr:last-child td { border-bottom: none; }
+                
+                .status-badge { padding: 4px 10px; border-radius: 99px; font-size: 0.8rem; font-weight: 600; }
+                .expired { background: #fef2f2; color: #dc2626; border: 1px solid #fecaca; }
+                .warning { background: #fffbeb; color: #d97706; border: 1px solid #fde68a; }
+                .success { background: #ecfdf5; color: #059669; border: 1px solid #a7f3d0; }
+                
+                .request-item { background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 8px; margin-bottom: 12px; overflow: hidden; }
+                .req-header { padding: 12px 15px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; user-select: none; }
+                .req-header:hover { background: #f3f4f6; }
+                .req-header strong { color: #111827; }
+                .req-header span { color: #6b7280; font-size: 0.9rem; }
+                
+                .code-container { border-top: 1px solid #e5e7eb; background: #282c34; padding: 15px; position: relative; }
+                .code-block { color: #abb2bf; font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace; font-size: 0.85rem; margin: 0; white-space: pre-wrap; word-break: break-all; }
                 .json-block { color: #98c379; }
                 .url-block { color: #61afef; }
-                .empty-tip { text-align: center; padding: 40px; color: #999; background: #fafafa; border-radius: 8px; border: 1px dashed #ddd; }
+                
+                .copy-btn { position: absolute; top: 10px; right: 10px; background: rgba(255,255,255,0.1); color: #fff; border: 1px solid rgba(255,255,255,0.2); padding: 5px 10px; border-radius: 4px; cursor: pointer; font-size: 0.75rem; transition: background 0.2s; }
+                .copy-btn:hover { background: rgba(255,255,255,0.2); }
+                
+                details > summary { list-style: none; }
+                details > summary::marker { display: none; }
+                
+                .sim-banner { background: #e0f2fe; color: #0369a1; padding: 15px; border-radius: 8px; margin-bottom: 20px; font-weight: 500; border: 1px solid #bae6fd; }
+                .tag-real { background: #dbeafe; color: #1e40af; padding: 2px 6px; border-radius: 4px; font-size: 0.7rem; margin-right: 5px; }
+                .tag-sim { background: #f3e8ff; color: #6b21a8; padding: 2px 6px; border-radius: 4px; font-size: 0.7rem; margin-right: 5px; }
             </style>
+            <script>
+                function copyText(btn, text) {
+                    navigator.clipboard.writeText(text).then(() => {
+                        const original = btn.innerText;
+                        btn.innerText = 'Copied!';
+                        setTimeout(() => btn.innerText = original, 2000);
+                    });
+                }
+            </script>
         </head>
         <body>
             <div class="container">
-                <h1>🐞 Debug 调试面板 (智能追赶修正模式)</h1>
-                <p style="color: #666; margin-bottom: 20px;">
-                    <strong>策略说明：</strong> 过期或无记录用户强制从今天开始申请，直到追平最晚日期，随后所有人合并齐射。
-                </p>
+                <h1>🔧 申请插件高级调试面板</h1>
 
-                <h2>👥 1. 人员状态概览</h2>
-                <table>
-                    <thead>
-                        <tr>
-                            <th>姓名</th>
-                            <th>ID (Masked)</th>
-                            <th>最新有效日期</th>
-                            <th>当前状态</th>
-                            <th>操作</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        ${plan.summary.map(item => `
-                        <tr>
-                            <td><strong>${item.name}</strong></td>
-                            <td>${item.idMask}</td>
-                            <td>${item.lastDate}</td>
-                            <td><span class="status-badge ${item.class}">${item.status}</span></td>
-                            <td>${item.renew ? '⚪ 待请求' : '✅ 跳过'}</td>
-                        </tr>
-                        `).join('')}
-                    </tbody>
-                </table>
+                <div class="card">
+                    <h2><span class="tag-real">LIVE</span> 实时状态概览</h2>
+                    <p style="color:#666; font-size: 0.9rem; margin-bottom: 15px;">基于从服务器查询到的最新数据。</p>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>姓名</th>
+                                <th>ID (Masked)</th>
+                                <th>最新有效日期</th>
+                                <th>状态</th>
+                                <th>操作</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${realPlan.summary.map(item => `
+                            <tr>
+                                <td><strong>${item.name}</strong></td>
+                                <td>${item.idMask}</td>
+                                <td>${item.lastDate}</td>
+                                <td><span class="status-badge ${item.class}">${item.status}</span></td>
+                                <td>${item.renew ? '🔴 待续期' : '⚪ 跳过'}</td>
+                            </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                    
+                    <h3>待发送队列 (${realPlan.requests.length})</h3>
+                    ${renderRequests(realPlan.requests)}
+                </div>
 
-                <h2>📦 2. 待发送数据包模拟 (${plan.requests.length} 个请求)</h2>
-                ${plan.requests.length === 0 ? 
-                    '<div class="empty-tip">✨ 当前没有人员需要续期，因此没有生成数据包。</div>' : 
-                    plan.requests.map(req => `
-                    <div class="request-card">
-                        <div class="card-header">
-                            <strong>[Day ${req.dayIndex}] 申请日期: ${req.targetDate}</strong>
-                            <span>包含人员: ${req.people}</span>
-                        </div>
-                        
-                        <details>
-                            <summary>查看原始 JSON 数据 (Human Readable)</summary>
-                            <pre class="code-block json-block">${req.rawJson}</pre>
-                        </details>
-                        
-                        <details>
-                            <summary>查看 URL 编码发送体 (Ready to Send)</summary>
-                            <pre class="code-block url-block">${req.encodedBody}</pre>
-                        </details>
+                <div class="card" style="border-top: 4px solid #9333ea;">
+                    <h2><span class="tag-sim">SIMULATION</span> 全员强制续期模拟 (假设无记录)</h2>
+                    <div class="sim-banner">
+                        💡 场景说明：假设数据库中所有人员记录丢失或过期，系统将从“今天”开始生成完整补齐计划。此数据仅用于测试，不会发送。
                     </div>
-                    `).join('')
-                }
+                    
+                    <h3>生成的模拟数据包 (${simulatedPlan.requests.length})</h3>
+                    ${renderRequests(simulatedPlan.requests)}
+                </div>
             </div>
         </body>
         </html>
@@ -570,48 +587,83 @@ router.get('/debug', async (req, res) => {
     }
 });
 
+// 辅助渲染函数
+function renderRequests(requests) {
+    if (requests.length === 0) return '<div style="padding:20px; text-align:center; color:#999; border:1px dashed #ddd; border-radius:8px;">暂无数据包生成</div>';
+    
+    return requests.map(req => `
+    <div class="request-item">
+        <details>
+            <summary class="req-header">
+                <div>
+                    <strong>[Day ${req.dayIndex}] ${req.targetDate}</strong>
+                    <span style="margin-left:10px;">👥 ${req.people}</span>
+                </div>
+                <span>▼ 展开详情</span>
+            </summary>
+            
+            <div class="code-container">
+                <button class="copy-btn" onclick='copyText(this, ${JSON.stringify(req.rawJson)})'>Copy JSON</button>
+                <div style="margin-bottom:5px; font-weight:bold; color:#fff;">原始 JSON:</div>
+                <pre class="code-block json-block">${req.rawJson}</pre>
+            </div>
+            
+            <div class="code-container" style="border-top:1px solid #444;">
+                <button class="copy-btn" onclick='copyText(this, "${req.encodedBody}")'>Copy Encoded</button>
+                <div style="margin-bottom:5px; font-weight:bold; color:#fff;">URL Encoded Body (Ready to Send):</div>
+                <pre class="code-block url-block">${req.encodedBody}</pre>
+            </div>
+        </details>
+    </div>
+    `).join('');
+}
+
 // --- 主逻辑路由 ---
 router.get('/auto-renew', async (req, res) => {
     const logs = [];
+    // 简单的内存日志
     const log = (msg) => { console.log(msg); logs.push(msg); };
     
+    // 结构化结果数组
+    const results = [];
+    
     try {
-        log("=== 开始自动续期流程 (Smart Catch-up Fixed) ===");
+        log("=== 🚀 开始自动续期流程 (Smart Catch-up Fixed) ===");
         
         const idStatusMap = await getAllStatuses();
         const plan = calculatePlan(idStatusMap);
         
-        plan.summary.forEach(s => {
-            if (s.renew) {
-                log(`⚡ 人员 [${s.name}] 需要续期 (最后日期: ${s.lastDate})`);
-            } else {
-                log(`⚪ 人员 [${s.name}] 暂无需续期`);
-            }
-        });
-
         if (plan.requests.length === 0) {
-            log("✨ 没有需要续期的人员。");
-            res.send(logs.join('\n'));
+            log("✨ 所有人员状态正常，无需续期。");
+            res.type('text/plain').send("✅ Status OK: No renewal needed.\n\n" + logs.join('\n'));
             return;
         }
 
         log(`📝 计划生成完成，共 ${plan.requests.length} 个请求包，开始执行...`);
 
-        const promises = [];
         for (const reqTask of plan.requests) {
-            const p = (async () => {
-                await submitApplication(reqTask.ts, reqTask.ids);
-            })();
-            promises.push(p);
-            await delay(50);
+            // 串行执行以保证顺序和日志清晰
+            const result = await submitApplication(reqTask.ts, reqTask.ids);
+            if (result) results.push(result);
+            // 稍微长一点的延迟防止并发过快
+            await delay(1000); 
         }
 
-        log(`🚀 已启动 ${promises.length} 个提交任务，正在等待服务器响应...`);
+        log("=== 🏁 流程结束 ===");
         
-        await Promise.all(promises);
+        // 构造漂亮的返回报告
+        let report = "📊 自动续期执行报告\n========================\n";
+        results.forEach((r, idx) => {
+            const icon = r.success ? "✅" : "❌";
+            report += `${icon} [Batch ${idx+1}] 日期: ${r.date}\n`;
+            report += `    人员: ${r.names}\n`;
+            report += `    状态: ${r.success ? "成功 (" + r.id + ")" : "失败 (" + r.msg + ")"}\n`;
+            report += "------------------------\n";
+        });
+        
+        report += "\n🔍 系统日志:\n" + logs.join('\n');
 
-        log("=== 流程结束 ===");
-        res.send(logs.join('\n'));
+        res.type('text/plain').send(report);
 
     } catch (err) {
         console.error(err);
