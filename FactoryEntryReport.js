@@ -736,7 +736,7 @@ router.get('/auto-renew', async (req, res) => {
             const result = await submitApplication(reqTask.ts, reqTask.ids);
             if (result) results.push(result);
             // 稍微长一点的延迟防止并发过快
-            await delay(1000); 
+            await delay(50); 
         }
 
         log("=== 🏁 流程结束 ===");
