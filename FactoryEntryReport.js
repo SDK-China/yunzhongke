@@ -1,9 +1,11 @@
 /**
  * FactoryEntryReport.js
- * 自动续期入厂申请脚本 (智能追赶 + 安全熔断版)
- * 更新：
- * 1. 增加安全熔断机制：查询报错、全无记录、多数无记录时自动终止，防止乱发包。
- * 2. 优化日志输出，明确失败原因。
+ * 自动续期入厂申请脚本 (智能对齐 + 错峰查询 + 移动端适配UI + 熔断UI修正版)
+ * * 更新日志：
+ * 1. [逻辑] 实现 "短板补齐"：落后者优先追赶团队最晚日期，整体过期才统一续期。
+ * 2. [安全] 查询接口增加 50ms 错峰延迟。
+ * 3. [UI] 调试界面适配手机，增加 JSON/Encoded 分栏展示。
+ * 4. [修复] 熔断时彻底隐藏待发送队列，防止用户误解，增加醒目拦截提示。
  */
 
 const express = require('express');
@@ -79,7 +81,7 @@ const PERSON_DB = {
         {"componentName":"TextField","fieldId":"textField_lxv44ory","label":"证件号码","fieldData":{"value": decode("MTMwMzIyMTk4ODA2MjQyMDE4")}},
         {"componentName":"TextField","fieldId":"textField_lxv44orw","label":"姓名","fieldData":{"value": decode("5byg5by6")}},
         {"componentName":"SelectField","fieldId":"selectField_mbyjhot6","label":"区号","fieldData":{"value":"86","text":"+86"},"options":[{"defaultChecked":true,"syncLabelValue":false,"__sid":"item_megqe4lm","text":"+86","__sid__":"serial_megqe4ll","value":"86","sid":"serial_mbyjf8gm"}]},
-        {"componentName":"TextField","fieldId":"textField_lxv44orz","label":"联系方式","fieldData":{"value": decode("MTc3MzM1MzIwNTc=")}},
+        {"componentName":"TextField","fieldId":"textField_lxv44orz","label":"联系方式","fieldData":{"value": decode("MTc3MzM1MzIwNTc=") }},
         {"componentName":"ImageField","fieldId":"imageField_ly9i5k5q","label":"免冠照片","fieldData":{"value":[{"name":"mmexport1759201649607.jpg","previewUrl":"https://dingtalk.avaryholding.com:8443/dingplus/image/20250930/2e36796d55df6570b30814673dd79c7d.jpg","downloadUrl":"https://dingtalk.avaryholding.com:8443/dingplus/image/20250930/2e36796d55df6570b30814673dd79c7d.jpg","size":64695,"url":"https://dingtalk.avaryholding.com:8443/dingplus/image/20250930/2e36796d55df6570b30814673dd79c7d.jpg"}]}},
         {"componentName":"AttachmentField","fieldId":"attachmentField_lxv44osj","label":"身份证照片","fieldData":{"value":[{"name":"mmexport1759201639327.jpg","previewUrl":"/o/GNC66E91ZR7ZFLTH8OFEP46CB9JG3EUHDF6GMOB?appType=APP_GRVPTEOQ6D4B7FLZFYNJ&fileName=APP_GRVPTEOQ6D4B7FLZFYNJ_R05DNjZFOTFaUjdaRkxUSDhPRkVQNDZDQjlKRzNFVUhERjZHTU5C.jpg&instId=&type=open&process=image/resize,m_fill,w_200,h_200,limit_0/quality,q_80","downloadUrl":"/o/GNC66E91ZR7ZFLTH8OFEP46CB9JG3EUHDF6GMOB?appType=APP_GRVPTEOQ6D4B7FLZFYNJ&fileName=APP_GRVPTEOQ6D4B7FLZFYNJ_R05DNjZFOTFaUjdaRkxUSDhPRkVQNDZDQjlKRzNFVUhERjZHTU5C.jpg&instId=&type=download","size":531330,"url":"/o/GNC66E91ZR7ZFLTH8OFEP46CB9JG3EUHDF6GMOB?appType=APP_GRVPTEOQ6D4B7FLZFYNJ&fileName=APP_GRVPTEOQ6D4B7FLZFYNJ_R05DNjZFOTFaUjdaRkxUSDhPRkVQNDZDQjlKRzNFVUhERjZHTU5C.jpg&instId=&type=download","fileUuid":"APP_GRVPTEOQ6D4B7FLZFYNJ_R05DNjZFOTFaUjdaRkxUSDhPRkVQNDZDQjlKRzNFVUhERjZHTU5C.jpg"}]}},
         {"componentName":"AttachmentField","fieldId":"attachmentField_lxv44osk","label":"社保/在职证明","fieldData":{"value":[{"name":"mmexport1759201655801.jpg","previewUrl":"/o/LLF66FD1VJ8ZU56HEFRI4BPWPUBG22DMDF6GMO4?appType=APP_GRVPTEOQ6D4B7FLZFYNJ&fileName=APP_GRVPTEOQ6D4B7FLZFYNJ_TExGNjZGRDFWSjhaVTU2SEVGUkk0QlBXUFVCRzIyRE1ERjZHTU40.jpg&instId=&type=open&process=image/resize,m_fill,w_200,h_200,limit_0/quality,q_80","downloadUrl":"/o/LLF66FD1VJ8ZU56HEFRI4BPWPUBG22DMDF6GMO4?appType=APP_GRVPTEOQ6D4B7FLZFYNJ&fileName=APP_GRVPTEOQ6D4B7FLZFYNJ_TExGNjZGRDFWSjhaVTU2SEVGUkk0QlBXUFVCRzIyRE1ERjZHTU40.jpg&instId=&type=download","size":304370,"url":"/o/LLF66FD1VJ8ZU56HEFRI4BPWPUBG22DMDF6GMO4?appType=APP_GRVPTEOQ6D4B7FLZFYNJ&fileName=APP_GRVPTEOQ6D4B7FLZFYNJ_TExGNjZGRDFWSjhaVTU2SEVGUkk0QlBXUFVCRzIyRE1ERjZHTU40.jpg&instId=&type=download","fileUuid":"APP_GRVPTEOQ6D4B7FLZFYNJ_TExGNjZGRDFWSjhaVTU2SEVGUkk0QlBXUFVCRzIyRE1ERjZHTU40.jpg"}]}},
@@ -91,7 +93,7 @@ const PERSON_DB = {
         {"componentName":"TextField","fieldId":"textField_lxv44ory","label":"证件号码","fieldData":{"value": decode("MTMwNDI1MTk4OTA4MjkwMzE0")}},
         {"componentName":"TextField","fieldId":"textField_lxv44orw","label":"姓名","fieldData":{"value": decode("5aec5bu66b6Z")}},
         {"componentName":"SelectField","fieldId":"selectField_mbyjhot6","label":"区号","fieldData":{"value":"86","text":"+86"},"options":[{"defaultChecked":true,"syncLabelValue":false,"__sid":"item_megqe4lm","text":"+86","__sid__":"serial_megqe4ll","value":"86","sid":"serial_mbyjf8gm"}]},
-        {"componentName":"TextField","fieldId":"textField_lxv44orz","label":"联系方式","fieldData":{"value": decode("MTM2MjU0MjIzNDY=")}},
+        {"componentName":"TextField","fieldId":"textField_lxv44orz","label":"联系方式","fieldData":{"value": decode("MTM2MjU0MjIzNDY=") }},
         {"componentName":"ImageField","fieldId":"imageField_ly9i5k5q","label":"免冠照片","fieldData":{"value":[{"name":"mmexport1759201658197.jpg","previewUrl":"https://dingtalk.avaryholding.com:8443/dingplus/image/20250930/ec928e3f5759064c4e2e1bf9cfc30f14.jpg","downloadUrl":"https://dingtalk.avaryholding.com:8443/dingplus/image/20250930/ec928e3f5759064c4e2e1bf9cfc30f14.jpg","size":58436,"url":"https://dingtalk.avaryholding.com:8443/dingplus/image/20250930/ec928e3f5759064c4e2e1bf9cfc30f14.jpg"}]}},
         {"componentName":"AttachmentField","fieldId":"attachmentField_lxv44osj","label":"身份证照片","fieldData":{"value":[{"name":"mmexport1759201657241.jpg","previewUrl":"/o/U1B66W914K8ZZWUFFNE4PBZVZH2G28D8FF6GMV4?appType=APP_GRVPTEOQ6D4B7FLZFYNJ&fileName=APP_GRVPTEOQ6D4B7FLZFYNJ_VTFCNjZXOTE0SzhaWldVRkZORTRQQlpWWkgyRzI3RDhGRjZHTVU0.jpg&instId=&type=open&process=image/resize,m_fill,w_200,h_200,limit_0/quality,q_80","downloadUrl":"/o/U1B66W914K8ZZWUFFNE4PBZVZH2G28D8FF6GMV4?appType=APP_GRVPTEOQ6D4B7FLZFYNJ&fileName=APP_GRVPTEOQ6D4B7FLZFYNJ_VTFCNjZXOTE0SzhaWldVRkZORTRQQlpWWkgyRzI3RDhGRjZHTVU0.jpg&instId=&type=download","size":37638,"url":"/o/U1B66W914K8ZZWUFFNE4PBZVZH2G28D8FF6GMV4?appType=APP_GRVPTEOQ6D4B7FLZFYNJ&fileName=APP_GRVPTEOQ6D4B7FLZFYNJ_VTFCNjZXOTE0SzhaWldVRkZORTRQQlpWWkgyRzI3RDhGRjZHTVU0.jpg&instId=&type=download","fileUuid":"APP_GRVPTEOQ6D4B7FLZFYNJ_VTFCNjZXOTE0SzhaWldVRkZORTRQQlpWWkgyRzI3RDhGRjZHTVU0.jpg"}]}},
         {"componentName":"AttachmentField","fieldId":"attachmentField_lxv44osk","label":"社保/在职证明","fieldData":{"value":[{"name":"mmexport1759201655801.jpg","previewUrl":"/o/6AG66W814L8ZPWYU9EOKXB6NTR892OPBFF6GMQ5?appType=APP_GRVPTEOQ6D4B7FLZFYNJ&fileName=APP_GRVPTEOQ6D4B7FLZFYNJ_NkFHNjZXODE0TDhaUFdZVTlFT0tYQjZOVFI4OTJPUEJGRjZHTVA1.jpg&instId=&type=open&process=image/resize,m_fill,w_200,h_200,limit_0/quality,q_80","downloadUrl":"/o/6AG66W814L8ZPWYU9EOKXB6NTR892OPBFF6GMQ5?appType=APP_GRVPTEOQ6D4B7FLZFYNJ&fileName=APP_GRVPTEOQ6D4B7FLZFYNJ_NkFHNjZXODE0TDhaUFdZVTlFT0tYQjZOVFI4OTJPUEJGRjZHTVA1.jpg&instId=&type=download","size":304370,"url":"/o/6AG66W814L8ZPWYU9EOKXB6NTR892OPBFF6GMQ5?appType=APP_GRVPTEOQ6D4B7FLZFYNJ&fileName=APP_GRVPTEOQ6D4B7FLZFYNJ_NkFHNjZXODE0TDhaUFdZVTlFT0tYQjZOVFI4OTJPUEJGRjZHTVA1.jpg&instId=&type=download","fileUuid":"APP_GRVPTEOQ6D4B7FLZFYNJ_NkFHNjZXODE0TDhaUFdZVTlFT0tYQjZOVFI4OTJPUEJGRjZHTVA1.jpg"}]}},
@@ -103,7 +105,7 @@ const PERSON_DB = {
         {"componentName":"TextField","fieldId":"textField_lxv44ory","label":"证件号码","fieldData":{"value": decode("MjMwMjMwMjAwMzAxMDEyMTM1")}},
         {"componentName":"TextField","fieldId":"textField_lxv44orw","label":"姓名","fieldData":{"value": decode("5a2Z5b635Yev")}},
         {"componentName":"SelectField","fieldId":"selectField_mbyjhot6","label":"区号","fieldData":{"value":"86","text":"+86"},"options":[{"defaultChecked":true,"syncLabelValue":false,"__sid":"item_megqe4lm","text":"+86","__sid__":"serial_megqe4ll","value":"86","sid":"serial_mbyjf8gm"}]},
-        {"componentName":"TextField","fieldId":"textField_lxv44orz","label":"联系方式","fieldData":{"value": decode("MTc2MTQ2MjUxMTI=")}},
+        {"componentName":"TextField","fieldId":"textField_lxv44orz","label":"联系方式","fieldData":{"value": decode("MTc2MTQ2MjUxMTI=") }},
         {"componentName":"ImageField","fieldId":"imageField_ly9i5k5q","label":"免冠照片","fieldData":{"value":[{"name":"IMG20250729211344.jpg","previewUrl":"https://dingtalk.avaryholding.com:8443/dingplus/image/20250801/aa450e5d5330972eabce5ecbf019b577.jpg","downloadUrl":"https://dingtalk.avaryholding.com:8443/dingplus/image/20250801/aa450e5d5330972eabce5ecbf019b577.jpg","size":211900,"url":"https://dingtalk.avaryholding.com:8443/dingplus/image/20250801/aa450e5d5330972eabce5ecbf019b577.jpg"}]}},
         {"componentName":"AttachmentField","fieldId":"attachmentField_lxv44osj","label":"身份证照片","fieldData":{"value":[{"name":"mmexport1754011976476.jpg","previewUrl":"/o/MLF662B1O8JX9WDEEK8VLAGNM11H3JP5G5SDM1F?appType=APP_GRVPTEOQ6D4B7FLZFYNJ&fileName=APP_GRVPTEOQ6D4B7FLZFYNJ_TUxGNjYyQjFPOEpYOVdERUVLOFZMQUdOTTExSDNKUDVHNVNETTBG.jpg&instId=&type=open&process=image/resize,m_fill,w_200,h_200,limit_0/quality,q_80","downloadUrl":"/o/MLF662B1O8JX9WDEEK8VLAGNM11H3JP5G5SDM1F?appType=APP_GRVPTEOQ6D4B7FLZFYNJ&fileName=APP_GRVPTEOQ6D4B7FLZFYNJ_TUxGNjYyQjFPOEpYOVdERUVLOFZMQUdOTTExSDNKUDVHNVNETTBG.jpg&instId=&type=download","size":396211,"url":"/o/MLF662B1O8JX9WDEEK8VLAGNM11H3JP5G5SDM1F?appType=APP_GRVPTEOQ6D4B7FLZFYNJ&fileName=APP_GRVPTEOQ6D4B7FLZFYNJ_TUxGNjYyQjFPOEpYOVdERUVLOFZMQUdOTTExSDNKUDVHNVNETTBG.jpg&instId=&type=download","fileUuid":"APP_GRVPTEOQ6D4B7FLZFYNJ_TUxGNjYyQjFPOEpYOVdERUVLOFZMQUdOTTExSDNKUDVHNVNETTBG.jpg"},{"name":"mmexport1754011977805.jpg","previewUrl":"/o/EWE66Z916BJXCIPX9N5DOACQ111K3IS8G5SDM48?appType=APP_GRVPTEOQ6D4B7FLZFYNJ&fileName=APP_GRVPTEOQ6D4B7FLZFYNJ_RVdFNjZaOTE2QkpYQ0lQWDlONURPQUNRMTExSzNIUzhHNVNETTM4.jpg&instId=&type=open&process=image/resize,m_fill,w_200,h_200,limit_0/quality,q_80","downloadUrl":"/o/EWE66Z916BJXCIPX9N5DOACQ111K3IS8G5SDM48?appType=APP_GRVPTEOQ6D4B7FLZFYNJ&fileName=APP_GRVPTEOQ6D4B7FLZFYNJ_RVdFNjZaOTE2QkpYQ0lQWDlONURPQUNRMTExSzNIUzhHNVNETTM4.jpg&instId=&type=download","size":502357,"url":"/o/EWE66Z916BJXCIPX9N5DOACQ111K3IS8G5SDM48?appType=APP_GRVPTEOQ6D4B7FLZFYNJ&fileName=APP_GRVPTEOQ6D4B7FLZFYNJ_RVdFNjZaOTE2QkpYQ0lQWDlONURPQUNRMTExSzNIUzhHNVNETTM4.jpg&instId=&type=download","fileUuid":"APP_GRVPTEOQ6D4B7FLZFYNJ_RVdFNjZaOTE2QkpYQ0lQWDlONURPQUNRMTExSzNIUzhHNVNETTM4.jpg"}]}},
         {"componentName":"AttachmentField","fieldId":"attachmentField_lxv44osk","label":"社保/在职证明","fieldData":{"value":[{"name":"在职证明+-+孙德凯.pdf","previewUrl":"/dingtalk/mobile/APP_GRVPTEOQ6D4B7FLZFYNJ/inst/preview?appType=APP_GRVPTEOQ6D4B7FLZFYNJ&fileName=APP_GRVPTEOQ6D4B7FLZFYNJ_QjlDNjYwQzFNQkxYRDBOUzczVk1EN0pCTTJDUDM2Q0xINVNETUI0.pdf&fileSize=40638&downloadUrl=APP_GRVPTEOQ6D4B7FLZFYNJ_QjlDNjYwQzFNQkxYRDBOUzczVk1EN0pCTTJDUDM2Q0xINVNETUI0.pdf","downloadUrl":"/o/B9C660C1MBLXD0NS73VMD7JBM2CP37CLH5SDMC4?appType=APP_GRVPTEOQ6D4B7FLZFYNJ&fileName=APP_GRVPTEOQ6D4B7FLZFYNJ_QjlDNjYwQzFNQkxYRDBOUzczVk1EN0pCTTJDUDM2Q0xINVNETUI0.pdf&instId=&type=download","size":40638,"url":"/o/B9C660C1MBLXD0NS73VMD7JBM2CP37CLH5SDMC4?appType=APP_GRVPTEOQ6D4B7FLZFYNJ&fileName=APP_GRVPTEOQ6D4B7FLZFYNJ_QjlDNjYwQzFNQkxYRDBOUzczVk1EN0pCTTJDUDM2Q0xINVNETUI0.pdf&instId=&type=download","fileUuid":"APP_GRVPTEOQ6D4B7FLZFYNJ_QjlDNjYwQzFNQkxYRDBOUzczVk1EN0pCTTJDUDM2Q0xINVNETUI0.pdf"}]}},
@@ -115,7 +117,7 @@ const PERSON_DB = {
         {"componentName":"TextField","fieldId":"textField_lxv44ory","label":"证件号码","fieldData":{"value": decode("MTMxMTIxMTk4OTAxMDU1MDEx")}},
         {"componentName":"TextField","fieldId":"textField_lxv44orw","label":"姓名","fieldData":{"value": decode("546L6I+B")}},
         {"componentName":"SelectField","fieldId":"selectField_mbyjhot6","label":"区号","fieldData":{"value":"86","text":"+86"},"options":[{"defaultChecked":true,"syncLabelValue":false,"__sid":"item_megqe4lm","text":"+86","__sid__":"serial_megqe4ll","value":"86","sid":"serial_mbyjf8gm"}]},
-        {"componentName":"TextField","fieldId":"textField_lxv44orz","label":"联系方式","fieldData":{"value": decode("MTUzNjk2OTc2NTY=")}},
+        {"componentName":"TextField","fieldId":"textField_lxv44orz","label":"联系方式","fieldData":{"value": decode("MTUzNjk2OTc2NTY=") }},
         {"componentName":"ImageField","fieldId":"imageField_ly9i5k5q","label":"免冠照片","fieldData":{"value":[{"name":"mmexport1764079804080.jpg","previewUrl":"https://dingtalk.avaryholding.com:8443/dingplus/image/20251125/75283de0e118cb24adf4d5a0ed6bac6f.jpg","downloadUrl":"https://dingtalk.avaryholding.com:8443/dingplus/image/20251125/75283de0e118cb24adf4d5a0ed6bac6f.jpg","size":61062,"url":"https://dingtalk.avaryholding.com:8443/dingplus/image/20251125/75283de0e118cb24adf4d5a0ed6bac6f.jpg"}]}},
         {"componentName":"AttachmentField","fieldId":"attachmentField_lxv44osj","label":"身份证照片","fieldData":{"value":[{"name":"mmexport1764079249396.jpg","previewUrl":"/o/4UF66771OHS0AITWGDG6M7PX8ZY237GNKNEIM0D?appType=APP_GRVPTEOQ6D4B7FLZFYNJ&fileName=APP_GRVPTEOQ6D4B7FLZFYNJ_NFVGNjY3NzFPSFMwQUlUV0dERzZNN1BYOFpZMjM3R05LTkVJTVpD.jpg&instId=&type=open&process=image/resize,m_fill,w_200,h_200,limit_0/quality,q_80","downloadUrl":"/o/4UF66771OHS0AITWGDG6M7PX8ZY237GNKNEIM0D?appType=APP_GRVPTEOQ6D4B7FLZFYNJ&fileName=APP_GRVPTEOQ6D4B7FLZFYNJ_NFVGNjY3NzFPSFMwQUlUV0dERzZNN1BYOFpZMjM3R05LTkVJTVpD.jpg&instId=&type=download","size":173437,"url":"/o/4UF66771OHS0AITWGDG6M7PX8ZY237GNKNEIM0D?appType=APP_GRVPTEOQ6D4B7FLZFYNJ&fileName=APP_GRVPTEOQ6D4B7FLZFYNJ_NFVGNjY3NzFPSFMwQUlUV0dERzZNN1BYOFpZMjM3R05LTkVJTVpD.jpg&instId=&type=download","fileUuid":"APP_GRVPTEOQ6D4B7FLZFYNJ_NFVGNjY3NzFPSFMwQUlUV0dERzZNN1BYOFpZMjM3R05LTkVJTVpD.jpg"}]}},
         {"componentName":"AttachmentField","fieldId":"attachmentField_lxv44osk","label":"社保/在职证明","fieldData":{"value":[{"name":"在职证明.pdf","previewUrl":"/dingtalk/mobile/APP_GRVPTEOQ6D4B7FLZFYNJ/inst/preview?appType=APP_GRVPTEOQ6D4B7FLZFYNJ&fileName=APP_GRVPTEOQ6D4B7FLZFYNJ_TlNHNjZKQjFMSFcwMjAwQ0hRRFNNQ0oxTDlWODIyWlBLTkVJTUk0.pdf&fileSize=74505&downloadUrl=APP_GRVPTEOQ6D4B7FLZFYNJ_TlNHNjZKQjFMSFcwMjAwQ0hRRFNNQ0oxTDlWODIyWlBLTkVJTUk0.pdf","downloadUrl":"/o/NSG66JB1LHW0200CHQDSMCJ1L9V822ZPKNEIMJ4?appType=APP_GRVPTEOQ6D4B7FLZFYNJ&fileName=APP_GRVPTEOQ6D4B7FLZFYNJ_TlNHNjZKQjFMSFcwMjAwQ0hRRFNNQ0oxTDlWODIyWlBLTkVJTUk0.pdf&instId=&type=download","size":74505,"url":"/o/NSG66JB1LHW0200CHQDSMCJ1L9V822ZPKNEIMJ4?appType=APP_GRVPTEOQ6D4B7FLZFYNJ&fileName=APP_GRVPTEOQ6D4B7FLZFYNJ_TlNHNjZKQjFMSFcwMjAwQ0hRRFNNQ0oxTDlWODIyWlBLTkVJTUk0.pdf&instId=&type=download","fileUuid":"APP_GRVPTEOQ6D4B7FLZFYNJ_TlNHNjZKQjFMSFcwMjAwQ0hRRFNNQ0oxTDlWODIyWlBLTkVJTUk0.pdf"}]}},
@@ -127,7 +129,7 @@ const PERSON_DB = {
         {"componentName":"TextField","fieldId":"textField_lxv44ory","label":"证件号码","fieldData":{"value": decode("NDEwNDIzMTk4OTA3MjIxNTMw")}},
         {"componentName":"TextField","fieldId":"textField_lxv44orw","label":"姓名","fieldData":{"value": decode("55Sw5LmQ5LmQ")}},
         {"componentName":"SelectField","fieldId":"selectField_mbyjhot6","label":"区号","fieldData":{"value":"86","text":"+86"},"options":[{"defaultChecked":true,"syncLabelValue":false,"__sid":"item_megqe4lm","text":"+86","__sid__":"serial_megqe4ll","value":"86","sid":"serial_mbyjf8gm"}]},
-        {"componentName":"TextField","fieldId":"textField_lxv44orz","label":"联系方式","fieldData":{"value": decode("MTM3MzM3NzE2NjE=")}},
+        {"componentName":"TextField","fieldId":"textField_lxv44orz","label":"联系方式","fieldData":{"value": decode("MTM3MzM3NzE2NjE=") }},
         {"componentName":"ImageField","fieldId":"imageField_ly9i5k5q","label":"免冠照片","fieldData":{"value":[{"name":"mmexport1764077687246.jpg","previewUrl":"https://dingtalk.avaryholding.com:8443/dingplus/image/20251125/ce5e71ca5152f9308d11fa79274a2db4.jpg","downloadUrl":"https://dingtalk.avaryholding.com:8443/dingplus/image/20251125/ce5e71ca5152f9308d11fa79274a2db4.jpg","size":56562,"url":"https://dingtalk.avaryholding.com:8443/dingplus/image/20251125/ce5e71ca5152f9308d11fa79274a2db4.jpg"}]}},
         {"componentName":"AttachmentField","fieldId":"attachmentField_lxv44osj","label":"身份证照片","fieldData":{"value":[{"name":"mmexport1764077685696.jpg","previewUrl":"/o/JHC66Q81ACX0C1U5KH7TLBOPQLB83SQ8YMEIM52?appType=APP_GRVPTEOQ6D4B7FLZFYNJ&fileName=APP_GRVPTEOQ6D4B7FLZFYNJ_SkhDNjZRODFBQ1gwQzFVNUtIN1RMQk9QUUxCODNTUThZTUVJTTQy.jpg&instId=&type=open&process=image/resize,m_fill,w_200,h_200,limit_0/quality,q_80","downloadUrl":"/o/JHC66Q81ACX0C1U5KH7TLBOPQLB83SQ8YMEIM52?appType=APP_GRVPTEOQ6D4B7FLZFYNJ&fileName=APP_GRVPTEOQ6D4B7FLZFYNJ_SkhDNjZRODFBQ1gwQzFVNUtIN1RMQk9QUUxCODNTUThZTUVJTTQy.jpg&instId=&type=download","size":327697,"url":"/o/JHC66Q81ACX0C1U5KH7TLBOPQLB83SQ8YMEIM52?appType=APP_GRVPTEOQ6D4B7FLZFYNJ&fileName=APP_GRVPTEOQ6D4B7FLZFYNJ_SkhDNjZRODFBQ1gwQzFVNUtIN1RMQk9QUUxCODNTUThZTUVJTTQy.jpg&instId=&type=download","fileUuid":"APP_GRVPTEOQ6D4B7FLZFYNJ_SkhDNjZRODFBQ1gwQzFVNUtIN1RMQk9QUUxCODNTUThZTUVJTTQy.jpg"}]}},
         {"componentName":"AttachmentField","fieldId":"attachmentField_lxv44osk","label":"社保/在职证明","fieldData":{"value":[{"name":"mmexport1764077683551.jpg","previewUrl":"/o/R7C66W71JES0TS6GOMX304AK0SI23F2NZMEIMWL?appType=APP_GRVPTEOQ6D4B7FLZFYNJ&fileName=APP_GRVPTEOQ6D4B7FLZFYNJ_UjdDNjZXNzFKRVMwVFM2R09NWDMwNEFLMFNJMjNGMk5aTUVJTVZM.jpg&instId=&type=open&process=image/resize,m_fill,w_200,h_200,limit_0/quality,q_80","downloadUrl":"/o/R7C66W71JES0TS6GOMX304AK0SI23F2NZMEIMWL?appType=APP_GRVPTEOQ6D4B7FLZFYNJ&fileName=APP_GRVPTEOQ6D4B7FLZFYNJ_UjdDNjZXNzFKRVMwVFM2R09NWDMwNEFLMFNJMjNGMk5aTUVJTVZM.jpg&instId=&type=download","size":95823,"url":"/o/R7C66W71JES0TS6GOMX304AK0SI23F2NZMEIMWL?appType=APP_GRVPTEOQ6D4B7FLZFYNJ&fileName=APP_GRVPTEOQ6D4B7FLZFYNJ_UjdDNjZXNzFKRVMwVFM2R09NWDMwNEFLMFNJMjNGMk5aTUVJTVZM.jpg&instId=&type=download","fileUuid":"APP_GRVPTEOQ6D4B7FLZFYNJ_UjdDNjZXNzFKRVMwVFM2R09NWDMwNEFLMFNJMjNGMk5aTUVJTVZM.jpg"}]}},
@@ -140,7 +142,7 @@ const PERSON_DB = {
         {"componentName":"TextField","fieldId":"textField_lxv44ory","label":"证件号码","fieldData":{"value": decode("NDMyOTAxMTk4MjExMDUyMDE2")}},
         {"componentName":"TextField","fieldId":"textField_lxv44orw","label":"姓名","fieldData":{"value": decode("5YWw5paM")}},
         {"componentName":"SelectField","fieldId":"selectField_mbyjhot6","label":"区号","fieldData":{"value":"86","text":"+86"},"options":[{"defaultChecked":true,"syncLabelValue":false,"__sid":"item_megqe4lm","text":"+86","__sid__":"serial_megqe4ll","value":"86","sid":"serial_mbyjf8gm"}]},
-        {"componentName":"TextField","fieldId":"textField_lxv44orz","label":"联系方式","fieldData":{"value": decode("MTM4MTI5NTM1MzA=")}},
+        {"componentName":"TextField","fieldId":"textField_lxv44orz","label":"联系方式","fieldData":{"value": decode("MTM4MTI5NTM1MzA=") }},
         {"componentName":"ImageField","fieldId":"imageField_ly9i5k5q","label":"免冠照片","fieldData":{"value":[{"name":"1000010214.jpg","previewUrl":"https://dingtalk.avaryholding.com:8443/dingplus/image/20251212/fd7e8c2de382ff60fa06a0b133726925.jpg","downloadUrl":"https://dingtalk.avaryholding.com:8443/dingplus/image/20251212/fd7e8c2de382ff60fa06a0b133726925.jpg","size":36681,"url":"https://dingtalk.avaryholding.com:8443/dingplus/image/20251212/fd7e8c2de382ff60fa06a0b133726925.jpg"}]}},
         {"componentName":"AttachmentField","fieldId":"attachmentField_lxv44osj","label":"身份证照片","fieldData":{"value":[{"name":"mmexport1765527972471.jpg","previewUrl":"/o/KPE66S71GVE1CFXGNA63M4ESVXGL3DBR4M2JMH?appType=APP_GRVPTEOQ6D4B7FLZFYNJ&fileName=APP_GRVPTEOQ6D4B7FLZFYNJ_S1BFNjZTNzFHVkUxQ0ZYR05BNjNNNEVTVlhHTDNEQlI0TTJKTUc$.jpg&instId=&type=open&process=image/resize,m_fill,w_200,h_200,limit_0/quality,q_80","downloadUrl":"/o/KPE66S71GVE1CFXGNA63M4ESVXGL3DBR4M2JMH?appType=APP_GRVPTEOQ6D4B7FLZFYNJ&fileName=APP_GRVPTEOQ6D4B7FLZFYNJ_S1BFNjZTNzFHVkUxQ0ZYR05BNjNNNEVTVlhHTDNEQlI0TTJKTUc$.jpg&instId=&type=download","size":214657,"url":"/o/KPE66S71GVE1CFXGNA63M4ESVXGL3DBR4M2JMH?appType=APP_GRVPTEOQ6D4B7FLZFYNJ&fileName=APP_GRVPTEOQ6D4B7FLZFYNJ_S1BFNjZTNzFHVkUxQ0ZYR05BNjNNNEVTVlhHTDNEQlI0TTJKTUc$.jpg&instId=&type=download","fileUuid":"APP_GRVPTEOQ6D4B7FLZFYNJ_S1BFNjZTNzFHVkUxQ0ZYR05BNjNNNEVTVlhHTDNEQlI0TTJKTUc$.jpg"}]}},
         {"componentName":"AttachmentField","fieldId":"attachmentField_lxv44osk","label":"社保/在职证明","fieldData":{"value":[{"name":"1_在职证明.pdf","previewUrl":"/dingtalk/mobile/APP_GRVPTEOQ6D4B7FLZFYNJ/inst/preview?appType=APP_GRVPTEOQ6D4B7FLZFYNJ&fileName=APP_GRVPTEOQ6D4B7FLZFYNJ_TUo5NjZBOTEwV0UxVlpBWUdKOTg0Q09GVTlBMjNVQlo0TTJKTUI%24.pdf&fileSize=71755&downloadUrl=APP_GRVPTEOQ6D4B7FLZFYNJ_TUo5NjZBOTEwV0UxVlpBWUdKOTg0Q09GVTlBMjNVQlo0TTJKTUI$.pdf","downloadUrl":"/o/MJ966A910WE1VZAYGJ984COFU9A23UBZ4M2JMC?appType=APP_GRVPTEOQ6D4B7FLZFYNJ&fileName=APP_GRVPTEOQ6D4B7FLZFYNJ_TUo5NjZBOTEwV0UxVlpBWUdKOTg0Q09GVTlBMjNVQlo0TTJKTUI$.pdf&instId=&type=download","size":71755,"url":"/o/MJ966A910WE1VZAYGJ984COFU9A23UBZ4M2JMC?appType=APP_GRVPTEOQ6D4B7FLZFYNJ&fileName=APP_GRVPTEOQ6D4B7FLZFYNJ_TUo5NjZBOTEwV0UxVlpBWUdKOTg0Q09GVTlBMjNVQlo0TTJKTUI$.pdf&instId=&type=download","fileUuid":"APP_GRVPTEOQ6D4B7FLZFYNJ_TUo5NjZBOTEwV0UxVlpBWUdKOTg0Q09GVTlBMjNVQlo0TTJKTUI$.pdf"}]}},
@@ -161,10 +163,10 @@ const PERSON_DB = {
     // 贾
     "MDMwNzE3Njg=": [
         {"componentName":"SelectField","fieldId":"selectField_lxv44orx","label":"有效身份证件","fieldData":{"value":"台胞证","text":"台胞证"},"options":[{"defaultChecked":false,"syncLabelValue":true,"__sid":"item_lxjzgsg3","text":"台胞证","__sid__":"serial_lxjzgsg2","value":"台胞证","sid":"serial_lxjzgsg2"}]},
-        {"componentName":"TextField","fieldId":"textField_lxv44ory","label":"证件号码","fieldData":{"value": decode("MDMwNzE3Njg=")}},
+        {"componentName":"TextField","fieldId":"textField_lxv44ory","label":"证件号码","fieldData":{"value": decode("MDMwNzE3Njg=") }},
         {"componentName":"TextField","fieldId":"textField_lxv44orw","label":"姓名","fieldData":{"value": decode("6LS+5paH6YCJ")}},
         {"componentName":"SelectField","fieldId":"selectField_mbyjhot6","label":"区号","fieldData":{"value":"86","text":"+86"},"options":[{"defaultChecked":true,"syncLabelValue":false,"__sid":"item_megqe4lm","text":"+86","__sid__":"serial_megqe4ll","value":"86","sid":"serial_mbyjf8gm"}]},
-        {"componentName":"TextField","fieldId":"textField_lxv44orz","label":"联系方式","fieldData":{"value": decode("MTU2MjM0NTc2MjU=")}},
+        {"componentName":"TextField","fieldId":"textField_lxv44orz","label":"联系方式","fieldData":{"value": decode("MTU2MjM0NTc2MjU=") }},
         {"componentName":"ImageField","fieldId":"imageField_ly9i5k5q","label":"免冠照片","fieldData":{"value":[{"name":"mmexport1760007547917.jpg","previewUrl":"https://dingtalk.avaryholding.com:8443/dingplus/image/20251010/652a6f0c65a2fb40cdccc4e4afbec59d.jpg","downloadUrl":"https://dingtalk.avaryholding.com:8443/dingplus/image/20251010/652a6f0c65a2fb40cdccc4e4afbec59d.jpg","size":144553,"url":"https://dingtalk.avaryholding.com:8443/dingplus/image/20251010/652a6f0c65a2fb40cdccc4e4afbec59d.jpg"}]}},
         {"componentName":"AttachmentField","fieldId":"attachmentField_lxv44osj","label":"身份证照片","fieldData":{"value":[{"name":"mmexport1760007546568.jpg","previewUrl":"/o/GI966BB1CS7ZB13YBTNJ95OVBJLY22F535KGM8L?appType=APP_GRVPTEOQ6D4B7FLZFYNJ&fileName=APP_GRVPTEOQ6D4B7FLZFYNJ_R0k5NjZCQjFDUzdaQjEzWUJUTko5NU9WQkpMWTIxRjUzNUtHTTdM.jpg&instId=&type=open&process=image/resize,m_fill,w_200,h_200,limit_0/quality,q_80","downloadUrl":"/o/GI966BB1CS7ZB13YBTNJ95OVBJLY22F535KGM8L?appType=APP_GRVPTEOQ6D4B7FLZFYNJ&fileName=APP_GRVPTEOQ6D4B7FLZFYNJ_R0k5NjZCQjFDUzdaQjEzWUJUTko5NU9WQkpMWTIxRjUzNUtHTTdM.jpg&instId=&type=download","size":302294,"url":"/o/GI966BB1CS7ZB13YBTNJ95OVBJLY22F535KGM8L?appType=APP_GRVPTEOQ6D4B7FLZFYNJ&fileName=APP_GRVPTEOQ6D4B7FLZFYNJ_R0k5NjZCQjFDUzdaQjEzWUJUTko5NU9WQkpMWTIxRjUzNUtHTTdM.jpg&instId=&type=download","fileUuid":"APP_GRVPTEOQ6D4B7FLZFYNJ_R0k5NjZCQjFDUzdaQjEzWUJUTko5NU9WQkpMWTIxRjUzNUtHTTdM.jpg"}]}},
         {"componentName":"AttachmentField","fieldId":"attachmentField_lxv44osk","label":"社保/在职证明","fieldData":{"value":[{"name":"在职证明+-+贾文选.pdf","previewUrl":"/dingtalk/mobile/APP_GRVPTEOQ6D4B7FLZFYNJ/inst/preview?appType=APP_GRVPTEOQ6D4B7FLZFYNJ&fileName=APP_GRVPTEOQ6D4B7FLZFYNJ_NENCNjY3NzFCOThaNEZMVkFaRkxaNkxNWEQ5MjJLTDczNUtHTThI.pdf&fileSize=35594&downloadUrl=APP_GRVPTEOQ6D4B7FLZFYNJ_NENCNjY3NzFCOThaNEZMVkFaRkxaNkxNWEQ5MjJLTDczNUtHTThI.pdf","downloadUrl":"/o/4CB66771B98Z4FLVAZFLZ6LMXD922KL735KGM9H?appType=APP_GRVPTEOQ6D4B7FLZFYNJ&fileName=APP_GRVPTEOQ6D4B7FLZFYNJ_NENCNjY3NzFCOThaNEZMVkFaRkxaNkxNWEQ5MjJLTDczNUtHTThI.pdf&instId=&type=download","size":35594,"url":"/o/4CB66771B98Z4FLVAZFLZ6LMXD922KL735KGM9H?appType=APP_GRVPTEOQ6D4B7FLZFYNJ&fileName=APP_GRVPTEOQ6D4B7FLZFYNJ_NENCNjY3NzFCOThaNEZMVkFaRkxaNkxNWEQ5MjJLTDczNUtHTThI.pdf&instId=&type=download","fileUuid":"APP_GRVPTEOQ6D4B7FLZFYNJ_NENCNjY3NzFCOThaNEZMVkFaRkxaNkxNWEQ5MjJLTDczNUtHTThI.pdf"}]}},
@@ -216,11 +218,10 @@ const getFormattedDate = (ts) => {
 };
 
 /**
- * 1. 查询所有人的状态 (增加安全统计)
- * 返回结构: { statusMap: {}, stats: { total, success, error, hasData, noData } }
+ * 1. 查询所有人的状态 (增加安全统计 + 50ms错峰查询)
  */
 const getAllStatuses = async () => {
-    console.log("🔍 开始批量查询人员状态...");
+    console.log("🔍 开始批量查询人员状态 (错峰模式)...");
     
     const statusMap = {};
     const decodedIds = CONFIG.query.visitorIdNos.map(id => decode(id));
@@ -228,13 +229,14 @@ const getAllStatuses = async () => {
     // 安全统计计数器
     const stats = {
         total: decodedIds.length,
-        success: 0,  // 接口请求成功
-        error: 0,    // 接口请求失败/网络错误
-        hasData: 0,  // 返回了有效记录
-        noData: 0    // 返回空数组(无记录)
+        success: 0, 
+        error: 0,   
+        hasData: 0, 
+        noData: 0   
     };
 
-    const promises = decodedIds.map(async (id) => {
+    // 使用 for...of 循环实现串行错峰查询
+    for (const id of decodedIds) {
         const idMask = id.substring(0, 4) + "****" + id.substring(id.length - 4);
         let maxEnd = 0;
         let isSuccess = false;
@@ -275,17 +277,11 @@ const getAllStatuses = async () => {
             stats.error++;
         }
 
-        // 无论成功失败，返回结果供映射
-        return { id, maxEnd };
-    });
-
-    // 等待所有查询完成
-    const results = await Promise.all(promises);
-    
-    // 构建映射表
-    results.forEach(r => {
-        statusMap[r.id] = r.maxEnd;
-    });
+        statusMap[id] = maxEnd;
+        
+        // 错峰延迟 50ms
+        await delay(50);
+    }
 
     console.log("📊 查询统计:", JSON.stringify(stats));
     return { statusMap, stats };
@@ -293,24 +289,11 @@ const getAllStatuses = async () => {
 
 /**
  * 核心逻辑：安全检查
- * 判断是否应该继续执行发包逻辑
  */
 const checkSafeToRun = (stats) => {
-    // 规则 1: 任何网络错误或API错误 -> 终止
-    if (stats.error > 0) {
-        return { safe: false, reason: `查询接口报错 (Error Count: ${stats.error})，可能接口已挂或网络波动。` };
-    }
-
-    // 规则 2: 所有查询成功，但全部无记录 -> 终止 (极有可能是 Cookie 失效或接口格式变更)
-    if (stats.total > 0 && stats.hasData === 0) {
-        return { safe: false, reason: "严重警告：所有人员均无记录！(可能 Cookie 失效或 API 结构变更)" };
-    }
-
-    // 规则 3: 多数无记录 (超过50%) -> 终止 (防止将老员工误判为新员工进行重置)
-    if (stats.noData > (stats.total / 2)) {
-        return { safe: false, reason: `异常警告：超过半数人员无记录 (${stats.noData}/${stats.total})，疑似数据源异常。` };
-    }
-
+    if (stats.error > 0) return { safe: false, reason: `查询接口报错 (Error Count: ${stats.error})` };
+    if (stats.total > 0 && stats.hasData === 0) return { safe: false, reason: "严重警告：所有人员均无记录！" };
+    if (stats.noData > 0) return { safe: false, reason: `异常警告：有人员无记录 (${stats.noData}/${stats.total})` };
     return { safe: true, reason: "状态正常" };
 };
 
@@ -326,8 +309,6 @@ const submitApplication = async (groupDateTs, personIds) => {
         if (personData) {
             tableRows.push(personData);
             names.push(personData[2].fieldData.value);
-        } else {
-            console.error(`❌ 未找到 ID 为 ${id} 的模板数据`);
         }
     });
 
@@ -339,7 +320,7 @@ const submitApplication = async (groupDateTs, personIds) => {
         "fieldId": "tableField_lxv44os5",
         "label": "人员信息",
         "fieldData": { "value": tableRows },
-        "listNum": 50 // 属性修正
+        "listNum": 50 
     };
 
     const dateField = {
@@ -358,16 +339,11 @@ const submitApplication = async (groupDateTs, personIds) => {
         ...FORM_TAIL.slice(4)     // 签核和保安
     ];
 
-    // 序列化 + URL 编码
     const jsonStr = JSON.stringify(finalForm);
     const encodedValue = encodeURIComponent(jsonStr);
-    
     const postData = `_csrf_token=${CONFIG.csrf_token}&formUuid=${CONFIG.formUuid}&appType=${CONFIG.appType}&value=${encodedValue}&_schemaVersion=653`;
     
-    // 发送请求
     const targetDateStr = getFormattedDate(groupDateTs);
-    const maskedNames = names.map(n => n.length > 1 ? n[0] + "*" + n.substring(2) : n).join(",");
-    
     console.log(`🚀 正在为 [${names.join(', ')}] 提交申请 -> 日期: ${targetDateStr}`);
 
     try {
@@ -389,8 +365,7 @@ const submitApplication = async (groupDateTs, personIds) => {
 };
 
 /**
- * 核心逻辑：计算统一发包计划 (Catch-up Strategy)
- * 返回结构: { summary: [], requests: [] }
+ * 核心逻辑：智能短板补齐 (Smart Catch-up Strategy)
  */
 const calculatePlan = (idStatusMap) => {
     const nowMs = Date.now();
@@ -399,96 +374,94 @@ const calculatePlan = (idStatusMap) => {
     const todayStartTs = todayObj.getTime() - 28800000;
     const todayId = getBeijingDayId(nowMs);
 
-    const validUsers = [];
-    const summary = [];
-    
-    let maxNextStartTs = 0; // 记录最晚的起始时间
+    // 1. 整理所有人当前有效期的截止日期
+    const userData = [];
+    let globalMaxEndTs = 0; // 整个团队目前最晚的有效期
+    let minEndTs = Infinity; 
 
-    // 1. 分析所有人状态
+    // 构建摘要展示数据
+    const summary = [];
+
     for (const [id, lastDateTs] of Object.entries(idStatusMap)) {
         const idBase64 = Buffer.from(id).toString('base64');
         const personInfo = PERSON_DB[idBase64];
-        const name = personInfo ? personInfo[2].fieldData.value : "未知人员";
-
-        let nextStartTs = 0;
-        let formattedLastDate = "无记录";
-        let statusText = "";
-        let statusClass = "";
-        let needsRenew = false;
-        let lastDayId = 0;
-
-        // 计算下一次起始时间
-        if (lastDateTs === 0) {
-            // 【修正1】无记录的新用户，从“今天”开始申请
-            lastDayId = todayId; 
-            nextStartTs = todayStartTs; 
-            formattedLastDate = "新用户/无记录";
-        } else {
-            lastDayId = getBeijingDayId(lastDateTs);
-            const d = new Date(lastDateTs + 28800000);
-            d.setUTCDate(d.getUTCDate() + 1);
-            d.setUTCHours(0,0,0,0);
-            nextStartTs = d.getTime() - 28800000;
-            formattedLastDate = getFormattedDate(lastDateTs);
+        const name = personInfo ? personInfo[2].fieldData.value : "未知";
+        
+        let currentEndTs = lastDateTs;
+        // 如果此人无记录(0)或已过期(小于昨天)，视为"需要从今天开始申请"
+        if (currentEndTs < todayStartTs) {
+            currentEndTs = todayStartTs - 86400000; // 设为昨天，以便下次循环从今天开始
         }
 
-        const diff = lastDayId - todayId;
+        if (currentEndTs > globalMaxEndTs) globalMaxEndTs = currentEndTs;
+        if (currentEndTs < minEndTs) minEndTs = currentEndTs;
 
-        // 判断是否需要续期 (<=2天)
-        if (diff < 0) {
+        const lastDayId = getBeijingDayId(currentEndTs);
+        const diff = lastDayId - todayId;
+        
+        let statusText = `正常 (剩 ${diff} 天)`;
+        let statusClass = "success";
+
+        if (lastDateTs === 0) {
+            statusText = "无记录 (需补齐)";
+            statusClass = "expired";
+        } else if (diff < 0) {
             statusText = `已过期 ${Math.abs(diff)} 天`;
             statusClass = "expired";
-            needsRenew = true;
         } else if (diff <= 2) {
-            statusText = `即将到期 (剩 ${diff} 天)`;
+            statusText = `即将过期 (剩 ${diff} 天)`;
             statusClass = "warning";
-            needsRenew = true;
-        } else {
-            statusText = `正常 (剩 ${diff} 天)`;
-            statusClass = "success";
         }
 
         summary.push({
             name,
             idMask: id.substring(0, 4) + "***" + id.substring(id.length - 4),
-            lastDate: formattedLastDate,
+            lastDate: lastDateTs === 0 ? "无记录" : getFormattedDate(lastDateTs),
             status: statusText,
-            class: statusClass,
-            renew: needsRenew
+            class: statusClass
         });
 
-        if (needsRenew) {
-            validUsers.push({ id, nextStartTs });
-            if (nextStartTs > maxNextStartTs) {
-                maxNextStartTs = nextStartTs;
-            }
-        }
+        userData.push({ id, currentEndTs });
     }
 
-    if (validUsers.length === 0) {
-        return { summary, requests: [] };
+    // 2. 决策目标日期 (Target Date)
+    // 逻辑：如果最晚的那个人(globalMaxEndTs) 距离今天 <= 2天，说明大部队都要过期了，所有人一起往后延。
+    // 如果最晚的那个人还很安全(>2天)，则只把落后的人补齐到 globalMaxEndTs。
+    
+    // 计算最晚日期距离今天几天
+    const maxEndDayId = getBeijingDayId(globalMaxEndTs);
+    const diffMax = maxEndDayId - todayId;
+
+    let targetTs = globalMaxEndTs;
+
+    // 如果整个团队最晚的日期都快到了(或者已经过去了)，则目标设定为：最晚日期 + 6天 (共7天)
+    // 注意：如果 globalMaxEndTs 是过去的时间(全员过期)，基准应取 todayStartTs
+    const baseLineTs = Math.max(globalMaxEndTs, todayStartTs);
+    
+    if (diffMax <= 2) {
+        // 需要整体续期
+        targetTs = baseLineTs + (6 * 86400000); 
+    } else {
+        // 不需要整体续期，只需补齐短板
+        targetTs = globalMaxEndTs;
     }
 
+    // 3. 生成每日请求
     const requests = [];
-
-    // 2. 生成计划：追赶 + 齐射
-    const minNextStartTs = Math.min(...validUsers.map(u => u.nextStartTs));
-    
-    // 【修正2】循环游标必须从“今天”开始
-    let cursorTs = Math.max(minNextStartTs, todayStartTs);
-    
-    // 结束时间是 基准线 + 6天 (共7天齐射)
-    const effectiveMaxStart = Math.max(maxNextStartTs, todayStartTs);
-    const endTs = effectiveMaxStart + (6 * 86400000); 
-
+    // 游标从 (最早结束时间 + 1天) 开始，但不能早于今天
+    // 比如某人13号结束，我们从14号开始补。
+    // 如果所有人都是18号结束，minEndTs=18号，则从19号开始判定。
+    let cursorTs = Math.max(minEndTs + 86400000, todayStartTs);
     let dayCount = 1;
 
-    while (cursorTs <= endTs) {
-        const todaysGroup = validUsers
-            .filter(u => u.nextStartTs <= cursorTs)
+    while (cursorTs <= targetTs) {
+        // 找出这一天谁没有覆盖 (即 用户的currentEndTs < cursorTs)
+        const todaysGroup = userData
+            .filter(u => u.currentEndTs < cursorTs)
             .map(u => u.id);
         
         if (todaysGroup.length > 0) {
+            // 生成这一天的请求包
             const personNames = todaysGroup.map(pid => {
                 const pidBase64 = Buffer.from(pid).toString('base64');
                 return PERSON_DB[pidBase64] ? PERSON_DB[pidBase64][2].fieldData.value : pid;
@@ -518,7 +491,7 @@ const calculatePlan = (idStatusMap) => {
                         "fieldData": { "value": cursorTs },
                         "format": "yyyy-MM-dd"
                     },
-                    ...FORM_TAIL.slice(4)     
+                    ...FORM_TAIL.slice(4)      
                 ];
 
                 const jsonStr = JSON.stringify(finalForm, null, 2); 
@@ -536,184 +509,226 @@ const calculatePlan = (idStatusMap) => {
                 });
             }
         }
-
         cursorTs += 86400000;
     }
 
-    return { summary, requests };
+    return { summary, requests, targetDate: getFormattedDate(targetTs) };
 };
 
 // --- 调试接口 (包含实际状态分析和全员失效模拟) ---
 router.get('/debug', async (req, res) => {
     try {
-        // 1. 获取真实状态并计算
         const { statusMap: realStatusMap, stats } = await getAllStatuses();
-        
-        // 运行安全检查
         const safetyCheck = checkSafeToRun(stats);
-
         const realPlan = calculatePlan(realStatusMap);
 
-        // 2. 生成模拟状态（假设所有人都没有记录/已过期）
+        // 模拟全员无记录
         const simulatedStatusMap = {};
         CONFIG.query.visitorIdNos.forEach(idBase64 => {
-             // 模拟状态：0 表示无记录，强制从今天开始申请
              simulatedStatusMap[decode(idBase64)] = 0;
         });
         const simulatedPlan = calculatePlan(simulatedStatusMap);
 
-        // 安全检查的 HTML 徽章
         const safetyBadge = safetyCheck.safe 
-            ? `<span style="background:#ecfdf5; color:#059669; padding:5px 10px; border-radius:4px; border:1px solid #a7f3d0;">✅ 安全 (Ready to Send)</span>`
-            : `<span style="background:#fef2f2; color:#dc2626; padding:5px 10px; border-radius:4px; border:1px solid #fecaca;">❌ 熔断 (BLOCKED)</span>`;
+            ? `<span style="background:#ecfdf5; color:#059669; padding:4px 8px; border-radius:4px; border:1px solid #a7f3d0; font-size:0.8rem;">✅ 安全 (Ready)</span>`
+            : `<span style="background:#fef2f2; color:#dc2626; padding:4px 8px; border-radius:4px; border:1px solid #fecaca; font-size:0.8rem;">❌ 熔断 (BLOCKED)</span>`;
+
+        // 核心修改：如果是熔断状态，不渲染真实的请求列表，而是显示阻断块
+        let realQueueHTML = '';
+        if (safetyCheck.safe) {
+            realQueueHTML = `
+                <h3 style="font-size:0.9rem; margin-bottom:10px; color:#374151;">🚀 待发送队列 (${realPlan.requests.length})</h3>
+                ${renderRequests(realPlan.requests)}
+            `;
+        } else {
+            realQueueHTML = `
+                <div class="blocked-overlay">
+                    <div style="font-size:1.5rem; margin-bottom:10px;">⛔</div>
+                    <div style="font-weight:bold; font-size:1.1rem; margin-bottom:5px;">队列已被安全拦截</div>
+                    <div style="font-size:0.85rem; opacity:0.8;">由于触发了熔断机制，系统已强制清空待发送队列。<br>本次执行<b>绝对不会</b>发送任何请求。</div>
+                </div>
+            `;
+        }
 
         const html = `
         <!DOCTYPE html>
         <html>
         <head>
             <meta charset="utf-8">
-            <meta name="viewport" content="width=device-width, initial-scale=1">
-            <title>申请插件调试面板 (Safe Mode)</title>
+            <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0">
+            <title>申请插件调试面板</title>
             <style>
-                body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background: #f0f2f5; padding: 20px; color: #333; }
-                .container { max-width: 1100px; margin: 0 auto; }
-                .card { background: #fff; padding: 25px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); margin-bottom: 25px; }
+                body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background: #f3f4f6; padding: 10px; color: #1f2937; margin:0; }
+                .container { max-width: 1000px; margin: 0 auto; }
+                .card { background: #fff; padding: 15px; border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); margin-bottom: 20px; }
                 
-                h1 { margin: 0 0 20px 0; color: #1f2937; font-size: 1.5rem; border-left: 5px solid #3b82f6; padding-left: 15px; }
-                h2 { margin-top: 0; color: #4b5563; font-size: 1.2rem; display: flex; align-items: center; gap: 10px; }
+                h1 { margin: 10px 0 20px 0; color: #111827; font-size: 1.2rem; border-left: 4px solid #3b82f6; padding-left: 10px; display: flex; align-items: center; justify-content: space-between; }
+                h2 { margin-top: 0; color: #4b5563; font-size: 1rem; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; }
                 
-                table { width: 100%; border-collapse: separate; border-spacing: 0; margin-bottom: 20px; border: 1px solid #e5e7eb; border-radius: 8px; overflow: hidden; }
-                th, td { text-align: left; padding: 12px 15px; border-bottom: 1px solid #e5e7eb; }
-                th { background: #f9fafb; font-weight: 600; color: #6b7280; font-size: 0.9rem; }
+                /* 表格响应式 */
+                .table-wrapper { overflow-x: auto; -webkit-overflow-scrolling: touch; margin-bottom: 15px; border-radius: 8px; border: 1px solid #e5e7eb; }
+                table { width: 100%; border-collapse: collapse; min-width: 500px; }
+                th, td { text-align: left; padding: 10px; border-bottom: 1px solid #e5e7eb; font-size: 0.9rem; }
+                th { background: #f9fafb; font-weight: 600; color: #6b7280; white-space: nowrap; }
                 tr:last-child td { border-bottom: none; }
                 
-                .status-badge { padding: 4px 10px; border-radius: 99px; font-size: 0.8rem; font-weight: 600; }
-                .expired { background: #fef2f2; color: #dc2626; border: 1px solid #fecaca; }
-                .warning { background: #fffbeb; color: #d97706; border: 1px solid #fde68a; }
-                .success { background: #ecfdf5; color: #059669; border: 1px solid #a7f3d0; }
+                .status-badge { padding: 2px 8px; border-radius: 99px; font-size: 0.75rem; font-weight: 600; white-space: nowrap; }
+                .expired { background: #fee2e2; color: #991b1b; }
+                .warning { background: #fef3c7; color: #92400e; }
+                .success { background: #d1fae5; color: #065f46; }
                 
-                .request-item { background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 8px; margin-bottom: 12px; overflow: hidden; }
-                .req-header { padding: 12px 15px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; user-select: none; }
+                .request-item { background: #fff; border: 1px solid #e5e7eb; border-radius: 8px; margin-bottom: 10px; overflow: hidden; }
+                .req-header { padding: 12px; background: #f9fafb; display: flex; flex-direction: column; cursor: pointer; user-select: none; }
+                .req-header-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px; }
+                .req-header-people { font-size: 0.85rem; color: #6b7280; }
                 .req-header:hover { background: #f3f4f6; }
-                .req-header strong { color: #111827; }
-                .req-header span { color: #6b7280; font-size: 0.9rem; }
                 
-                .code-container { border-top: 1px solid #e5e7eb; background: #282c34; padding: 15px; position: relative; }
-                .code-block { color: #abb2bf; font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace; font-size: 0.85rem; margin: 0; white-space: pre-wrap; word-break: break-all; }
-                .json-block { color: #98c379; }
-                .url-block { color: #61afef; }
+                /* 代码块样式 */
+                .code-section { border-top: 1px solid #e5e7eb; }
+                .code-tabs { display: flex; background: #f3f4f6; border-bottom: 1px solid #e5e7eb; }
+                .tab-btn { padding: 8px 15px; font-size: 0.8rem; cursor: pointer; color: #6b7280; border-right: 1px solid #e5e7eb; background: #f3f4f6; border: none; }
+                .tab-btn.active { background: #fff; color: #3b82f6; font-weight: 600; border-bottom: 2px solid #3b82f6; }
                 
-                .copy-btn { position: absolute; top: 10px; right: 10px; background: rgba(255,255,255,0.1); color: #fff; border: 1px solid rgba(255,255,255,0.2); padding: 5px 10px; border-radius: 4px; cursor: pointer; font-size: 0.75rem; transition: background 0.2s; }
-                .copy-btn:hover { background: rgba(255,255,255,0.2); }
+                .code-content { padding: 0; position: relative; display: none; }
+                .code-content.active { display: block; }
+                
+                pre { margin: 0; padding: 15px; overflow-x: auto; font-family: Consolas, monospace; font-size: 0.75rem; line-height: 1.4; color: #d4d4d4; background: #1e1e1e; border-radius: 0 0 4px 4px; max-height: 300px; }
+                
+                .copy-btn { position: absolute; top: 10px; right: 10px; background: rgba(255,255,255,0.2); color: #fff; border: 1px solid rgba(255,255,255,0.3); padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 0.7rem; }
+                .copy-btn:hover { background: rgba(255,255,255,0.3); }
                 
                 details > summary { list-style: none; }
                 details > summary::marker { display: none; }
                 
-                .sim-banner { background: #e0f2fe; color: #0369a1; padding: 15px; border-radius: 8px; margin-bottom: 20px; font-weight: 500; border: 1px solid #bae6fd; }
-                .error-banner { background: #fee2e2; color: #991b1b; padding: 15px; border-radius: 8px; margin-bottom: 20px; font-weight: bold; border: 1px solid #fca5a5; }
-                .tag-real { background: #dbeafe; color: #1e40af; padding: 2px 6px; border-radius: 4px; font-size: 0.7rem; margin-right: 5px; }
-                .tag-sim { background: #f3e8ff; color: #6b21a8; padding: 2px 6px; border-radius: 4px; font-size: 0.7rem; margin-right: 5px; }
+                .error-banner { background: #fee2e2; border: 1px solid #fca5a5; color: #b91c1c; padding: 15px; border-radius: 8px; margin-bottom: 15px; font-weight: bold; font-size: 0.9rem; }
+                
+                .stat-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 15px; font-size: 0.8rem; color: #666; background: #f9fafb; padding: 10px; border-radius: 8px; }
+                .stat-item { text-align: center; }
+                .stat-val { font-weight: bold; font-size: 1rem; color: #111827; }
+                
+                /* 熔断遮罩层 */
+                .blocked-overlay {
+                    background: #f3f4f6;
+                    border: 2px dashed #d1d5db;
+                    border-radius: 8px;
+                    padding: 30px;
+                    text-align: center;
+                    color: #4b5563;
+                }
+                
+                @media (min-width: 600px) {
+                    .req-header { flex-direction: row; justify-content: space-between; align-items: center; }
+                    .req-header-top { margin-bottom: 0; min-width: 150px; }
+                    h2 { justify-content: flex-start; }
+                }
             </style>
             <script>
                 function copyText(btn, text) {
-                    navigator.clipboard.writeText(text).then(() => {
+                    navigator.clipboard.writeText(decodeURIComponent(text)).then(() => {
                         const original = btn.innerText;
                         btn.innerText = 'Copied!';
                         setTimeout(() => btn.innerText = original, 2000);
                     });
                 }
+                function switchTab(btn, index) {
+                    const parent = btn.closest('.code-section');
+                    parent.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+                    parent.querySelectorAll('.code-content').forEach(c => c.classList.remove('active'));
+                    btn.classList.add('active');
+                    parent.querySelectorAll('.code-content')[index].classList.add('active');
+                }
             </script>
         </head>
         <body>
             <div class="container">
-                <h1>🔧 申请插件高级调试面板</h1>
+                <h1>
+                    <span>🔧 自动续期调试</span>
+                    ${safetyBadge}
+                </h1>
+
+                ${!safetyCheck.safe ? `<div class="error-banner">⛔ 熔断警告: ${safetyCheck.reason}</div>` : ''}
 
                 <div class="card">
                     <h2>
-                        <span class="tag-real">LIVE</span> 实时状态概览 
-                        <div style="margin-left:auto; font-size:1rem;">${safetyBadge}</div>
+                        <span>📊 实时状态 (Target: ${realPlan.targetDate})</span>
                     </h2>
                     
-                    ${!safetyCheck.safe ? `<div class="error-banner">⛔ 系统已熔断，原因：${safetyCheck.reason}</div>` : ''}
+                    <div class="stat-grid">
+                        <div class="stat-item"><div class="stat-val">${stats.total}</div>总人数</div>
+                        <div class="stat-item"><div class="stat-val" style="color:#059669">${stats.success}</div>成功</div>
+                        <div class="stat-item"><div class="stat-val" style="color:#dc2626">${stats.error}</div>错误</div>
+                        <div class="stat-item"><div class="stat-val">${stats.noData}</div>无记录</div>
+                    </div>
 
-                    <p style="color:#666; font-size: 0.9rem; margin-bottom: 15px;">
-                        查询统计: 总数 ${stats.total} | 成功 ${stats.success} | 错误 ${stats.error} | 有记录 ${stats.hasData} | 无记录 ${stats.noData}
-                    </p>
-
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>姓名</th>
-                                <th>ID (Masked)</th>
-                                <th>最新有效日期</th>
-                                <th>状态</th>
-                                <th>操作</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            ${realPlan.summary.map(item => `
-                            <tr>
-                                <td><strong>${item.name}</strong></td>
-                                <td>${item.idMask}</td>
-                                <td>${item.lastDate}</td>
-                                <td><span class="status-badge ${item.class}">${item.status}</span></td>
-                                <td>${item.renew ? '🔴 待续期' : '⚪ 跳过'}</td>
-                            </tr>
-                            `).join('')}
-                        </tbody>
-                    </table>
+                    <div class="table-wrapper">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>姓名</th>
+                                    <th>有效期止</th>
+                                    <th>状态</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${realPlan.summary.map(item => `
+                                <tr>
+                                    <td><strong>${item.name}</strong><br><span style="font-size:0.7rem;color:#999">${item.idMask}</span></td>
+                                    <td>${item.lastDate}</td>
+                                    <td><span class="status-badge ${item.class}">${item.status}</span></td>
+                                </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+                    </div>
                     
-                    <h3>待发送队列 (${realPlan.requests.length})</h3>
-                    ${renderRequests(realPlan.requests)}
+                    ${realQueueHTML}
                 </div>
 
                 <div class="card" style="border-top: 4px solid #9333ea;">
-                    <h2><span class="tag-sim">SIMULATION</span> 全员强制续期模拟 (假设无记录)</h2>
-                    <div class="sim-banner">
-                        💡 场景说明：假设数据库中所有人员记录丢失或过期，系统将从“今天”开始生成完整补齐计划。此数据仅用于测试，不会发送。
-                    </div>
-                    
-                    <h3>生成的模拟数据包 (${simulatedPlan.requests.length})</h3>
+                    <h2>🔮 全员无记录模拟 (Force Sync)</h2>
+                    <p style="font-size:0.8rem; color:#666; margin-bottom:10px;">假设数据库清空，系统将从“今天”开始生成完整对齐计划。（此区域仅为逻辑验证，不受熔断影响）</p>
                     ${renderRequests(simulatedPlan.requests)}
                 </div>
             </div>
         </body>
         </html>
         `;
-
         res.send(html);
-
     } catch (err) {
         console.error(err);
         res.status(500).send(`Debug Error: ${err.message}`);
     }
 });
 
-// 辅助渲染函数
+// 辅助渲染函数 (增强版)
 function renderRequests(requests) {
-    if (requests.length === 0) return '<div style="padding:20px; text-align:center; color:#999; border:1px dashed #ddd; border-radius:8px;">暂无数据包生成</div>';
+    if (requests.length === 0) return '<div style="padding:15px; text-align:center; color:#999; border:1px dashed #ddd; border-radius:8px; font-size:0.8rem;">无需发送数据包</div>';
     
-    return requests.map(req => `
+    return requests.map((req, i) => `
     <div class="request-item">
         <details>
             <summary class="req-header">
-                <div>
-                    <strong>[Day ${req.dayIndex}] ${req.targetDate}</strong>
-                    <span style="margin-left:10px;">👥 ${req.people}</span>
+                <div class="req-header-top">
+                    <strong>📅 ${req.targetDate}</strong>
                 </div>
-                <span>▼ 展开详情</span>
+                <div class="req-header-people">👥 ${req.people}</div>
             </summary>
             
-            <div class="code-container">
-                <button class="copy-btn" onclick='copyText(this, ${JSON.stringify(req.rawJson)})'>Copy JSON</button>
-                <div style="margin-bottom:5px; font-weight:bold; color:#fff;">原始 JSON:</div>
-                <pre class="code-block json-block">${req.rawJson}</pre>
-            </div>
-            
-            <div class="code-container" style="border-top:1px solid #444;">
-                <button class="copy-btn" onclick='copyText(this, "${req.encodedBody}")'>Copy Encoded</button>
-                <div style="margin-bottom:5px; font-weight:bold; color:#fff;">URL Encoded Body (Ready to Send):</div>
-                <pre class="code-block url-block">${req.encodedBody}</pre>
+            <div class="code-section">
+                <div class="code-tabs">
+                    <button class="tab-btn active" onclick="switchTab(this, 0)">Raw JSON</button>
+                    <button class="tab-btn" onclick="switchTab(this, 1)">Encoded Body</button>
+                </div>
+                
+                <div class="code-content active">
+                    <button class="copy-btn" onclick="copyText(this, '${encodeURIComponent(req.rawJson)}')">Copy</button>
+                    <pre style="color:#a5d6ff;">${req.rawJson}</pre>
+                </div>
+                
+                <div class="code-content">
+                    <button class="copy-btn" onclick="copyText(this, '${encodeURIComponent(req.encodedBody)}')">Copy</button>
+                    <pre style="color:#ffae57; white-space:pre-wrap; word-break:break-all;">${req.encodedBody}</pre>
+                </div>
             </div>
         </details>
     </div>
@@ -723,16 +738,13 @@ function renderRequests(requests) {
 // --- 主逻辑路由 ---
 router.get('/auto-renew', async (req, res) => {
     const logs = [];
-    // 简单的内存日志
     const log = (msg) => { console.log(msg); logs.push(msg); };
-    
-    // 结构化结果数组
     const results = [];
     
     try {
-        log("=== 🚀 开始自动续期流程 (Smart Catch-up with Safety Lock) ===");
+        log("=== 🚀 开始自动续期流程 (Smart Catch-up with Staggered Query) ===");
         
-        // 1. 获取状态 & 统计
+        // 1. 获取状态 & 统计 (已包含错峰)
         const { statusMap, stats } = await getAllStatuses();
         
         // 2. 执行安全熔断检查
@@ -740,9 +752,8 @@ router.get('/auto-renew', async (req, res) => {
         if (!safetyCheck.safe) {
             log(`⛔ [严重] 安全熔断触发，终止执行！`);
             log(`❌ 原因: ${safetyCheck.reason}`);
-            log(`📊 统计: 总数 ${stats.total}, 报错 ${stats.error}, 无记录 ${stats.noData}`);
-            
-            res.type('text/plain').send(`❌ ABORTED: ${safetyCheck.reason}\n\nSee logs for details:\n` + logs.join('\n'));
+            res.type('text/plain').send(`❌ ABORTED: ${safetyCheck.reason}\n\nSee logs:\n` + logs.join('\n'));
+            // ⚠️ 核心：这里直接 return，确保绝对不会执行后续发送逻辑
             return;
         }
 
@@ -750,36 +761,32 @@ router.get('/auto-renew', async (req, res) => {
         const plan = calculatePlan(statusMap);
         
         if (plan.requests.length === 0) {
-            log("✨ 所有人员状态正常，无需续期。");
+            log("✨ 所有人员状态正常(已对齐)，无需续期。");
             res.type('text/plain').send("✅ Status OK: No renewal needed.\n\n" + logs.join('\n'));
             return;
         }
 
-        log(`📝 计划生成完成，共 ${plan.requests.length} 个请求包，开始执行...`);
+        log(`📝 计划生成完成: 目标日期 ${plan.targetDate}, 共 ${plan.requests.length} 个请求包`);
 
-        // 4. 执行计划
+        // 4. 执行计划 (错峰发送)
         for (const reqTask of plan.requests) {
-            // 串行执行以保证顺序和日志清晰
             const result = await submitApplication(reqTask.ts, reqTask.ids);
             if (result) results.push(result);
-            // 稍微长一点的延迟防止并发过快
-            await delay(50); 
+            await delay(50); // 发送间隔
         }
 
         log("=== 🏁 流程结束 ===");
         
-        // 构造漂亮的返回报告
         let report = "📊 自动续期执行报告\n========================\n";
         results.forEach((r, idx) => {
             const icon = r.success ? "✅" : "❌";
             report += `${icon} [Batch ${idx+1}] 日期: ${r.date}\n`;
             report += `    人员: ${r.names}\n`;
-            report += `    状态: ${r.success ? "成功 (" + r.id + ")" : "失败 (" + r.msg + ")"}\n`;
+            report += `    结果: ${r.success ? "成功 (" + r.id + ")" : "失败 (" + r.msg + ")"}\n`;
             report += "------------------------\n";
         });
         
         report += "\n🔍 系统日志:\n" + logs.join('\n');
-
         res.type('text/plain').send(report);
 
     } catch (err) {
