@@ -1,9 +1,9 @@
 /**
  * FactoryEntryReport.js
- * 自动续期入厂申请脚本 (智能对齐 + 错峰查询 + 移动端适配UI + 熔断UI修正版)
+ * 自动续期入厂申请脚本 (智能对齐 + 错峰并发极速版 + 移动端适配UI + 熔断UI修正版)
  * * 更新日志：
  * 1. [逻辑] 实现 "短板补齐"：落后者优先追赶团队最晚日期，整体过期才统一续期。
- * 2. [安全] 查询接口增加 50ms 错峰延迟。
+ * 2. [性能] 查询与提交均采用 50ms 错峰并发模式 (Fire-and-Forget + Promise.all)，大幅提升速度。
  * 3. [UI] 调试界面适配手机，增加 JSON/Encoded 分栏展示。
  * 4. [修复] 熔断时彻底隐藏待发送队列，防止用户误解，增加醒目拦截提示。
  */
@@ -217,16 +217,63 @@ const getFormattedDate = (ts) => {
     return date.toISOString().split('T')[0];
 };
 
+// --- 单个查询核心逻辑 (Fire-and-Forget) ---
+const checkSingleStatus = async (id) => {
+    const idMask = id.substring(0, 4) + "****" + id.substring(id.length - 4);
+    let maxEnd = 0;
+    let result = { id, success: false, hasData: false, maxEnd: 0 };
+
+    try {
+        const res = await axios.post(CONFIG.query.queryUrl, {
+            visitorIdNo: id,
+            regPerson: CONFIG.query.regPerson,
+            acToken: CONFIG.query.acToken
+        });
+        
+        if (res.data.code === 200) {
+            result.success = true;
+            if (res.data.data && res.data.data.length > 0) {
+                result.hasData = true;
+                res.data.data.forEach(record => {
+                    const end = parseInt(record.dateEnd || record.rangeEnd);
+                    if (end > maxEnd) maxEnd = end;
+                });
+                console.log(`   [${idMask}] 最新记录结束时间: ${getFormattedDate(maxEnd)}`);
+            } else {
+                console.log(`   [${idMask}] 无有效记录 (Empty Data)`);
+            }
+            result.maxEnd = maxEnd;
+        } else {
+            console.error(`   [${idMask}] API错误: Code ${res.data.code}`);
+        }
+    } catch (e) {
+        console.error(`   [${idMask}] 网络/请求出错: ${e.message}`);
+    }
+    return result;
+};
+
 /**
- * 1. 查询所有人的状态 (增加安全统计 + 50ms错峰查询)
+ * 1. 查询所有人的状态 (并发模式)
  */
 const getAllStatuses = async () => {
-    console.log("🔍 开始批量查询人员状态 (错峰模式)...");
+    console.log("🔍 开始批量查询人员状态 (错峰并发模式)...");
     
     const statusMap = {};
     const decodedIds = CONFIG.query.visitorIdNos.map(id => decode(id));
     
-    // 安全统计计数器
+    // 构造并发请求数组
+    const promises = [];
+    for (const id of decodedIds) {
+        // 将 Promise 推入数组，不等待结果
+        promises.push(checkSingleStatus(id));
+        // 仅做发射间隔
+        await delay(50);
+    }
+
+    // 统一回收结果
+    const results = await Promise.all(promises);
+
+    // 统计结果
     const stats = {
         total: decodedIds.length,
         success: 0, 
@@ -235,53 +282,16 @@ const getAllStatuses = async () => {
         noData: 0   
     };
 
-    // 使用 for...of 循环实现串行错峰查询
-    for (const id of decodedIds) {
-        const idMask = id.substring(0, 4) + "****" + id.substring(id.length - 4);
-        let maxEnd = 0;
-        let isSuccess = false;
-        let hasRecord = false;
-
-        try {
-            const res = await axios.post(CONFIG.query.queryUrl, {
-                visitorIdNo: id,
-                regPerson: CONFIG.query.regPerson,
-                acToken: CONFIG.query.acToken
-            });
-            
-            if (res.data.code === 200) {
-                isSuccess = true;
-                if (res.data.data && res.data.data.length > 0) {
-                    hasRecord = true;
-                    res.data.data.forEach(record => {
-                        const end = parseInt(record.dateEnd || record.rangeEnd);
-                        if (end > maxEnd) maxEnd = end;
-                    });
-                    console.log(`   [${idMask}] 最新记录结束时间: ${getFormattedDate(maxEnd)}`);
-                } else {
-                    console.log(`   [${idMask}] 无有效记录 (Empty Data)`);
-                }
-            } else {
-                console.error(`   [${idMask}] API错误: Code ${res.data.code}`);
-            }
-        } catch (e) {
-            console.error(`   [${idMask}] 网络/请求出错: ${e.message}`);
-        }
-
-        // 更新统计
-        if (isSuccess) {
+    results.forEach(r => {
+        statusMap[r.id] = r.maxEnd;
+        if (r.success) {
             stats.success++;
-            if (hasRecord) stats.hasData++;
+            if (r.hasData) stats.hasData++;
             else stats.noData++;
         } else {
             stats.error++;
         }
-
-        statusMap[id] = maxEnd;
-        
-        // 错峰延迟 50ms
-        await delay(1);
-    }
+    });
 
     console.log("📊 查询统计:", JSON.stringify(stats));
     return { statusMap, stats };
@@ -425,17 +435,10 @@ const calculatePlan = (idStatusMap) => {
     }
 
     // 2. 决策目标日期 (Target Date)
-    // 逻辑：如果最晚的那个人(globalMaxEndTs) 距离今天 <= 2天，说明大部队都要过期了，所有人一起往后延。
-    // 如果最晚的那个人还很安全(>2天)，则只把落后的人补齐到 globalMaxEndTs。
-    
-    // 计算最晚日期距离今天几天
     const maxEndDayId = getBeijingDayId(globalMaxEndTs);
     const diffMax = maxEndDayId - todayId;
 
     let targetTs = globalMaxEndTs;
-
-    // 如果整个团队最晚的日期都快到了(或者已经过去了)，则目标设定为：最晚日期 + 6天 (共7天)
-    // 注意：如果 globalMaxEndTs 是过去的时间(全员过期)，基准应取 todayStartTs
     const baseLineTs = Math.max(globalMaxEndTs, todayStartTs);
     
     if (diffMax <= 2) {
@@ -448,20 +451,15 @@ const calculatePlan = (idStatusMap) => {
 
     // 3. 生成每日请求
     const requests = [];
-    // 游标从 (最早结束时间 + 1天) 开始，但不能早于今天
-    // 比如某人13号结束，我们从14号开始补。
-    // 如果所有人都是18号结束，minEndTs=18号，则从19号开始判定。
     let cursorTs = Math.max(minEndTs + 86400000, todayStartTs);
     let dayCount = 1;
 
     while (cursorTs <= targetTs) {
-        // 找出这一天谁没有覆盖 (即 用户的currentEndTs < cursorTs)
         const todaysGroup = userData
             .filter(u => u.currentEndTs < cursorTs)
             .map(u => u.id);
         
         if (todaysGroup.length > 0) {
-            // 生成这一天的请求包
             const personNames = todaysGroup.map(pid => {
                 const pidBase64 = Buffer.from(pid).toString('base64');
                 return PERSON_DB[pidBase64] ? PERSON_DB[pidBase64][2].fieldData.value : pid;
@@ -495,8 +493,7 @@ const calculatePlan = (idStatusMap) => {
                 ];
 
                 const jsonStr = JSON.stringify(finalForm, null, 2); 
-                const encodedValue = encodeURIComponent(JSON.stringify(finalForm));
-                const fullPostBody = `_csrf_token=${CONFIG.csrf_token}&formUuid=${CONFIG.formUuid}&appType=${CONFIG.appType}&value=${encodedValue}&_schemaVersion=653`;
+                const fullPostBody = `_csrf_token=${CONFIG.csrf_token}&formUuid=${CONFIG.formUuid}&appType=${CONFIG.appType}&value=${encodeURIComponent(JSON.stringify(finalForm))}&_schemaVersion=653`;
 
                 requests.push({
                     ts: cursorTs,
@@ -533,7 +530,6 @@ router.get('/debug', async (req, res) => {
             ? `<span style="background:#ecfdf5; color:#059669; padding:4px 8px; border-radius:4px; border:1px solid #a7f3d0; font-size:0.8rem;">✅ 安全 (Ready)</span>`
             : `<span style="background:#fef2f2; color:#dc2626; padding:4px 8px; border-radius:4px; border:1px solid #fecaca; font-size:0.8rem;">❌ 熔断 (BLOCKED)</span>`;
 
-        // 核心修改：如果是熔断状态，不渲染真实的请求列表，而是显示阻断块
         let realQueueHTML = '';
         if (safetyCheck.safe) {
             realQueueHTML = `
@@ -742,9 +738,9 @@ router.get('/auto-renew', async (req, res) => {
     const results = [];
     
     try {
-        log("=== 🚀 开始自动续期流程 (Smart Catch-up with Staggered Query) ===");
+        log("=== 🚀 开始自动续期流程 (Smart Catch-up with Staggered Concurrency) ===");
         
-        // 1. 获取状态 & 统计 (已包含错峰)
+        // 1. 获取状态 & 统计 (已包含错峰并发)
         const { statusMap, stats } = await getAllStatuses();
         
         // 2. 执行安全熔断检查
@@ -753,7 +749,6 @@ router.get('/auto-renew', async (req, res) => {
             log(`⛔ [严重] 安全熔断触发，终止执行！`);
             log(`❌ 原因: ${safetyCheck.reason}`);
             res.type('text/plain').send(`❌ ABORTED: ${safetyCheck.reason}\n\nSee logs:\n` + logs.join('\n'));
-            // ⚠️ 核心：这里直接 return，确保绝对不会执行后续发送逻辑
             return;
         }
 
@@ -768,12 +763,18 @@ router.get('/auto-renew', async (req, res) => {
 
         log(`📝 计划生成完成: 目标日期 ${plan.targetDate}, 共 ${plan.requests.length} 个请求包`);
 
-        // 4. 执行计划 (错峰发送)
+        // 4. 执行计划 (错峰并发发送)
+        const submitPromises = [];
         for (const reqTask of plan.requests) {
-            const result = await submitApplication(reqTask.ts, reqTask.ids);
-            if (result) results.push(result);
-            await delay(50); // 发送间隔
+            submitPromises.push(submitApplication(reqTask.ts, reqTask.ids));
+            await delay(50); // 错峰间隔
         }
+        
+        // 统一等待所有请求完成
+        const taskResults = await Promise.all(submitPromises);
+        taskResults.forEach(r => {
+            if (r) results.push(r);
+        });
 
         log("=== 🏁 流程结束 ===");
         
