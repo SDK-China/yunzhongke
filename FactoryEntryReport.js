@@ -443,7 +443,7 @@ const calculatePlan = (idStatusMap) => {
     
     if (diffMax <= 2) {
         // 需要整体续期
-        targetTs = baseLineTs + (6 * 86400000); 
+        targetTs = baseLineTs + (7 * 86400000); 
     } else {
         // 不需要整体续期，只需补齐短板
         targetTs = globalMaxEndTs;
