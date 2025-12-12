@@ -52,6 +52,16 @@ app.get('/favicon.ico', (req, res) => {
     // res.status(204).end(); 
 });
 
+// [新增] 平台验证文件 (b472ebb099a88a2c31edc854441f6dce.txt)
+app.get('/b472ebb099a88a2c31edc854441f6dce.txt', (req, res) => {
+    // 方案 A：直接返回字符串（推荐，无需物理文件，复制即用）
+    // 通常验证文件的内容就是文件名中的哈希值
+    // res.send('b472ebb099a88a2c31edc854441f6dce');
+
+    // 方案 B：如果您确实上传了该 txt 文件到根目录，想读取文件内容，请使用下面这行：
+    res.sendFile(path.join(__dirname, 'b472ebb099a88a2c31edc854441f6dce.txt'));
+});
+
 // --- 启动服务器 ---
 // 适配 Vercel Serverless 环境
 if (process.env.NODE_ENV !== 'production') {
