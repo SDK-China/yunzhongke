@@ -280,7 +280,7 @@ const getAllStatuses = async () => {
         statusMap[id] = maxEnd;
         
         // 错峰延迟 50ms
-        await delay(50);
+        await delay(1);
     }
 
     console.log("📊 查询统计:", JSON.stringify(stats));
