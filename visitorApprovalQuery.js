@@ -302,7 +302,7 @@ router.get('/visitor-status', async (req, res) => {
 <body>
 
 <div class="header">
-    <h1>工厂访客通 <span style="font-size:14px" onclick="location.reload()">🔄</span></h1>
+    <h1>A08访客通 <span style="font-size:14px" onclick="location.reload()">🔄</span></h1>
     <div style="font-size:12px; opacity:0.8; margin-top:4px;">最后更新: ${nowStr}</div>
     <div class="search-bar">
         <input type="text" class="search-input" placeholder="搜姓名或身份证后4位..." id="searchInput" onkeyup="filterList()">
