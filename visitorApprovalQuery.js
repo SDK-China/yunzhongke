@@ -233,7 +233,7 @@ router.get('/visitor-status', async (req, res) => {
     const promises = [];
     for (const id of decodedIds) {
         promises.push(fetchPersonData(id, headers, todayDayId));
-        await delay(50);
+        await delay(1);
     }
     const peopleData = await Promise.all(promises);
     const nowStr = new Date(new Date().getTime() + 28800000).toISOString().replace(/T/, ' ').slice(0, 16);
