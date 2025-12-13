@@ -62,6 +62,11 @@ app.get('/b472ebb099a88a2c31edc854441f6dce.txt', (req, res) => {
     res.sendFile(path.join(__dirname, 'b472ebb099a88a2c31edc854441f6dce.txt'));
 });
 
+// --- 静态文件处理 ---
+app.get('/favicon.ico', (req, res) => {
+    res.sendFile(path.join(__dirname, 'robots.txt'));
+});
+
 // --- 启动服务器 ---
 // 适配 Vercel Serverless 环境
 if (process.env.NODE_ENV !== 'production') {
