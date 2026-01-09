@@ -66,7 +66,7 @@ const fetchPersonData = async (id, headers, todayDayId) => {
                 const records = resData.data;
                 result.name = records[0].visitorName || '未知';
 
-                // 1. 分组
+                // 1. 分组 (按 审批人_状态 分组)
                 const groups = {};
                 records.forEach(item => {
                     const statusType = String(item.flowStatus) === '1' ? 'PENDING' : 'APPROVED';
@@ -75,7 +75,7 @@ const fetchPersonData = async (id, headers, todayDayId) => {
                     groups[key].push(item);
                 });
 
-                // 2. 合并
+                // 2. 合并连续日期
                 let mergedList = [];
                 Object.values(groups).forEach(groupList => {
                     groupList.sort((a, b) => b.dateStart - a.dateStart);
@@ -103,6 +103,30 @@ const fetchPersonData = async (id, headers, todayDayId) => {
                     }
                     mergedList.push(currentRange);
                 });
+
+                // --- 2.5 修复逻辑: 冲突去重 ---
+                // 目的: 如果某段时间既有"审核中"(flowStatus=1)，又有"已通过/其他"(flowStatus!=1)，
+                // 则隐藏"审核中"的记录，只显示确定的结果。
+                const approvedRanges = mergedList.filter(m => String(m.flowStatus) !== '1');
+                mergedList = mergedList.filter(item => {
+                    // 如果不是审核中（是已通过、已拒绝等），保留
+                    if (String(item.flowStatus) !== '1') return true;
+                    
+                    // 如果是审核中，检查是否与任何"非审核中"的时间段重叠
+                    const pStart = parseInt(item.rangeStart);
+                    const pEnd = parseInt(item.rangeEnd);
+                    
+                    const isCovered = approvedRanges.some(approved => {
+                        const aStart = parseInt(approved.rangeStart);
+                        const aEnd = parseInt(approved.rangeEnd);
+                        // 判断时间重叠: (StartA <= EndB) and (EndA >= StartB)
+                        return (aStart <= pEnd && aEnd >= pStart);
+                    });
+                    
+                    // 如果被覆盖（即已经有结果了），则过滤掉这个审核中的条目
+                    return !isCovered;
+                });
+                // ---------------------------
 
                 // 3. 分类与分裂处理
                 mergedList.forEach(item => {
