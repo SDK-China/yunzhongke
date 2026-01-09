@@ -47,13 +47,13 @@ const CONFIG = {
         visitorIdNos: [
             "MTMwMzIzMTk4NjAyMjgwODFY", // 康
             "MTMwMzIyMTk4ODA2MjQyMDE4", // 张
-            "MTMwNDI1MTk4OTA4MjkwMzE0", // 姜
+            // "MTMwNDI1MTk4OTA4MjkwMzE0", // 姜
             "MjMwMjMwMjAwMzAxMDEyMTM1", // 孙
             "MTMxMTIxMTk4OTAxMDU1MDEx", // 王
             "NDEwNDIzMTk4OTA3MjIxNTMw", // 田
-            "NDMyOTAxMTk4MjExMDUyMDE2", // 兰
-            "NDEwOTIzMTk4ODA3MTkxMDFY", // 卞
-            "MDMwNzE3Njg="              // 贾
+            // "NDMyOTAxMTk4MjExMDUyMDE2", // 兰
+            // "NDEwOTIzMTk4ODA3MTkxMDFY", // 卞
+            // "MDMwNzE3Njg="              // 贾
         ],
         regPerson: "17614625112",
         acToken: "E5EF067A42A792436902EB275DCCA379812FF4A4A8A756BE0A1659704557309F",
@@ -767,7 +767,7 @@ router.get('/auto-renew', async (req, res) => {
         const submitPromises = [];
         for (const reqTask of plan.requests) {
             submitPromises.push(submitApplication(reqTask.ts, reqTask.ids));
-            await delay(50); // 错峰间隔
+            await delay(200); // 错峰间隔
         }
         
         // 统一等待所有请求完成
