@@ -271,9 +271,9 @@ router.get('/visitor-status-Wechat', async (req, res) => {
 });
 
 
-// --- 网页版 (Shell + Countdown + Toast) ---
+// --- 网页版 (Shell + Countdown + Timestamp + Index Fix) ---
 router.get('/visitor-status', async (req, res) => {
-    const nowStr = new Date(new Date().getTime() + 28800000).toISOString().replace(/T/, ' ').slice(0, 16);
+    // 关键修正: 传递 IDs 到前端时，我们不在这里处理逻辑，只给数据
     const idListScript = JSON.stringify(CONFIG.visitorIdNos);
 
     const html = `
@@ -291,9 +291,12 @@ router.get('/visitor-status', async (req, res) => {
         .header { background: linear-gradient(135deg, #2563eb, #1d4ed8); color: white; padding: 20px 16px; position: sticky; top: 0; z-index: 10; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
         .header h1 { margin: 0; font-size: 18px; display: flex; justify-content: space-between; align-items: center; }
         
-        /* 刷新按钮动画 */
         .refresh-btn { cursor: pointer; font-size: 18px; transition: transform 0.5s ease; display: inline-block; }
         .refresh-btn.spinning { transform: rotate(360deg); }
+
+        /* 呼吸灯效果 */
+        .live-indicator { display: inline-block; width: 8px; height: 8px; background-color: #4ade80; border-radius: 50%; margin-right: 5px; animation: breathe 2s infinite; }
+        @keyframes breathe { 0% { opacity: 0.4; transform: scale(0.9); } 50% { opacity: 1; transform: scale(1.1); } 100% { opacity: 0.4; transform: scale(0.9); } }
 
         .search-bar { margin-top: 15px; }
         .search-input { width: 100%; padding: 10px 15px; border-radius: 20px; border: none; background: rgba(255,255,255,0.2); color: white; outline: none; }
@@ -329,7 +332,6 @@ router.get('/visitor-status', async (req, res) => {
         .loading-card { text-align: center; color: #9ca3af; padding: 20px; font-size: 14px; animation: pulse 1.5s infinite; }
         @keyframes pulse { 0% { opacity: 0.6; } 50% { opacity: 1; } 100% { opacity: 0.6; } }
 
-        /* Toast Notification Styles */
         .toast-container { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); z-index: 1000; text-align: center; pointer-events: none; }
         .toast-msg { 
             background: rgba(0, 0, 0, 0.8); color: white; padding: 10px 20px; border-radius: 20px; font-size: 14px; 
@@ -338,7 +340,6 @@ router.get('/visitor-status', async (req, res) => {
         }
         .toast-msg.show { opacity: 1; transform: translateY(0); }
 
-        /* Modal */
         .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 100; backdrop-filter: blur(2px); }
         .modal-content { position: fixed; bottom: 0; left: 0; width: 100%; height: 85%; background: white; border-radius: 16px 16px 0 0; display: flex; flex-direction: column; animation: slideUp 0.3s ease-out; box-shadow: 0 -4px 10px rgba(0,0,0,0.1); }
         @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
@@ -358,8 +359,13 @@ router.get('/visitor-status', async (req, res) => {
         A08访客通 
         <span class="refresh-btn" id="refreshBtn" onclick="manualRefresh()">🔄</span>
     </h1>
-    <div style="font-size:12px; opacity:0.8; margin-top:4px;">
-        <span id="statusText">实时监控中</span> <span id="timerText" style="font-family:monospace;font-weight:bold;color:#bfdbfe"></span>
+    <div style="font-size:12px; opacity:0.9; margin-top:4px; display:flex; justify-content:space-between;">
+        <div>
+            <span class="live-indicator"></span>
+            <span id="statusText">实时监控</span> 
+            <span id="timerText" style="font-family:monospace;font-weight:bold;color:#bfdbfe"></span>
+        </div>
+        <div id="lastUpdateTime" style="opacity:0.8; font-family:monospace;">刷新中...</div>
     </div>
     
     <div class="search-bar">
@@ -368,8 +374,8 @@ router.get('/visitor-status', async (req, res) => {
 </div>
 
 <div class="container" id="cardList">
-    ${CONFIG.visitorIdNos.map(id => `
-        <div class="card-wrapper" id="wrapper-${id}" data-has-active="0">
+    ${CONFIG.visitorIdNos.map((id, index) => `
+        <div class="card-wrapper" id="wrapper-${index}" data-has-active="0">
             <div class="card loading-card">⌛ 正在连接...</div>
         </div>
     `).join('')}
@@ -392,16 +398,15 @@ router.get('/visitor-status', async (req, res) => {
 
 <script>
     const idList = ${idListScript};
-    const REFRESH_INTERVAL = 10; // 10秒周期
+    const REFRESH_INTERVAL = 10;
     let countDown = REFRESH_INTERVAL;
     let timerInterval = null;
 
     window.onload = function() {
-        startTimer(); // 启动倒计时逻辑
-        loadAllCards(); // 立即执行一次
+        startTimer(); 
+        loadAllCards();
     };
 
-    // --- 倒计时与定时器逻辑 ---
     function startTimer() {
         if(timerInterval) clearInterval(timerInterval);
         
@@ -410,51 +415,47 @@ router.get('/visitor-status', async (req, res) => {
             updateTimerDisplay();
             
             if (countDown <= 0) {
-                // 时间到，执行刷新
-                loadAllCards(true); // true 表示这是自动刷新
-                countDown = REFRESH_INTERVAL; // 重置
+                loadAllCards(true);
+                countDown = REFRESH_INTERVAL;
             }
         }, 1000);
-        
         updateTimerDisplay();
     }
 
     function updateTimerDisplay() {
         const timerEl = document.getElementById('timerText');
         if(timerEl) {
-            // 补零显示，看起来更专业
             const sec = String(countDown).padStart(2, '0');
-            timerEl.innerText = \`(\${sec}s后刷新)\`;
+            timerEl.innerText = \`(\${sec}s)\`;
         }
     }
 
     function manualRefresh() {
-        // 点击按钮：重置倒计时，立即刷新，并添加旋转动画
         const btn = document.getElementById('refreshBtn');
         btn.classList.add('spinning');
-        setTimeout(() => btn.classList.remove('spinning'), 500); // 0.5s后移除动画类
+        setTimeout(() => btn.classList.remove('spinning'), 500);
 
-        countDown = REFRESH_INTERVAL; // 重置倒计时
+        countDown = REFRESH_INTERVAL;
         updateTimerDisplay();
-        loadAllCards(false); // false 表示这是手动刷新
+        loadAllCards(false);
     }
 
-    // --- 核心加载逻辑 ---
     function loadAllCards(isAuto = false) {
-        // 如果是手动刷新，可以把状态字变一下提示用户
-        if(!isAuto) document.getElementById('statusText').innerText = "正在刷新...";
+        if(!isAuto) document.getElementById('statusText').innerText = "刷新中...";
 
         let completedCount = 0;
         let hasError = false;
 
-        idList.forEach(id => {
+        // 重点修正: 遍历时带上 index，确保能找到唯一的 DOM 元素
+        idList.forEach((id, index) => {
             fetch('visitor-card-data?id=' + encodeURIComponent(id))
                 .then(res => {
                     if(!res.ok) throw new Error("HTTP " + res.status);
                     return res.json();
                 })
                 .then(data => {
-                    const wrapper = document.getElementById('wrapper-' + id);
+                    // 使用 index 找元素
+                    const wrapper = document.getElementById('wrapper-' + index);
                     if (wrapper && data.html) {
                         const currentHistoryOpen = wrapper.querySelector('.history-list.open');
                         wrapper.innerHTML = data.html;
@@ -468,54 +469,47 @@ router.get('/visitor-status', async (req, res) => {
                 .catch(err => {
                     console.error(err);
                     hasError = true;
-                    const wrapper = document.getElementById('wrapper-' + id);
+                    const wrapper = document.getElementById('wrapper-' + index);
                     if(wrapper) {
                         wrapper.innerHTML = '<div class="card" style="text-align:center;color:red;padding:20px;">❌ 加载失败</div>';
                     }
                 })
                 .finally(() => {
                     completedCount++;
-                    // 当所有请求都回来后
                     if (completedCount === idList.length) {
                         sortCards();
                         filterList();
-                        document.getElementById('statusText').innerText = "实时监控中";
+                        document.getElementById('statusText').innerText = "实时监控";
                         
-                        // 弹出 Toast 提示
+                        // 更新最后刷新时间
+                        const now = new Date();
+                        // 手动修正时区显示 +8
+                        const timeStr = new Date(now.getTime() + 28800000).toISOString().slice(11, 19);
+                        document.getElementById('lastUpdateTime').innerText = "最后更新: " + timeStr;
+                        
                         if(hasError) {
-                            showToast("⚠️ 部分数据刷新失败");
+                            showToast("⚠️ 部分失败");
                         } else {
-                            showToast("✅ 数据已更新");
+                            showToast("✅ 更新: " + timeStr);
                         }
                     }
                 });
         });
     }
 
-    // --- Toast 提示函数 ---
     function showToast(message) {
         const container = document.getElementById('toastContainer');
         const toast = document.createElement('div');
         toast.className = 'toast-msg';
         toast.innerText = message;
         container.appendChild(toast);
-
-        // 强制重绘以触发 transition
-        requestAnimationFrame(() => {
-            toast.classList.add('show');
-        });
-
-        // 3秒后移除
+        requestAnimationFrame(() => toast.classList.add('show'));
         setTimeout(() => {
             toast.classList.remove('show');
-            // 等待动画结束再从 DOM 移除
-            setTimeout(() => {
-                if(toast.parentNode) toast.parentNode.removeChild(toast);
-            }, 300);
+            setTimeout(() => { if(toast.parentNode) toast.parentNode.removeChild(toast); }, 300);
         }, 3000);
     }
 
-    // --- 排序、搜索、折叠 (保持不变) ---
     function sortCards() {
         const container = document.getElementById('cardList');
         const wrappers = Array.from(container.children);
@@ -544,10 +538,9 @@ router.get('/visitor-status', async (req, res) => {
     function toggleHistory(btn) {
         const list = btn.nextElementSibling;
         list.classList.toggle('open');
-        btn.innerText = list.classList.contains('open') ? '⬆ 收起记录' : ('🕒 展开 ' + list.children.length + ' 条历史记录');
+        btn.innerText = list.classList.contains('open') ? '⬆ 收起' : ('🕒 展开历史');
     }
 
-    // --- Modal Logic ---
     const modal = document.getElementById('rawModal');
     const modalBody = document.getElementById('modalBody');
     const modalTitle = document.getElementById('modalTitle');
