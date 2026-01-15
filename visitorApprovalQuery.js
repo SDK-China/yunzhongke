@@ -14,7 +14,7 @@ const CONFIG = {
         "NDMyOTAxMTk4MjExMDUyMDE2",
         "NDEwOTIzMTk4ODA3MTkxMDFY",
         "MDMwNzE3Njg=",
-        "NDMyOTAxMTk4MjExMDUyMDE2" // 兰斌 ID (根据你提供的源数据添加，用于测试)
+        "NDMyOTAxMTk4MjExMDUyMDE2" 
     ],
     regPerson: "17614625112",
     acToken: "E5EF067A42A792436902EB275DCCA379812FF4A4A8A756BE0A1659704557309F"
@@ -76,7 +76,7 @@ const fetchPersonData = async (id, headers, todayDayId) => {
                     groups[key].push(item);
                 });
 
-                // 2. 合并连续日期 (核心修复位置)
+                // 2. 合并连续日期
                 let mergedList = [];
                 Object.values(groups).forEach(groupList => {
                     groupList.sort((a, b) => b.dateStart - a.dateStart);
@@ -91,14 +91,10 @@ const fetchPersonData = async (id, headers, todayDayId) => {
                         const nextItem = groupList[i];
                         const diffDays = getBeijingDayId(currentRange.rangeStart) - getBeijingDayId(nextItem.dateEnd);
                         
-                        // --- 新增逻辑: 跨越“今天”界限时不合并 ---
-                        // 如果上一条记录是“过去”，而当前记录是“今天或未来”，强制断开。
-                        // 防止 14号(过期) 和 15号(今天) 被合并成一条，导致14号无法进入历史记录。
+                        // 逻辑: 跨越“今天”界限时不合并
                         const rangeEndDay = getBeijingDayId(currentRange.rangeEnd);
                         const nextStartDay = getBeijingDayId(nextItem.dateStart);
-                        const isCrossingToday = (nextStartDay < todayDayId) && (rangeEndDay >= todayDayId);
-                        // 注意：因为列表是倒序的(日期大在前)，nextItem其实是日期较早的那个
-                        // 所以判断逻辑是：current(日期大/今天) vs next(日期小/昨天)
+                        
                         // 如果 current >= today 且 next < today，则不合并
                         const breakMerge = (getBeijingDayId(currentRange.rangeStart) >= todayDayId) && (getBeijingDayId(nextItem.dateEnd) < todayDayId);
 
@@ -178,7 +174,7 @@ const fetchPersonData = async (id, headers, todayDayId) => {
                     }
                 });
 
-                // 4. 排序
+                // 4. 排序 (内部列表排序)
                 result.priorityList.sort((a, b) => b.rangeStart - a.rangeStart);
                 result.historyList.sort((a, b) => b.rangeStart - a.rangeStart);
             }
@@ -215,6 +211,13 @@ router.get('/visitor-status-Wechat', async (req, res) => {
             await delay(50);
         }
         const results = await Promise.all(promises);
+
+        // --- 文本版也加上排序 (可选) ---
+        results.sort((a, b) => {
+            const aHas = a.priorityList.length > 0 ? 1 : 0;
+            const bHas = b.priorityList.length > 0 ? 1 : 0;
+            return bHas - aHas; 
+        });
 
         results.forEach(person => {
             if (!person.success) {
@@ -263,6 +266,16 @@ router.get('/visitor-status', async (req, res) => {
         await delay(50);
     }
     const peopleData = await Promise.all(promises);
+    
+    // --- 新增: 结果列表排序 ---
+    // 逻辑：priorityList长度大于0 (有Active/Pending/Future) 的排在前面
+    peopleData.sort((a, b) => {
+        const aHas = a.priorityList.length > 0 ? 1 : 0;
+        const bHas = b.priorityList.length > 0 ? 1 : 0;
+        return bHas - aHas; // 降序: 有记录(1) 排在 无记录(0) 前面
+    });
+    // ----------------------
+
     const nowStr = new Date(new Date().getTime() + 28800000).toISOString().replace(/T/, ' ').slice(0, 16);
 
     const html = `
@@ -375,14 +388,14 @@ router.get('/visitor-status', async (req, res) => {
                         const startStr = getFormattedDate(item._displayStart);
                         const endStr = getFormattedDate(item._displayEnd);
                         
-                        // 修复逻辑：历史记录也要根据状态显示图标
+                        // 历史记录图标显示
                         let icon = '⚪';
                         let statusText = '';
                         if (String(item.flowStatus) === '1') { 
                             icon = '🟡'; 
                             statusText = ' [审核中]';
                         } else if (String(item.flowStatus) === '7' || String(item.flowStatus) === '5') {
-                            icon = '⚪'; // 已过期或拒绝通常用灰色/白色
+                            icon = '⚪'; 
                         }
                         
                         return `<div class="record-item" style="opacity:0.6"><div>${icon}</div><div>${startStr}-${endStr}${statusText}</div></div>`;
