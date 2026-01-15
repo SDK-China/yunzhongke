@@ -271,7 +271,7 @@ router.get('/visitor-status', async (req, res) => {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>访客状态看板</title>
+    <title>A08访客通</title>
     <style>
         :root { --primary: #3b82f6; --success: #10b981; --bg: #f3f4f6; --card-bg: #ffffff; --text-main: #1f2937; }
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
