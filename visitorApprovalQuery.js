@@ -13,7 +13,8 @@ const CONFIG = {
         "NDEwNDIzMTk4OTA3MjIxNTMw",
         "NDMyOTAxMTk4MjExMDUyMDE2",
         "NDEwOTIzMTk4ODA3MTkxMDFY",
-        "MDMwNzE3Njg="
+        "MDMwNzE3Njg=",
+        "NDMyOTAxMTk4MjExMDUyMDE2" // 兰斌 ID (根据你提供的源数据添加，用于测试)
     ],
     regPerson: "17614625112",
     acToken: "E5EF067A42A792436902EB275DCCA379812FF4A4A8A756BE0A1659704557309F"
@@ -75,7 +76,7 @@ const fetchPersonData = async (id, headers, todayDayId) => {
                     groups[key].push(item);
                 });
 
-                // 2. 合并连续日期
+                // 2. 合并连续日期 (核心修复位置)
                 let mergedList = [];
                 Object.values(groups).forEach(groupList => {
                     groupList.sort((a, b) => b.dateStart - a.dateStart);
@@ -90,7 +91,18 @@ const fetchPersonData = async (id, headers, todayDayId) => {
                         const nextItem = groupList[i];
                         const diffDays = getBeijingDayId(currentRange.rangeStart) - getBeijingDayId(nextItem.dateEnd);
                         
-                        if (diffDays <= 1) {
+                        // --- 新增逻辑: 跨越“今天”界限时不合并 ---
+                        // 如果上一条记录是“过去”，而当前记录是“今天或未来”，强制断开。
+                        // 防止 14号(过期) 和 15号(今天) 被合并成一条，导致14号无法进入历史记录。
+                        const rangeEndDay = getBeijingDayId(currentRange.rangeEnd);
+                        const nextStartDay = getBeijingDayId(nextItem.dateStart);
+                        const isCrossingToday = (nextStartDay < todayDayId) && (rangeEndDay >= todayDayId);
+                        // 注意：因为列表是倒序的(日期大在前)，nextItem其实是日期较早的那个
+                        // 所以判断逻辑是：current(日期大/今天) vs next(日期小/昨天)
+                        // 如果 current >= today 且 next < today，则不合并
+                        const breakMerge = (getBeijingDayId(currentRange.rangeStart) >= todayDayId) && (getBeijingDayId(nextItem.dateEnd) < todayDayId);
+
+                        if (diffDays <= 1 && !breakMerge) {
                             currentRange.rangeStart = nextItem.dateStart;
                         } else {
                             mergedList.push(currentRange);
@@ -104,29 +116,19 @@ const fetchPersonData = async (id, headers, todayDayId) => {
                     mergedList.push(currentRange);
                 });
 
-                // --- 2.5 修复逻辑: 冲突去重 ---
-                // 目的: 如果某段时间既有"审核中"(flowStatus=1)，又有"已通过/其他"(flowStatus!=1)，
-                // 则隐藏"审核中"的记录，只显示确定的结果。
+                // --- 2.5 冲突去重 ---
                 const approvedRanges = mergedList.filter(m => String(m.flowStatus) !== '1');
                 mergedList = mergedList.filter(item => {
-                    // 如果不是审核中（是已通过、已拒绝等），保留
                     if (String(item.flowStatus) !== '1') return true;
-                    
-                    // 如果是审核中，检查是否与任何"非审核中"的时间段重叠
                     const pStart = parseInt(item.rangeStart);
                     const pEnd = parseInt(item.rangeEnd);
-                    
                     const isCovered = approvedRanges.some(approved => {
                         const aStart = parseInt(approved.rangeStart);
                         const aEnd = parseInt(approved.rangeEnd);
-                        // 判断时间重叠: (StartA <= EndB) and (EndA >= StartB)
                         return (aStart <= pEnd && aEnd >= pStart);
                     });
-                    
-                    // 如果被覆盖（即已经有结果了），则过滤掉这个审核中的条目
                     return !isCovered;
                 });
-                // ---------------------------
 
                 // 3. 分类与分裂处理
                 mergedList.forEach(item => {
@@ -134,13 +136,18 @@ const fetchPersonData = async (id, headers, todayDayId) => {
                     const endId = getBeijingDayId(item.rangeEnd);
                     let type = 'ACTIVE';
 
-                    if (String(item.flowStatus) === '1') type = 'PENDING';
-                    else if (endId < todayDayId) type = 'HISTORY';
-                    else if (startId > todayDayId) type = 'FUTURE';
+                    if (endId < todayDayId) {
+                        type = 'HISTORY'; 
+                    } else if (String(item.flowStatus) === '1') {
+                        type = 'PENDING';
+                    } else if (startId > todayDayId) {
+                        type = 'FUTURE';
+                    } else {
+                        type = 'ACTIVE';
+                    }
                     
                     const baseItem = { ...item, _type: type };
 
-                    // Priority List: ACTIVE(部分), FUTURE, PENDING
                     if (type === 'FUTURE' || type === 'PENDING') {
                         result.priorityList.push({
                             ...baseItem,
@@ -155,7 +162,6 @@ const fetchPersonData = async (id, headers, todayDayId) => {
                         });
                     }
 
-                    // History List: HISTORY + ACTIVE(过去部分)
                     if (type === 'HISTORY') {
                         result.historyList.push({
                             ...baseItem,
@@ -223,10 +229,7 @@ router.get('/visitor-status-Wechat', async (req, res) => {
                 person.priorityList.forEach(item => {
                     const startStr = getFormattedDate(item._displayStart);
                     const endStr = getFormattedDate(item._displayEnd);
-                    const currentYear = new Date().getFullYear();
-                    const displayStart = startStr.startsWith(currentYear) ? startStr.slice(5) : startStr;
-                    const displayEnd = endStr.startsWith(currentYear) ? endStr.slice(5) : endStr;
-                    let dateDisplay = (startStr === endStr) ? displayStart : `${displayStart}-${displayEnd}`;
+                    let dateDisplay = (startStr === endStr) ? startStr : `${startStr}-${endStr}`;
 
                     let icon = "⚪";
                     let statusText = "";
@@ -338,7 +341,6 @@ router.get('/visitor-status', async (req, res) => {
         const searchKey = `${person.name} ${person.idTail}`.toUpperCase();
         const rawJsonStr = encodeURIComponent(JSON.stringify(person.rawData, null, 2));
 
-        // 核心修改：状态展示优先级判断
         let mainStatusHtml = '<span class="status-badge badge-none">无记录</span>';
         const hasActive = person.priorityList.some(i => i._type === 'ACTIVE');
         const hasPending = person.priorityList.some(i => i._type === 'PENDING');
@@ -372,7 +374,18 @@ router.get('/visitor-status', async (req, res) => {
                     ${person.historyList.map(item => {
                         const startStr = getFormattedDate(item._displayStart);
                         const endStr = getFormattedDate(item._displayEnd);
-                        return `<div class="record-item" style="opacity:0.6"><div>⚪</div><div>${startStr}-${endStr}</div></div>`;
+                        
+                        // 修复逻辑：历史记录也要根据状态显示图标
+                        let icon = '⚪';
+                        let statusText = '';
+                        if (String(item.flowStatus) === '1') { 
+                            icon = '🟡'; 
+                            statusText = ' [审核中]';
+                        } else if (String(item.flowStatus) === '7' || String(item.flowStatus) === '5') {
+                            icon = '⚪'; // 已过期或拒绝通常用灰色/白色
+                        }
+                        
+                        return `<div class="record-item" style="opacity:0.6"><div>${icon}</div><div>${startStr}-${endStr}${statusText}</div></div>`;
                     }).join('')}
                 </div>
             </div>
