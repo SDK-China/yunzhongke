@@ -13,7 +13,8 @@ const CONFIG = {
         "NDEwNDIzMTk4OTA3MjIxNTMw",
         "NDMyOTAxMTk4MjExMDUyMDE2",
         "NDEwOTIzMTk4ODA3MTkxMDFY",
-        "MDMwNzE3Njg="
+        "MDMwNzE3Njg=",
+        "NDMyOTAxMTk4MjExMDUyMDE2" 
     ],
     regPerson: "17614625112",
     acToken: "E5EF067A42A792436902EB275DCCA379812FF4A4A8A756BE0A1659704557309F"
@@ -66,7 +67,7 @@ const fetchPersonData = async (id, headers, todayDayId) => {
                 const records = resData.data;
                 result.name = records[0].visitorName || '未知';
 
-                // 1. 分组
+                // 1. 分组 (按 审批人_状态 分组)
                 const groups = {};
                 records.forEach(item => {
                     const statusType = String(item.flowStatus) === '1' ? 'PENDING' : 'APPROVED';
@@ -75,7 +76,7 @@ const fetchPersonData = async (id, headers, todayDayId) => {
                     groups[key].push(item);
                 });
 
-                // 2. 合并
+                // 2. 合并连续日期
                 let mergedList = [];
                 Object.values(groups).forEach(groupList => {
                     groupList.sort((a, b) => b.dateStart - a.dateStart);
@@ -90,7 +91,14 @@ const fetchPersonData = async (id, headers, todayDayId) => {
                         const nextItem = groupList[i];
                         const diffDays = getBeijingDayId(currentRange.rangeStart) - getBeijingDayId(nextItem.dateEnd);
                         
-                        if (diffDays <= 1) {
+                        // 逻辑: 跨越“今天”界限时不合并
+                        const rangeEndDay = getBeijingDayId(currentRange.rangeEnd);
+                        const nextStartDay = getBeijingDayId(nextItem.dateStart);
+                        
+                        // 如果 current >= today 且 next < today，则不合并
+                        const breakMerge = (getBeijingDayId(currentRange.rangeStart) >= todayDayId) && (getBeijingDayId(nextItem.dateEnd) < todayDayId);
+
+                        if (diffDays <= 1 && !breakMerge) {
                             currentRange.rangeStart = nextItem.dateStart;
                         } else {
                             mergedList.push(currentRange);
@@ -104,19 +112,38 @@ const fetchPersonData = async (id, headers, todayDayId) => {
                     mergedList.push(currentRange);
                 });
 
+                // --- 2.5 冲突去重 ---
+                const approvedRanges = mergedList.filter(m => String(m.flowStatus) !== '1');
+                mergedList = mergedList.filter(item => {
+                    if (String(item.flowStatus) !== '1') return true;
+                    const pStart = parseInt(item.rangeStart);
+                    const pEnd = parseInt(item.rangeEnd);
+                    const isCovered = approvedRanges.some(approved => {
+                        const aStart = parseInt(approved.rangeStart);
+                        const aEnd = parseInt(approved.rangeEnd);
+                        return (aStart <= pEnd && aEnd >= pStart);
+                    });
+                    return !isCovered;
+                });
+
                 // 3. 分类与分裂处理
                 mergedList.forEach(item => {
                     const startId = getBeijingDayId(item.rangeStart);
                     const endId = getBeijingDayId(item.rangeEnd);
                     let type = 'ACTIVE';
 
-                    if (String(item.flowStatus) === '1') type = 'PENDING';
-                    else if (endId < todayDayId) type = 'HISTORY';
-                    else if (startId > todayDayId) type = 'FUTURE';
+                    if (endId < todayDayId) {
+                        type = 'HISTORY'; 
+                    } else if (String(item.flowStatus) === '1') {
+                        type = 'PENDING';
+                    } else if (startId > todayDayId) {
+                        type = 'FUTURE';
+                    } else {
+                        type = 'ACTIVE';
+                    }
                     
                     const baseItem = { ...item, _type: type };
 
-                    // Priority List: ACTIVE(部分), FUTURE, PENDING
                     if (type === 'FUTURE' || type === 'PENDING') {
                         result.priorityList.push({
                             ...baseItem,
@@ -131,7 +158,6 @@ const fetchPersonData = async (id, headers, todayDayId) => {
                         });
                     }
 
-                    // History List: HISTORY + ACTIVE(过去部分)
                     if (type === 'HISTORY') {
                         result.historyList.push({
                             ...baseItem,
@@ -148,7 +174,7 @@ const fetchPersonData = async (id, headers, todayDayId) => {
                     }
                 });
 
-                // 4. 排序
+                // 4. 排序 (内部列表排序)
                 result.priorityList.sort((a, b) => b.rangeStart - a.rangeStart);
                 result.historyList.sort((a, b) => b.rangeStart - a.rangeStart);
             }
@@ -186,6 +212,13 @@ router.get('/visitor-status-Wechat', async (req, res) => {
         }
         const results = await Promise.all(promises);
 
+        // --- 文本版也加上排序 (可选) ---
+        results.sort((a, b) => {
+            const aHas = a.priorityList.length > 0 ? 1 : 0;
+            const bHas = b.priorityList.length > 0 ? 1 : 0;
+            return bHas - aHas; 
+        });
+
         results.forEach(person => {
             if (!person.success) {
                 outputLines.push(`\n❌ ${person.idTail} 查询失败或无记录`);
@@ -199,10 +232,7 @@ router.get('/visitor-status-Wechat', async (req, res) => {
                 person.priorityList.forEach(item => {
                     const startStr = getFormattedDate(item._displayStart);
                     const endStr = getFormattedDate(item._displayEnd);
-                    const currentYear = new Date().getFullYear();
-                    const displayStart = startStr.startsWith(currentYear) ? startStr.slice(5) : startStr;
-                    const displayEnd = endStr.startsWith(currentYear) ? endStr.slice(5) : endStr;
-                    let dateDisplay = (startStr === endStr) ? displayStart : `${displayStart}-${displayEnd}`;
+                    let dateDisplay = (startStr === endStr) ? startStr : `${startStr}-${endStr}`;
 
                     let icon = "⚪";
                     let statusText = "";
@@ -236,6 +266,16 @@ router.get('/visitor-status', async (req, res) => {
         await delay(50);
     }
     const peopleData = await Promise.all(promises);
+    
+    // --- 新增: 结果列表排序 ---
+    // 逻辑：priorityList长度大于0 (有Active/Pending/Future) 的排在前面
+    peopleData.sort((a, b) => {
+        const aHas = a.priorityList.length > 0 ? 1 : 0;
+        const bHas = b.priorityList.length > 0 ? 1 : 0;
+        return bHas - aHas; // 降序: 有记录(1) 排在 无记录(0) 前面
+    });
+    // ----------------------
+
     const nowStr = new Date(new Date().getTime() + 28800000).toISOString().replace(/T/, ' ').slice(0, 16);
 
     const html = `
@@ -244,7 +284,7 @@ router.get('/visitor-status', async (req, res) => {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>访客状态看板</title>
+    <title>A08访客通</title>
     <style>
         :root { --primary: #3b82f6; --success: #10b981; --bg: #f3f4f6; --card-bg: #ffffff; --text-main: #1f2937; }
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
@@ -314,7 +354,6 @@ router.get('/visitor-status', async (req, res) => {
         const searchKey = `${person.name} ${person.idTail}`.toUpperCase();
         const rawJsonStr = encodeURIComponent(JSON.stringify(person.rawData, null, 2));
 
-        // 核心修改：状态展示优先级判断
         let mainStatusHtml = '<span class="status-badge badge-none">无记录</span>';
         const hasActive = person.priorityList.some(i => i._type === 'ACTIVE');
         const hasPending = person.priorityList.some(i => i._type === 'PENDING');
@@ -348,7 +387,18 @@ router.get('/visitor-status', async (req, res) => {
                     ${person.historyList.map(item => {
                         const startStr = getFormattedDate(item._displayStart);
                         const endStr = getFormattedDate(item._displayEnd);
-                        return `<div class="record-item" style="opacity:0.6"><div>⚪</div><div>${startStr}-${endStr}</div></div>`;
+                        
+                        // 历史记录图标显示
+                        let icon = '⚪';
+                        let statusText = '';
+                        if (String(item.flowStatus) === '1') { 
+                            icon = '🟡'; 
+                            statusText = ' [审核中]';
+                        } else if (String(item.flowStatus) === '7' || String(item.flowStatus) === '5') {
+                            icon = '⚪'; 
+                        }
+                        
+                        return `<div class="record-item" style="opacity:0.6"><div>${icon}</div><div>${startStr}-${endStr}${statusText}</div></div>`;
                     }).join('')}
                 </div>
             </div>

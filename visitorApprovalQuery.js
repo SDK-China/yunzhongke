@@ -35,7 +35,16 @@ const getFormattedDate = (ts) => {
     return `${y}/${m}/${day}`;
 };
 
-// --- 核心逻辑：获取并处理单人数据 ---
+const getHeaders = () => ({
+    "Host": "dingtalk.avaryholding.com:8443",
+    "Connection": "keep-alive",
+    "User-Agent": "Mozilla/5.0 (Linux; Android 16; PJZ110 Build/BP2A.250605.015) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.7444.102 Mobile Safari/537.36",
+    "Content-Type": "application/json",
+    "Origin": "https://iw68lh.aliwork.com",
+    "Referer": "https://iw68lh.aliwork.com/o/fkxt_index_app/FORM-AA91D5970CA048008FF29690F451EA1DDXJH?account=17614625112"
+});
+
+// --- 核心逻辑 ---
 const fetchPersonData = async (id, headers, todayDayId) => {
     const targetUrl = 'https://dingtalk.avaryholding.com:8443/dingplus/visitorConnector/visitorStatus';
     const idTail = id.length > 4 ? id.slice(-4) : id;
@@ -44,16 +53,12 @@ const fetchPersonData = async (id, headers, todayDayId) => {
         name: '未知',
         idTail: idTail,
         success: false,
-        priorityList: [], // 存放：ACTIVE(截断后), FUTURE, PENDING
-        historyList: [],  // 存放：完全过期的 HISTORY + ACTIVE(被截断的前半段)
-        rawData: []       // 完整原始数据
+        priorityList: [],
+        historyList: [],
+        rawData: []
     };
 
-    const body = {
-        visitorIdNo: id,
-        regPerson: CONFIG.regPerson,
-        acToken: CONFIG.acToken
-    };
+    const body = { visitorIdNo: id, regPerson: CONFIG.regPerson, acToken: CONFIG.acToken };
 
     try {
         const response = await axios.post(targetUrl, body, { headers, timeout: 8000 });
@@ -67,7 +72,6 @@ const fetchPersonData = async (id, headers, todayDayId) => {
                 const records = resData.data;
                 result.name = records[0].visitorName || '未知';
 
-                // 1. 分组 (按 审批人_状态 分组)
                 const groups = {};
                 records.forEach(item => {
                     const statusType = String(item.flowStatus) === '1' ? 'PENDING' : 'APPROVED';
@@ -76,43 +80,26 @@ const fetchPersonData = async (id, headers, todayDayId) => {
                     groups[key].push(item);
                 });
 
-                // 2. 合并连续日期
                 let mergedList = [];
                 Object.values(groups).forEach(groupList => {
                     groupList.sort((a, b) => b.dateStart - a.dateStart);
-                    
-                    let currentRange = {
-                        ...groupList[0],
-                        rangeStart: groupList[0].dateStart,
-                        rangeEnd: groupList[0].dateEnd
-                    };
+                    let currentRange = { ...groupList[0], rangeStart: groupList[0].dateStart, rangeEnd: groupList[0].dateEnd };
 
                     for (let i = 1; i < groupList.length; i++) {
                         const nextItem = groupList[i];
                         const diffDays = getBeijingDayId(currentRange.rangeStart) - getBeijingDayId(nextItem.dateEnd);
-                        
-                        // 逻辑: 跨越“今天”界限时不合并
-                        const rangeEndDay = getBeijingDayId(currentRange.rangeEnd);
-                        const nextStartDay = getBeijingDayId(nextItem.dateStart);
-                        
-                        // 如果 current >= today 且 next < today，则不合并
                         const breakMerge = (getBeijingDayId(currentRange.rangeStart) >= todayDayId) && (getBeijingDayId(nextItem.dateEnd) < todayDayId);
 
                         if (diffDays <= 1 && !breakMerge) {
                             currentRange.rangeStart = nextItem.dateStart;
                         } else {
                             mergedList.push(currentRange);
-                            currentRange = {
-                                ...nextItem,
-                                rangeStart: nextItem.dateStart,
-                                rangeEnd: nextItem.dateEnd
-                            };
+                            currentRange = { ...nextItem, rangeStart: nextItem.dateStart, rangeEnd: nextItem.dateEnd };
                         }
                     }
                     mergedList.push(currentRange);
                 });
 
-                // --- 2.5 冲突去重 ---
                 const approvedRanges = mergedList.filter(m => String(m.flowStatus) !== '1');
                 mergedList = mergedList.filter(item => {
                     if (String(item.flowStatus) !== '1') return true;
@@ -126,83 +113,129 @@ const fetchPersonData = async (id, headers, todayDayId) => {
                     return !isCovered;
                 });
 
-                // 3. 分类与分裂处理
                 mergedList.forEach(item => {
                     const startId = getBeijingDayId(item.rangeStart);
                     const endId = getBeijingDayId(item.rangeEnd);
                     let type = 'ACTIVE';
 
-                    if (endId < todayDayId) {
-                        type = 'HISTORY'; 
-                    } else if (String(item.flowStatus) === '1') {
-                        type = 'PENDING';
-                    } else if (startId > todayDayId) {
-                        type = 'FUTURE';
-                    } else {
-                        type = 'ACTIVE';
-                    }
+                    if (endId < todayDayId) type = 'HISTORY'; 
+                    else if (String(item.flowStatus) === '1') type = 'PENDING';
+                    else if (startId > todayDayId) type = 'FUTURE';
+                    else type = 'ACTIVE';
                     
                     const baseItem = { ...item, _type: type };
 
                     if (type === 'FUTURE' || type === 'PENDING') {
-                        result.priorityList.push({
-                            ...baseItem,
-                            _displayStart: item.rangeStart,
-                            _displayEnd: item.rangeEnd
-                        });
+                        result.priorityList.push({ ...baseItem, _displayStart: item.rangeStart, _displayEnd: item.rangeEnd });
                     } else if (type === 'ACTIVE') {
-                        result.priorityList.push({
-                            ...baseItem,
-                            _displayStart: (startId < todayDayId) ? getNowTs() : item.rangeStart,
-                            _displayEnd: item.rangeEnd
-                        });
+                        result.priorityList.push({ ...baseItem, _displayStart: (startId < todayDayId) ? getNowTs() : item.rangeStart, _displayEnd: item.rangeEnd });
                     }
 
                     if (type === 'HISTORY') {
-                        result.historyList.push({
-                            ...baseItem,
-                            _displayStart: item.rangeStart,
-                            _displayEnd: item.rangeEnd
-                        });
+                        result.historyList.push({ ...baseItem, _displayStart: item.rangeStart, _displayEnd: item.rangeEnd });
                     } else if (type === 'ACTIVE' && startId < todayDayId) {
                         const yesterdayTs = getNowTs() - 86400000;
-                        result.historyList.push({
-                            ...baseItem,
-                            _displayStart: item.rangeStart,
-                            _displayEnd: yesterdayTs
-                        });
+                        result.historyList.push({ ...baseItem, _displayStart: item.rangeStart, _displayEnd: yesterdayTs });
                     }
                 });
 
-                // 4. 排序 (内部列表排序)
                 result.priorityList.sort((a, b) => b.rangeStart - a.rangeStart);
                 result.historyList.sort((a, b) => b.rangeStart - a.rangeStart);
             }
         }
     } catch (err) {
-        // success false
+        // console.error(err);
     }
     return result;
 };
 
-const getHeaders = () => ({
-    "Host": "dingtalk.avaryholding.com:8443",
-    "Connection": "keep-alive",
-    "User-Agent": "Mozilla/5.0 (Linux; Android 16; PJZ110 Build/BP2A.250605.015) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.7444.102 Mobile Safari/537.36",
-    "Content-Type": "application/json",
-    "Origin": "https://iw68lh.aliwork.com",
-    "Referer": "https://iw68lh.aliwork.com/o/fkxt_index_app/FORM-AA91D5970CA048008FF29690F451EA1DDXJH?account=17614625112"
+// --- HTML 生成器 ---
+const generateCardHtml = (person) => {
+    const searchKey = `${person.name} ${person.idTail}`.toUpperCase();
+    const rawJsonStr = encodeURIComponent(JSON.stringify(person.rawData, null, 2));
+
+    let mainStatusHtml = '<span class="status-badge badge-none">无记录</span>';
+    const hasActive = person.priorityList.some(i => i._type === 'ACTIVE');
+    const hasPending = person.priorityList.some(i => i._type === 'PENDING');
+    const hasFuture = person.priorityList.some(i => i._type === 'FUTURE');
+
+    if (hasActive) mainStatusHtml = '<span class="status-badge badge-active">生效中</span>';
+    else if (hasPending) mainStatusHtml = '<span class="status-badge badge-pending">审核中</span>';
+    else if (hasFuture) mainStatusHtml = '<span class="status-badge badge-future">已预约</span>';
+    else if (!person.success) mainStatusHtml = '<span class="status-badge badge-none" style="background:#fee2e2;color:#991b1b">查询失败</span>';
+
+    const priorityHtml = person.priorityList.map(item => {
+        const startStr = getFormattedDate(item._displayStart);
+        const endStr = getFormattedDate(item._displayEnd);
+        let tag = '', icon = '⚪';
+        if (item._type === 'ACTIVE') { tag = '<span class="record-tag tag-active">今日生效</span>'; icon = '🟢'; }
+        if (item._type === 'FUTURE') { tag = '<span class="record-tag tag-future">预约</span>'; icon = '🔵'; }
+        if (item._type === 'PENDING') { tag = '<span class="record-tag tag-pending">审核中</span>'; icon = '🟡'; }
+        return `<div class="record-item"><div>${icon}</div><div><div>${startStr}-${endStr} ${tag}</div><div style="font-size:12px;color:#6b7280">审批: ${item.rPersonName}</div></div></div>`;
+    }).join('');
+
+    const historyHtml = person.historyList.length > 0 ? `
+        <div class="history-section">
+            <div class="history-toggle" onclick="toggleHistory(this)">🕒 展开 ${person.historyList.length} 条历史记录</div>
+            <div class="history-list">
+                ${person.historyList.map(item => {
+                    const startStr = getFormattedDate(item._displayStart);
+                    const endStr = getFormattedDate(item._displayEnd);
+                    let icon = '⚪', statusText = '';
+                    if (String(item.flowStatus) === '1') { icon = '🟡'; statusText = ' [审核中]'; }
+                    return `<div class="record-item" style="opacity:0.6"><div>${icon}</div><div>${startStr}-${endStr}${statusText}</div></div>`;
+                }).join('')}
+            </div>
+        </div>
+    ` : '';
+
+    return `
+        <div class="card" data-key="${searchKey}">
+            <div class="card-header">
+                <div class="user-info">
+                    <div class="avatar">${person.name[0] || '?'}</div>
+                    <div><div class="user-name">${person.name}</div><div class="user-id">ID: ${person.idTail}</div></div>
+                </div>
+                ${mainStatusHtml}
+            </div>
+            <div>${priorityHtml || '<div style="text-align:center;color:#ccc;font-size:12px">暂无活跃记录</div>'}</div>
+            ${historyHtml}
+            <button class="raw-btn" onclick="openRawModal('${person.name}', '${rawJsonStr}')">📦 查看源数据</button>
+        </div>
+    `;
+};
+
+
+// --- API: 卡片数据接口 ---
+router.get('/visitor-card-data', async (req, res) => {
+    try {
+        const encodedId = req.query.id;
+        if (!encodedId) return res.json({ html: '', hasActive: false });
+
+        const id = Buffer.from(encodedId, 'base64').toString('utf-8');
+        const headers = getHeaders();
+        const todayDayId = getBeijingDayId(new Date().getTime());
+
+        const person = await fetchPersonData(id, headers, todayDayId);
+        const html = generateCardHtml(person);
+        const hasActive = person.priorityList.length > 0;
+
+        res.json({ html, hasActive });
+    } catch (e) {
+        console.error("API Error:", e);
+        const errorHtml = `<div class="card" style="border-left:4px solid red; padding:10px; color:red">⚠️ 数据获取失败</div>`;
+        res.json({ html: errorHtml, hasActive: false });
+    }
 });
 
-// --- 路由 1: 文本版 ---
+
+// --- 微信文本版 ---
 router.get('/visitor-status-Wechat', async (req, res) => {
     const headers = getHeaders();
     const now = new Date();
     const nowStr = new Date(now.getTime() + 28800000).toISOString().replace(/T/, ' ').replace(/\..+/, '');
     const todayDayId = getBeijingDayId(now.getTime());
-    
     let outputLines = [`🕒 查询时间: ${nowStr}`];
-
     try {
         const decodedIds = CONFIG.visitorIdNos.map(encoded => Buffer.from(encoded, 'base64').toString('utf-8'));
         const promises = [];
@@ -211,72 +244,37 @@ router.get('/visitor-status-Wechat', async (req, res) => {
             await delay(50);
         }
         const results = await Promise.all(promises);
-
-        // --- 文本版也加上排序 (可选) ---
-        results.sort((a, b) => {
-            const aHas = a.priorityList.length > 0 ? 1 : 0;
-            const bHas = b.priorityList.length > 0 ? 1 : 0;
-            return bHas - aHas; 
-        });
-
+        results.sort((a, b) => (b.priorityList.length > 0 ? 1 : 0) - (a.priorityList.length > 0 ? 1 : 0));
         results.forEach(person => {
-            if (!person.success) {
-                outputLines.push(`\n❌ ${person.idTail} 查询失败或无记录`);
-                return;
-            }
+            if (!person.success) { outputLines.push(`\n❌ ${person.idTail} 查询失败`); return; }
             const hasActive = person.priorityList.length > 0;
             outputLines.push(`\n👤 ${person.name} (${person.idTail})`);
-            if (!hasActive) {
-                outputLines.push(`⚪ 无有效记录`);
-            } else {
+            if (!hasActive) outputLines.push(`⚪ 无有效记录`);
+            else {
                 person.priorityList.forEach(item => {
                     const startStr = getFormattedDate(item._displayStart);
                     const endStr = getFormattedDate(item._displayEnd);
                     let dateDisplay = (startStr === endStr) ? startStr : `${startStr}-${endStr}`;
-
-                    let icon = "⚪";
-                    let statusText = "";
+                    let icon = "⚪", statusText = "";
                     if (item._type === 'PENDING') { icon = "🟡"; statusText = " [审核中🔥]"; }
                     else if (item._type === 'ACTIVE') { icon = "🟢"; statusText = " [今日生效]"; }
                     else if (item._type === 'FUTURE') { icon = "🔵"; statusText = " [已预约]"; }
-
                     outputLines.push(`${icon} ${dateDisplay} | 审批:${item.rPersonName}${statusText}`);
                 });
             }
         });
-
         res.header('Content-Type', 'text/plain; charset=utf-8');
         res.send(outputLines.join('\n'));
-
     } catch (err) {
-        console.error(err);
         res.status(500).send('Server Error');
     }
 });
 
-// --- 路由 2: 网页版 ---
-router.get('/visitor-status', async (req, res) => {
-    const headers = getHeaders();
-    const todayDayId = getBeijingDayId(new Date().getTime());
-    
-    const decodedIds = CONFIG.visitorIdNos.map(encoded => Buffer.from(encoded, 'base64').toString('utf-8'));
-    const promises = [];
-    for (const id of decodedIds) {
-        promises.push(fetchPersonData(id, headers, todayDayId));
-        await delay(50);
-    }
-    const peopleData = await Promise.all(promises);
-    
-    // --- 新增: 结果列表排序 ---
-    // 逻辑：priorityList长度大于0 (有Active/Pending/Future) 的排在前面
-    peopleData.sort((a, b) => {
-        const aHas = a.priorityList.length > 0 ? 1 : 0;
-        const bHas = b.priorityList.length > 0 ? 1 : 0;
-        return bHas - aHas; // 降序: 有记录(1) 排在 无记录(0) 前面
-    });
-    // ----------------------
 
+// --- 网页版 (Shell + Countdown + Toast) ---
+router.get('/visitor-status', async (req, res) => {
     const nowStr = new Date(new Date().getTime() + 28800000).toISOString().replace(/T/, ' ').slice(0, 16);
+    const idListScript = JSON.stringify(CONFIG.visitorIdNos);
 
     const html = `
 <!DOCTYPE html>
@@ -292,11 +290,17 @@ router.get('/visitor-status', async (req, res) => {
         
         .header { background: linear-gradient(135deg, #2563eb, #1d4ed8); color: white; padding: 20px 16px; position: sticky; top: 0; z-index: 10; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
         .header h1 { margin: 0; font-size: 18px; display: flex; justify-content: space-between; align-items: center; }
+        
+        /* 刷新按钮动画 */
+        .refresh-btn { cursor: pointer; font-size: 18px; transition: transform 0.5s ease; display: inline-block; }
+        .refresh-btn.spinning { transform: rotate(360deg); }
+
         .search-bar { margin-top: 15px; }
         .search-input { width: 100%; padding: 10px 15px; border-radius: 20px; border: none; background: rgba(255,255,255,0.2); color: white; outline: none; }
         .search-input::placeholder { color: rgba(255,255,255,0.7); }
 
         .container { padding: 16px; max-width: 600px; margin: 0 auto; }
+        .card-wrapper { transition: all 0.3s ease; }
         .card { background: var(--card-bg); border-radius: 12px; padding: 16px; margin-bottom: 16px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
         
         .card-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #f0f0f0; padding-bottom: 10px; margin-bottom: 10px; }
@@ -321,106 +325,57 @@ router.get('/visitor-status', async (req, res) => {
         .history-toggle { font-size: 12px; color: #9ca3af; text-align: center; padding: 5px; cursor: pointer; }
         .history-list { display: none; margin-top: 5px; opacity: 0.8; }
         .history-list.open { display: block; }
-
         .raw-btn { display: block; width: 100%; text-align: right; color: #6b7280; font-size: 11px; margin-top: 10px; cursor: pointer; border:none; background:none;}
+        .loading-card { text-align: center; color: #9ca3af; padding: 20px; font-size: 14px; animation: pulse 1.5s infinite; }
+        @keyframes pulse { 0% { opacity: 0.6; } 50% { opacity: 1; } 100% { opacity: 0.6; } }
 
-        /* Modal Styles */
+        /* Toast Notification Styles */
+        .toast-container { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); z-index: 1000; text-align: center; pointer-events: none; }
+        .toast-msg { 
+            background: rgba(0, 0, 0, 0.8); color: white; padding: 10px 20px; border-radius: 20px; font-size: 14px; 
+            margin-bottom: 10px; opacity: 0; transition: opacity 0.3s ease, transform 0.3s ease; transform: translateY(20px);
+            backdrop-filter: blur(4px); box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        .toast-msg.show { opacity: 1; transform: translateY(0); }
+
+        /* Modal */
         .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 100; backdrop-filter: blur(2px); }
         .modal-content { position: fixed; bottom: 0; left: 0; width: 100%; height: 85%; background: white; border-radius: 16px 16px 0 0; display: flex; flex-direction: column; animation: slideUp 0.3s ease-out; box-shadow: 0 -4px 10px rgba(0,0,0,0.1); }
         @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
-        
         .modal-header { padding: 12px 16px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center; background: #f9fafb; border-radius: 16px 16px 0 0; }
         .modal-title { font-weight: 600; font-size: 16px; }
         .modal-actions { display: flex; gap: 10px; }
         .btn-action { border: none; padding: 6px 12px; border-radius: 6px; font-size: 13px; cursor: pointer; font-weight: 500;}
         .btn-copy { background: #2563eb; color: white; }
         .btn-close { background: #e5e7eb; color: #374151; }
-
         .modal-body { flex: 1; overflow-y: auto; padding: 10px; background: #1f2937; color: #a7f3d0; font-family: monospace; font-size: 11px; white-space: pre-wrap; word-break: break-all; }
     </style>
 </head>
 <body>
 
 <div class="header">
-    <h1>A08访客通 <span style="font-size:14px" onclick="location.reload()">🔄</span></h1>
-    <div style="font-size:12px; opacity:0.8; margin-top:4px;">最后更新: ${nowStr}</div>
+    <h1>
+        A08访客通 
+        <span class="refresh-btn" id="refreshBtn" onclick="manualRefresh()">🔄</span>
+    </h1>
+    <div style="font-size:12px; opacity:0.8; margin-top:4px;">
+        <span id="statusText">实时监控中</span> <span id="timerText" style="font-family:monospace;font-weight:bold;color:#bfdbfe"></span>
+    </div>
+    
     <div class="search-bar">
         <input type="text" class="search-input" placeholder="搜姓名或身份证后4位..." id="searchInput" onkeyup="filterList()">
     </div>
 </div>
 
 <div class="container" id="cardList">
-    ${peopleData.map(person => {
-        const searchKey = `${person.name} ${person.idTail}`.toUpperCase();
-        const rawJsonStr = encodeURIComponent(JSON.stringify(person.rawData, null, 2));
-
-        let mainStatusHtml = '<span class="status-badge badge-none">无记录</span>';
-        const hasActive = person.priorityList.some(i => i._type === 'ACTIVE');
-        const hasPending = person.priorityList.some(i => i._type === 'PENDING');
-        const hasFuture = person.priorityList.some(i => i._type === 'FUTURE');
-
-        if (hasActive) {
-            mainStatusHtml = '<span class="status-badge badge-active">生效中</span>';
-        } else if (hasPending) {
-            mainStatusHtml = '<span class="status-badge badge-pending">审核中</span>';
-        } else if (hasFuture) {
-            mainStatusHtml = '<span class="status-badge badge-future">已预约</span>';
-        } else if (!person.success) {
-            mainStatusHtml = '<span class="status-badge badge-none">查询失败</span>';
-        }
-
-        const priorityHtml = person.priorityList.map(item => {
-            const startStr = getFormattedDate(item._displayStart);
-            const endStr = getFormattedDate(item._displayEnd);
-            let tag = '';
-            let icon = '⚪';
-            if (item._type === 'ACTIVE') { tag = '<span class="record-tag tag-active">今日生效</span>'; icon = '🟢'; }
-            if (item._type === 'FUTURE') { tag = '<span class="record-tag tag-future">预约</span>'; icon = '🔵'; }
-            if (item._type === 'PENDING') { tag = '<span class="record-tag tag-pending">审核中</span>'; icon = '🟡'; }
-            return `<div class="record-item"><div>${icon}</div><div><div>${startStr}-${endStr} ${tag}</div><div style="font-size:12px;color:#6b7280">审批: ${item.rPersonName}</div></div></div>`;
-        }).join('');
-
-        const historyHtml = person.historyList.length > 0 ? `
-            <div class="history-section">
-                <div class="history-toggle" onclick="toggleHistory(this)">🕒 展开 ${person.historyList.length} 条历史记录</div>
-                <div class="history-list">
-                    ${person.historyList.map(item => {
-                        const startStr = getFormattedDate(item._displayStart);
-                        const endStr = getFormattedDate(item._displayEnd);
-                        
-                        // 历史记录图标显示
-                        let icon = '⚪';
-                        let statusText = '';
-                        if (String(item.flowStatus) === '1') { 
-                            icon = '🟡'; 
-                            statusText = ' [审核中]';
-                        } else if (String(item.flowStatus) === '7' || String(item.flowStatus) === '5') {
-                            icon = '⚪'; 
-                        }
-                        
-                        return `<div class="record-item" style="opacity:0.6"><div>${icon}</div><div>${startStr}-${endStr}${statusText}</div></div>`;
-                    }).join('')}
-                </div>
-            </div>
-        ` : '';
-
-        return `
-            <div class="card" data-key="${searchKey}">
-                <div class="card-header">
-                    <div class="user-info">
-                        <div class="avatar">${person.name[0]}</div>
-                        <div><div class="user-name">${person.name}</div><div class="user-id">ID: ${person.idTail}</div></div>
-                    </div>
-                    ${mainStatusHtml}
-                </div>
-                <div>${priorityHtml || '<div style="text-align:center;color:#ccc;font-size:12px">暂无活跃记录</div>'}</div>
-                ${historyHtml}
-                
-                <button class="raw-btn" onclick="openRawModal('${person.name}', '${rawJsonStr}')">📦 查看源数据</button>
-            </div>
-        `;
-    }).join('')}
+    ${CONFIG.visitorIdNos.map(id => `
+        <div class="card-wrapper" id="wrapper-${id}" data-has-active="0">
+            <div class="card loading-card">⌛ 正在连接...</div>
+        </div>
+    `).join('')}
 </div>
+
+<div class="toast-container" id="toastContainer"></div>
 
 <div class="modal-overlay" id="rawModal" onclick="closeRawModal(event)">
     <div class="modal-content" onclick="event.stopPropagation()">
@@ -436,12 +391,153 @@ router.get('/visitor-status', async (req, res) => {
 </div>
 
 <script>
+    const idList = ${idListScript};
+    const REFRESH_INTERVAL = 10; // 10秒周期
+    let countDown = REFRESH_INTERVAL;
+    let timerInterval = null;
+
+    window.onload = function() {
+        startTimer(); // 启动倒计时逻辑
+        loadAllCards(); // 立即执行一次
+    };
+
+    // --- 倒计时与定时器逻辑 ---
+    function startTimer() {
+        if(timerInterval) clearInterval(timerInterval);
+        
+        timerInterval = setInterval(() => {
+            countDown--;
+            updateTimerDisplay();
+            
+            if (countDown <= 0) {
+                // 时间到，执行刷新
+                loadAllCards(true); // true 表示这是自动刷新
+                countDown = REFRESH_INTERVAL; // 重置
+            }
+        }, 1000);
+        
+        updateTimerDisplay();
+    }
+
+    function updateTimerDisplay() {
+        const timerEl = document.getElementById('timerText');
+        if(timerEl) {
+            // 补零显示，看起来更专业
+            const sec = String(countDown).padStart(2, '0');
+            timerEl.innerText = \`(\${sec}s后刷新)\`;
+        }
+    }
+
+    function manualRefresh() {
+        // 点击按钮：重置倒计时，立即刷新，并添加旋转动画
+        const btn = document.getElementById('refreshBtn');
+        btn.classList.add('spinning');
+        setTimeout(() => btn.classList.remove('spinning'), 500); // 0.5s后移除动画类
+
+        countDown = REFRESH_INTERVAL; // 重置倒计时
+        updateTimerDisplay();
+        loadAllCards(false); // false 表示这是手动刷新
+    }
+
+    // --- 核心加载逻辑 ---
+    function loadAllCards(isAuto = false) {
+        // 如果是手动刷新，可以把状态字变一下提示用户
+        if(!isAuto) document.getElementById('statusText').innerText = "正在刷新...";
+
+        let completedCount = 0;
+        let hasError = false;
+
+        idList.forEach(id => {
+            fetch('visitor-card-data?id=' + encodeURIComponent(id))
+                .then(res => {
+                    if(!res.ok) throw new Error("HTTP " + res.status);
+                    return res.json();
+                })
+                .then(data => {
+                    const wrapper = document.getElementById('wrapper-' + id);
+                    if (wrapper && data.html) {
+                        const currentHistoryOpen = wrapper.querySelector('.history-list.open');
+                        wrapper.innerHTML = data.html;
+                        wrapper.setAttribute('data-has-active', data.hasActive ? '1' : '0');
+                        if (currentHistoryOpen) {
+                             const btn = wrapper.querySelector('.history-toggle');
+                             if(btn) toggleHistory(btn);
+                        }
+                    }
+                })
+                .catch(err => {
+                    console.error(err);
+                    hasError = true;
+                    const wrapper = document.getElementById('wrapper-' + id);
+                    if(wrapper) {
+                        wrapper.innerHTML = '<div class="card" style="text-align:center;color:red;padding:20px;">❌ 加载失败</div>';
+                    }
+                })
+                .finally(() => {
+                    completedCount++;
+                    // 当所有请求都回来后
+                    if (completedCount === idList.length) {
+                        sortCards();
+                        filterList();
+                        document.getElementById('statusText').innerText = "实时监控中";
+                        
+                        // 弹出 Toast 提示
+                        if(hasError) {
+                            showToast("⚠️ 部分数据刷新失败");
+                        } else {
+                            showToast("✅ 数据已更新");
+                        }
+                    }
+                });
+        });
+    }
+
+    // --- Toast 提示函数 ---
+    function showToast(message) {
+        const container = document.getElementById('toastContainer');
+        const toast = document.createElement('div');
+        toast.className = 'toast-msg';
+        toast.innerText = message;
+        container.appendChild(toast);
+
+        // 强制重绘以触发 transition
+        requestAnimationFrame(() => {
+            toast.classList.add('show');
+        });
+
+        // 3秒后移除
+        setTimeout(() => {
+            toast.classList.remove('show');
+            // 等待动画结束再从 DOM 移除
+            setTimeout(() => {
+                if(toast.parentNode) toast.parentNode.removeChild(toast);
+            }, 300);
+        }, 3000);
+    }
+
+    // --- 排序、搜索、折叠 (保持不变) ---
+    function sortCards() {
+        const container = document.getElementById('cardList');
+        const wrappers = Array.from(container.children);
+        wrappers.sort((a, b) => {
+            const aVal = parseInt(a.getAttribute('data-has-active') || '0');
+            const bVal = parseInt(b.getAttribute('data-has-active') || '0');
+            return bVal - aVal;
+        });
+        wrappers.forEach(div => container.appendChild(div));
+    }
+
     function filterList() {
         const val = document.getElementById('searchInput').value.toUpperCase();
-        const cards = document.querySelectorAll('.card');
-        cards.forEach(card => {
-            const key = card.getAttribute('data-key');
-            card.style.display = key.indexOf(val) > -1 ? '' : 'none';
+        const wrappers = document.querySelectorAll('.card-wrapper');
+        wrappers.forEach(wrapper => {
+            const card = wrapper.querySelector('.card');
+            if (card) {
+                const key = card.getAttribute('data-key');
+                if (key) {
+                    wrapper.style.display = key.indexOf(val) > -1 ? '' : 'none';
+                }
+            }
         });
     }
 
@@ -451,7 +547,7 @@ router.get('/visitor-status', async (req, res) => {
         btn.innerText = list.classList.contains('open') ? '⬆ 收起记录' : ('🕒 展开 ' + list.children.length + ' 条历史记录');
     }
 
-    // Modal Logic
+    // --- Modal Logic ---
     const modal = document.getElementById('rawModal');
     const modalBody = document.getElementById('modalBody');
     const modalTitle = document.getElementById('modalTitle');
@@ -461,7 +557,7 @@ router.get('/visitor-status', async (req, res) => {
         modalTitle.innerText = name + ' - 源数据';
         modalBody.innerText = jsonStr;
         modal.style.display = 'block';
-        document.body.style.overflow = 'hidden'; // 防止背景滚动
+        document.body.style.overflow = 'hidden'; 
     }
 
     function closeRawModal(e) {
