@@ -16,7 +16,10 @@ const CONFIGS = {
             "NDMyOTAxMTk4MjExMDUyMDE2",
             "NDEwOTIzMTk4ODA3MTkxMDFY",
             "MDMwNzE3Njg=",
-            "NDMyOTAxMTk4MjExMDUyMDE2"
+            "NDMyOTAxMTk4MjExMDUyMDE2",
+            "MDMwNzE3Njg=",
+            "MTAyNDE5NDY=",
+            "MDczOTM0Njc="
         ],
         regPerson: "17614625112",
         acToken: "E5EF067A42A792436902EB275DCCA379812FF4A4A8A756BE0A1659704557309F"
