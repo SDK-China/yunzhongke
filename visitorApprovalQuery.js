@@ -56,6 +56,7 @@ const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 const getBeijingDayId = (ts) => Math.floor((parseInt(ts) + 28800000) / 86400000);
 const getNowTs = () => new Date().getTime();
 const getBeijingTimeStr = () => {
+    // 强制显示北京时间 HH:mm:ss
     return new Date(new Date().getTime() + 28800000).toISOString().slice(11, 19);
 };
 
@@ -77,7 +78,7 @@ const getHeaders = () => ({
     "Referer": "https://iw68lh.aliwork.com/"
 });
 
-// --- 3. 核心业务逻辑 ---
+// --- 3. 核心业务逻辑 (保持不变) ---
 const fetchPersonData = async (id, headers, todayDayId, regPerson, acToken) => {
     const startTime = Date.now();
     const targetUrl = 'https://dingtalk.avaryholding.com:8443/dingplus/visitorConnector/visitorStatus';
@@ -98,7 +99,7 @@ const fetchPersonData = async (id, headers, todayDayId, regPerson, acToken) => {
     try {
         const response = await axios.post(targetUrl, body, { headers, timeout: 6000 });
         const resData = response.data;
-        result.cost = Date.now() - startTime;
+        result.cost = Date.now() - startTime; 
 
         if (resData.code === 200 && Array.isArray(resData.data)) {
             result.success = true;
@@ -300,7 +301,7 @@ router.get('/visitor-card-data', async (req, res) => {
     }
 });
 
-// 微信文本版 (保持之前的接口逻辑不变)
+// 微信文本版接口 (向下兼容)
 router.get('/visitor-status-Wechat', async (req, res) => {
     const loc = req.query.loc || 'A08';
     const config = CONFIGS[loc] || CONFIGS['A08'];
@@ -330,17 +331,14 @@ router.get('/visitor-status-Wechat', async (req, res) => {
     } catch (e) { res.status(500).send('Error'); }
 });
 
-// 网页主入口 (支持前端丝滑无刷新切换)
+// 网页主入口 (SPA 丝滑切换改版)
 router.get('/visitor-status', async (req, res) => {
-    // 把两份配置都压入前端页面中，供纯前端进行快速切换
-    const allIdLists = {
-        A08: CONFIGS['A08'].visitorIdNos,
-        Q01: CONFIGS['Q01'].visitorIdNos
+    // 提取两个厂区的关键配置传入前端
+    const frontendConfigs = {
+        'A08': { title: CONFIGS['A08'].title, ids: CONFIGS['A08'].visitorIdNos },
+        'Q01': { title: CONFIGS['Q01'].title, ids: CONFIGS['Q01'].visitorIdNos }
     };
-    const allTitles = {
-        A08: CONFIGS['A08'].title,
-        Q01: CONFIGS['Q01'].title
-    };
+    const frontendConfigsScript = JSON.stringify(frontendConfigs);
 
     const html = `
 <!DOCTYPE html>
@@ -363,7 +361,7 @@ router.get('/visitor-status', async (req, res) => {
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; user-select: none; }
         body { margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", sans-serif; background: var(--bg-body); color: var(--text-main); padding-bottom: 80px; }
 
-        /* --- 顶部导航 (Glassmorphism) --- */
+        /* --- 顶部导航 --- */
         .navbar {
             position: sticky; top: 0; z-index: 100;
             background: rgba(255, 255, 255, 0.85);
@@ -377,7 +375,6 @@ router.get('/visitor-status', async (req, res) => {
         .live-dot { width: 8px; height: 8px; background: #22c55e; border-radius: 50%; box-shadow: 0 0 8px #22c55e; animation: pulse 2s infinite; }
         @keyframes pulse { 0% { opacity: 0.5; transform: scale(0.9); } 50% { opacity: 1; transform: scale(1.1); } 100% { opacity: 0.5; transform: scale(0.9); } }
         
-        /* 刷新倒计时进度条 */
         .progress-bar-container { position: absolute; bottom: 0; left: 0; width: 100%; height: 2px; background: transparent; }
         .progress-bar { height: 100%; background: var(--primary); width: 100%; transition: width 1s linear; }
 
@@ -397,12 +394,12 @@ router.get('/visitor-status', async (req, res) => {
         }
         .search-input:focus { background: #cbd5e1; }
 
-        /* 厂区纯前端无刷新切换 Tab */
+        /* 厂区丝滑切换 Tab (无跳转刷新) */
         .tabs { display: flex; gap: 8px; margin-top: 12px; }
         .tab { 
             flex: 1; text-align: center; padding: 8px 0; background: #e2e8f0; 
-            border-radius: 8px; color: #64748b; font-weight: 600; cursor: pointer;
-            text-decoration: none; font-size: 13px; transition: all 0.2s;
+            border-radius: 8px; color: #64748b; font-weight: 600; 
+            cursor: pointer; font-size: 13px; transition: all 0.2s;
             border: 1px solid transparent;
         }
         .tab.active { 
@@ -433,7 +430,6 @@ router.get('/visitor-status', async (req, res) => {
         .user-meta .name { font-weight: 600; font-size: 16px; color: #334155; }
         .user-meta .id-no { font-size: 12px; color: #94a3b8; margin-top: 2px; }
 
-        /* 状态标签 */
         .status-badge { padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: 600; }
         .badge-green { background: #dcfce7; color: #166534; }
         .badge-yellow { background: #fef9c3; color: #854d0e; }
@@ -460,7 +456,6 @@ router.get('/visitor-status', async (req, res) => {
         .approver { font-size: 12px; color: #94a3b8; }
         .empty-tip { text-align: center; color: #cbd5e1; font-size: 12px; padding: 8px 0; }
 
-        /* 历史区域 */
         .history-box { margin-top: 10px; border-top: 1px dashed #e2e8f0; padding-top: 8px; }
         .history-trigger { font-size: 11px; color: #94a3b8; display: flex; justify-content: space-between; cursor: pointer; padding: 4px 0; }
         .history-content { display: none; margin-top: 4px; }
@@ -469,7 +464,6 @@ router.get('/visitor-status', async (req, res) => {
         .arrow { transition: transform 0.2s; }
         .history-trigger.active .arrow { transform: rotate(180deg); }
 
-        /* 底部 Footer */
         .card-footer { 
             background: #f8fafc; border-top: 1px solid #f1f5f9; padding: 8px 16px; 
             display: flex; justify-content: space-between; align-items: center;
@@ -483,13 +477,13 @@ router.get('/visitor-status', async (req, res) => {
         }
         .footer-btn:active { background: rgba(37, 99, 235, 0.15); }
 
-        /* 骨架屏 Loading */
+        /* 骨架屏 */
         .skeleton { animation: pulse-bg 1.5s infinite; background: #e2e8f0; border-radius: 4px; }
         .skeleton-text { height: 16px; width: 60%; margin-bottom: 6px; }
         .skeleton-circle { height: 40px; width: 40px; border-radius: 50%; }
         @keyframes pulse-bg { 0% { opacity: 0.6; } 50% { opacity: 1; } 100% { opacity: 0.6; } }
 
-        /* 强提示 Toast */
+        /* Toast */
         .toast-wrap { 
             position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); 
             z-index: 999; display: flex; flex-direction: column; gap: 8px; pointer-events: none; 
@@ -502,7 +496,7 @@ router.get('/visitor-status', async (req, res) => {
         }
         .toast.show { opacity: 1; transform: translateY(0); }
 
-        /* 弹窗 */
+        /* Modal */
         .modal-mask { position: fixed; inset: 0; background: rgba(0,0,0,0.4); backdrop-filter: blur(2px); z-index: 200; display: none; opacity: 0; transition: opacity 0.2s;}
         .modal-mask.show { opacity: 1; }
         .modal-panel { 
@@ -523,7 +517,7 @@ router.get('/visitor-status', async (req, res) => {
 <div class="navbar">
     <div class="nav-content">
         <div class="nav-title">
-            <div class="live-dot"></div> <span id="navTitleText"></span>
+            <div class="live-dot"></div> <span id="mainTitle"></span>
         </div>
         <div class="btn-refresh" id="refreshBtn" onclick="manualRefresh()">🔄</div>
     </div>
@@ -532,8 +526,8 @@ router.get('/visitor-status', async (req, res) => {
     </div>
     
     <div class="tabs">
-        <div class="tab active" data-loc="A08" onclick="switchLoc('A08')">🏢 A08 厂区</div>
-        <div class="tab" data-loc="Q01" onclick="switchLoc('Q01')">🏢 Q01 厂区</div>
+        <div id="tab-A08" class="tab active" onclick="switchTab('A08')">🏢 A08 厂区</div>
+        <div id="tab-Q01" class="tab" onclick="switchTab('Q01')">🏢 Q01 厂区</div>
     </div>
 
     <div class="progress-bar-container">
@@ -541,7 +535,8 @@ router.get('/visitor-status', async (req, res) => {
     </div>
 </div>
 
-<div class="container" id="cardList"></div>
+<div class="container" id="cardList">
+    </div>
 
 <div class="toast-wrap" id="toastWrap"></div>
 
@@ -558,73 +553,63 @@ router.get('/visitor-status', async (req, res) => {
 </div>
 
 <script>
-    // 后端一次性注入配置，前端丝滑切换
-    const ALL_ID_LISTS = ${JSON.stringify(allIdLists)};
-    const ALL_TITLES = ${JSON.stringify(allTitles)};
+    const locConfigs = ${frontendConfigsScript};
+    let currentLoc = 'A08';
+    let idList = locConfigs[currentLoc].ids;
     
-    let currentLoc = "A08";
-    let idList = ALL_ID_LISTS[currentLoc];
+    // 核心并发锁：记录当前的请求批次，每次点击 Tab 切换就会 +1
+    let currentFetchVersion = 0; 
     
     const INTERVAL = 120;
     let countDown = INTERVAL;
     let timer = null;
-    
-    // 会话锁：防止快速点击切换时，旧厂区的数据回调冲刷掉新厂区的列表
-    let currentSession = Date.now(); 
 
     window.onload = function() {
-        // 初始化标题
-        document.getElementById('navTitleText').innerText = ALL_TITLES[currentLoc];
-        document.title = ALL_TITLES[currentLoc];
-        
+        updateTitleAndMeta();
         renderSkeletons();
         startLoop();
-        loadData(true); // 首次加载视为自动，静默
+        loadData(true); 
     };
 
-    // 真正的丝滑核心逻辑：点击按钮只在前端换数据
-    function switchLoc(newLoc) {
-        if (newLoc === currentLoc) return; // 重复点击无效
-        
-        currentLoc = newLoc;
-        idList = ALL_ID_LISTS[currentLoc];
-        
-        // 更新标题
-        document.getElementById('navTitleText').innerText = ALL_TITLES[currentLoc];
-        document.title = ALL_TITLES[currentLoc];
-        
-        // 切换高亮按钮
-        document.querySelectorAll('.tab').forEach(el => {
-            if (el.getAttribute('data-loc') === currentLoc) {
-                el.classList.add('active');
-            } else {
-                el.classList.remove('active');
-            }
-        });
-
-        // 切换时清空搜索框
-        document.getElementById('searchInput').value = '';
-
-        // 秒清空并加载骨架动画，视觉上最丝滑
-        renderSkeletons();
-
-        // 重新拉取新厂区数据
-        manualRefresh();
+    function updateTitleAndMeta() {
+        document.getElementById('mainTitle').innerText = locConfigs[currentLoc].title;
+        document.title = locConfigs[currentLoc].title;
     }
 
     function renderSkeletons() {
         const container = document.getElementById('cardList');
-        container.innerHTML = idList.map((id, idx) => \`
-            <div class="app-card" id="wrapper-\${idx}" style="padding:16px;">
-                <div style="display:flex;gap:12px;align-items:center;">
-                    <div class="skeleton skeleton-circle"></div>
-                    <div style="flex:1">
-                        <div class="skeleton skeleton-text"></div>
-                        <div class="skeleton skeleton-text" style="width:40%"></div>
-                    </div>
-                </div>
-            </div>
-        \`).join('');
+        container.innerHTML = idList.map(function(id, idx) {
+            return '<div class="app-card" id="wrapper-' + idx + '" style="padding:16px;">' +
+                   '<div style="display:flex;gap:12px;align-items:center;">' +
+                   '<div class="skeleton skeleton-circle"></div>' +
+                   '<div style="flex:1">' +
+                   '<div class="skeleton skeleton-text"></div>' +
+                   '<div class="skeleton skeleton-text" style="width:40%"></div>' +
+                   '</div></div></div>';
+        }).join('');
+    }
+
+    // --- 丝滑切换核心逻辑 ---
+    function switchTab(loc) {
+        if (currentLoc === loc) return; // 点相同的无视
+        
+        currentLoc = loc;
+        idList = locConfigs[loc].ids;
+        currentFetchVersion++; // 锁住新批次，旧批次的网络响应即使回来了也会被直接丢弃！
+
+        // 更新 UI Tab 状态
+        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        document.getElementById('tab-' + loc).classList.add('active');
+        
+        // 恢复搜索框并更新标题
+        document.getElementById('searchInput').value = '';
+        updateTitleAndMeta();
+
+        // 瞬间清空老列表并加载骨架动画
+        renderSkeletons();
+        
+        // 立即拉取新数据
+        manualRefresh();
     }
 
     function startLoop() {
@@ -662,19 +647,18 @@ router.get('/visitor-status', async (req, res) => {
             showToast("🚀 正在刷新数据...");
         }
 
-        // 刷新会话锁标识。旧的回调只要看到 currentSession != mySession 就会默默放弃，绝不串场！
-        const mySession = Date.now();
-        currentSession = mySession;
-
         let finished = 0;
         let hasErr = false;
+        
+        // 保存当前这波请求的版号，用于在网络回调时验证
+        const thisVersion = currentFetchVersion; 
 
         idList.forEach((id, index) => {
             fetch('visitor-card-data?loc=' + currentLoc + '&id=' + encodeURIComponent(id))
                 .then(r => r.json())
                 .then(d => {
-                    // 【绝对防御】如果这期间用户点击了别的厂区，这波回来的数据直接丢掉
-                    if (currentSession !== mySession) return; 
+                    // 【防并发锁起效点】如果版本号已经对不上，说明用户已经切换了 Tab，直接静默抛弃该旧数据！
+                    if (thisVersion !== currentFetchVersion) return; 
 
                     const wrapper = document.getElementById('wrapper-' + index);
                     if(wrapper && d.html) {
@@ -693,11 +677,11 @@ router.get('/visitor-status', async (req, res) => {
                     }
                 })
                 .catch(() => { 
-                    if (currentSession !== mySession) return;
-                    hasErr = true; 
+                    if (thisVersion === currentFetchVersion) hasErr = true; 
                 })
                 .finally(() => {
-                    if (currentSession !== mySession) return;
+                    if (thisVersion !== currentFetchVersion) return; // 过期请求不纳入统计
+                    
                     finished++;
                     if(finished === idList.length) {
                         sortAndFilter();
