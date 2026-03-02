@@ -562,7 +562,7 @@ router.get('/visitor-status', async (req, res) => {
     let currentLoc = "A08";
     let idList = ALL_ID_LISTS[currentLoc];
     
-    const INTERVAL = 10;
+    const INTERVAL = 120;
     let countDown = INTERVAL;
     let timer = null;
     
