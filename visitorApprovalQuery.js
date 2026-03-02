@@ -25,7 +25,7 @@ const CONFIGS = {
         acToken: "E5EF067A42A792436902EB275DCCA379812FF4A4A8A756BE0A1659704557309F"
     },
     'Q01': {
-        title: "Q01 访客通 Pro",
+        title: "QA01 访客通 Pro",
         visitorIdNos: [
             "MTMwMzIzMTk5MjEyMTY2NDM0",
             "MTMwMzIzMTk5ODA2MTQxMDU4",
