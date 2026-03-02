@@ -2,53 +2,22 @@ const express = require('express');
 const axios = require('axios');
 const router = express.Router();
 
-// --- 1. 配置区域 (全面升级支持多厂区) ---
-const CONFIGS = {
-    'A08': {
-        title: "A08 访客通 Pro",
-        visitorIdNos: [
-            "MTMwMzIzMTk4NjAyMjgwODFY",
-            "MTMwMzIyMTk4ODA2MjQyMDE4",
-            "MTMwNDI1MTk4OTA4MjkwMzE0",
-            "MjMwMjMwMjAwMzAxMDEyMTM1",
-            "MTMxMTIxMTk4OTAxMDU1MDEx",
-            "NDEwNDIzMTk4OTA3MjIxNTMw",
-            "NDMyOTAxMTk4MjExMDUyMDE2",
-            "NDEwOTIzMTk4ODA3MTkxMDFY",
-            "MDMwNzE3Njg=",
-            "NDMyOTAxMTk4MjExMDUyMDE2",
-            "MDMwNzE3Njg=",
-            "MTAyNDE5NDY=",
-            "MDczOTM0Njc="
-        ],
-        regPerson: "17614625112",
-        acToken: "E5EF067A42A792436902EB275DCCA379812FF4A4A8A756BE0A1659704557309F"
-    },
-    'Q01': {
-        title: "Q01 访客通 Pro",
-        visitorIdNos: [
-            "MTMwMzIzMTk5MjEyMTY2NDM0", 
-            "MTMwMzIzMTk5ODA2MTQxMDU4", 
-            "MTMwMzIzMTk5MDAzMDc2NDE2",
-            "MTMwMzIzMTk4OTA5MDQ2NDEx",
-            "MDU4NDMzNDg=",             
-            "MTIwNDUxOTI=",             
-            "SzEzOTMxMihBKQ==",         
-            "NDMxMjIyMTk5NzEyMDUzMzEz", 
-            "NTIyNzMxMjAwMDAxMTAzNjEx",
-            "MTMwMzIxMjAwMjA0MTY2MjE4", 
-            "NDUwMjIxMTk4OTA0MDUyNDNY", 
-            "NDIxMTgxMTk5MDAxMTc2MzFY",
-            "NDQwOTgyMTk5NzEwMDgyNTk3",
-            "NDExNTI0MjAwNTEyMTA3NjU2", 
-            "MDg5NjQ3MzI=",             
-            "MDYyNDg5MDE=",            
-            "SDAzODMzNTcy",             
-            "NTMyNDY5ODc0"            
-        ],
-        regPerson: "15032325162",
-        acToken: "53F44A99C6D8AADE22942CD9E1D803E8812FF4A4A8A756BE0A1659704557309F"
-    }
+// --- 1. 配置区域 ---
+const CONFIG = {
+    visitorIdNos: [
+        "MTMwMzIzMTk4NjAyMjgwODFY",
+        "MTMwMzIyMTk4ODA2MjQyMDE4",
+        "MTMwNDI1MTk4OTA4MjkwMzE0",
+        "MjMwMjMwMjAwMzAxMDEyMTM1",
+        "MTMxMTIxMTk4OTAxMDU1MDEx",
+        "NDEwNDIzMTk4OTA3MjIxNTMw",
+        "NDMyOTAxMTk4MjExMDUyMDE2",
+        "NDEwOTIzMTk4ODA3MTkxMDFY",
+        "MDMwNzE3Njg=",
+        "NDMyOTAxMTk4MjExMDUyMDE2"
+    ],
+    regPerson: "17614625112",
+    acToken: "E5EF067A42A792436902EB275DCCA379812FF4A4A8A756BE0A1659704557309F"
 };
 
 // --- 2. 工具函数 ---
@@ -78,8 +47,8 @@ const getHeaders = () => ({
     "Referer": "https://iw68lh.aliwork.com/"
 });
 
-// --- 3. 核心业务逻辑 (保持不变，增加入参) ---
-const fetchPersonData = async (id, headers, todayDayId, regPerson, acToken) => {
+// --- 3. 核心业务逻辑 (保持不变，增加耗时统计) ---
+const fetchPersonData = async (id, headers, todayDayId) => {
     const startTime = Date.now();
     const targetUrl = 'https://dingtalk.avaryholding.com:8443/dingplus/visitorConnector/visitorStatus';
     const idTail = id.length > 4 ? id.slice(-4) : id;
@@ -94,7 +63,7 @@ const fetchPersonData = async (id, headers, todayDayId, regPerson, acToken) => {
         cost: 0
     };
 
-    const body = { visitorIdNo: id, regPerson: regPerson, acToken: acToken };
+    const body = { visitorIdNo: id, regPerson: CONFIG.regPerson, acToken: CONFIG.acToken };
 
     try {
         const response = await axios.post(targetUrl, body, { headers, timeout: 6000 });
@@ -185,7 +154,7 @@ const fetchPersonData = async (id, headers, todayDayId, regPerson, acToken) => {
     return result;
 };
 
-// --- 4. HTML 生成逻辑 ---
+// --- 4. HTML 生成逻辑 (UI 大改版) ---
 const generateCardHtml = (person) => {
     const searchKey = `${person.name} ${person.idTail}`.toUpperCase();
     const rawJsonStr = encodeURIComponent(JSON.stringify(person.rawData, null, 2));
@@ -286,14 +255,11 @@ const generateCardHtml = (person) => {
 router.get('/visitor-card-data', async (req, res) => {
     try {
         const encodedId = req.query.id;
-        const loc = req.query.loc || 'A08';
-        const config = CONFIGS[loc] || CONFIGS['A08'];
-
         if (!encodedId) return res.json({ html: '', hasActive: false });
         const id = Buffer.from(encodedId, 'base64').toString('utf-8');
         const headers = getHeaders();
         const todayDayId = getBeijingDayId(new Date().getTime());
-        const person = await fetchPersonData(id, headers, todayDayId, config.regPerson, config.acToken);
+        const person = await fetchPersonData(id, headers, todayDayId);
         const html = generateCardHtml(person);
         res.json({ html, hasActive: person.priorityList.length > 0 });
     } catch (e) {
@@ -301,17 +267,14 @@ router.get('/visitor-card-data', async (req, res) => {
     }
 });
 
-// 微信文本版 (通过 ?loc=A08 或 ?loc=Q01 切换)
+// 微信文本版 (保持简洁)
 router.get('/visitor-status-Wechat', async (req, res) => {
-    const loc = req.query.loc || 'A08';
-    const config = CONFIGS[loc] || CONFIGS['A08'];
     const headers = getHeaders();
     const todayDayId = getBeijingDayId(new Date().getTime());
-    let outputLines = [`[${loc}] 🕒 ${getBeijingTimeStr()}`];
-    
+    let outputLines = [`🕒 ${getBeijingTimeStr()}`];
     try {
-        const decodedIds = config.visitorIdNos.map(encoded => Buffer.from(encoded, 'base64').toString('utf-8'));
-        const promises = decodedIds.map(id => fetchPersonData(id, headers, todayDayId, config.regPerson, config.acToken));
+        const decodedIds = CONFIG.visitorIdNos.map(encoded => Buffer.from(encoded, 'base64').toString('utf-8'));
+        const promises = decodedIds.map(id => fetchPersonData(id, headers, todayDayId));
         const results = await Promise.all(promises);
         results.sort((a, b) => (b.priorityList.length > 0 ? 1 : 0) - (a.priorityList.length > 0 ? 1 : 0));
         
@@ -331,11 +294,9 @@ router.get('/visitor-status-Wechat', async (req, res) => {
     } catch (e) { res.status(500).send('Error'); }
 });
 
-// 网页主入口 (包含全新 UI 和 厂区切换逻辑)
+// 网页主入口 (包含全新 UI 和 强提示逻辑)
 router.get('/visitor-status', async (req, res) => {
-    const loc = req.query.loc || 'A08';
-    const config = CONFIGS[loc] || CONFIGS['A08'];
-    const idListScript = JSON.stringify(config.visitorIdNos);
+    const idListScript = JSON.stringify(CONFIG.visitorIdNos);
 
     const html = `
 <!DOCTYPE html>
@@ -343,7 +304,7 @@ router.get('/visitor-status', async (req, res) => {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>${config.title}</title>
+    <title>A08 访客通 Pro</title>
     <style>
         :root {
             --primary: #2563eb;
@@ -391,20 +352,6 @@ router.get('/visitor-status', async (req, res) => {
             padding: 0 12px; font-size: 14px; outline: none; transition: background 0.2s;
         }
         .search-input:focus { background: #cbd5e1; }
-
-        /* 厂区切换 Tab */
-        .tabs { display: flex; gap: 8px; margin-top: 12px; }
-        .tab { 
-            flex: 1; text-align: center; padding: 8px 0; background: #e2e8f0; 
-            border-radius: 8px; color: #64748b; font-weight: 600; 
-            text-decoration: none; font-size: 13px; transition: all 0.2s;
-            border: 1px solid transparent;
-        }
-        .tab.active { 
-            background: #fff; color: var(--primary); 
-            box-shadow: 0 2px 4px rgba(0,0,0,0.05); 
-            border-color: #cbd5e1;
-        }
 
         /* --- 容器 --- */
         .container { padding: 16px; max-width: 600px; margin: 0 auto; }
@@ -518,26 +465,20 @@ router.get('/visitor-status', async (req, res) => {
 <div class="navbar">
     <div class="nav-content">
         <div class="nav-title">
-            <div class="live-dot"></div> ${config.title}
+            <div class="live-dot"></div> A08 访客通 Pro
         </div>
         <div class="btn-refresh" id="refreshBtn" onclick="manualRefresh()">🔄</div>
     </div>
     <div class="search-wrap">
         <input type="text" class="search-input" id="searchInput" placeholder="🔍 搜索姓名或身份证后4位..." onkeyup="filterList()">
     </div>
-    
-    <div class="tabs">
-        <a href="?loc=A08" class="tab ${loc === 'A08' ? 'active' : ''}">🏢 A08 厂区</a>
-        <a href="?loc=Q01" class="tab ${loc === 'Q01' ? 'active' : ''}">🏢 Q01 厂区</a>
-    </div>
-
     <div class="progress-bar-container">
         <div class="progress-bar" id="progressBar"></div>
     </div>
 </div>
 
 <div class="container" id="cardList">
-    ${config.visitorIdNos.map((id, idx) => `
+    ${CONFIG.visitorIdNos.map((id, idx) => `
         <div class="app-card" id="wrapper-${idx}" style="padding:16px;">
             <div style="display:flex;gap:12px;align-items:center;">
                 <div class="skeleton skeleton-circle"></div>
@@ -566,7 +507,6 @@ router.get('/visitor-status', async (req, res) => {
 
 <script>
     const idList = ${idListScript};
-    const currentLoc = "${loc}";
     const INTERVAL = 10;
     let countDown = INTERVAL;
     let timer = null;
@@ -617,7 +557,7 @@ router.get('/visitor-status', async (req, res) => {
         let hasErr = false;
 
         idList.forEach((id, index) => {
-            fetch('visitor-card-data?loc=' + currentLoc + '&id=' + encodeURIComponent(id))
+            fetch('visitor-card-data?id=' + encodeURIComponent(id))
                 .then(r => r.json())
                 .then(d => {
                     const wrapper = document.getElementById('wrapper-' + index);
