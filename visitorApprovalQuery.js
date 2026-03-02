@@ -16,10 +16,7 @@ const CONFIGS = {
             "NDMyOTAxMTk4MjExMDUyMDE2",
             "NDEwOTIzMTk4ODA3MTkxMDFY",
             "MDMwNzE3Njg=",
-            "NDMyOTAxMTk4MjExMDUyMDE2",
-            "MDMwNzE3Njg=",
-            "MTAyNDE5NDY=",
-            "MDczOTM0Njc="
+            "NDMyOTAxMTk4MjExMDUyMDE2"
         ],
         regPerson: "17614625112",
         acToken: "E5EF067A42A792436902EB275DCCA379812FF4A4A8A756BE0A1659704557309F"
@@ -27,24 +24,24 @@ const CONFIGS = {
     'Q01': {
         title: "Q01 访客通 Pro",
         visitorIdNos: [
-            "MTMwMzIzMTk5MjEyMTY2NDM0", 
-            "MTMwMzIzMTk5ODA2MTQxMDU4", 
+            "MTMwMzIzMTk5MjEyMTY2NDM0",
+            "MTMwMzIzMTk5ODA2MTQxMDU4",
             "MTMwMzIzMTk5MDAzMDc2NDE2",
             "MTMwMzIzMTk4OTA5MDQ2NDEx",
-            "MDU4NDMzNDg=",             
-            "MTIwNDUxOTI=",             
-            "SzEzOTMxMihBKQ==",         
-            "NDMxMjIyMTk5NzEyMDUzMzEz", 
+            "MDU4NDMzNDg=",
+            "MTIwNDUxOTI=",
+            "SzEzOTMxMihBKQ==",
+            "NDMxMjIyMTk5NzEyMDUzMzEz",
             "NTIyNzMxMjAwMDAxMTAzNjEx",
-            "MTMwMzIxMjAwMjA0MTY2MjE4", 
-            "NDUwMjIxMTk4OTA0MDUyNDNY", 
+            "MTMwMzIxMjAwMjA0MTY2MjE4",
+            "NDUwMjIxMTk4OTA0MDUyNDNY",
             "NDIxMTgxMTk5MDAxMTc2MzFY",
             "NDQwOTgyMTk5NzEwMDgyNTk3",
-            "NDExNTI0MjAwNTEyMTA3NjU2", 
-            "MDg5NjQ3MzI=",             
-            "MDYyNDg5MDE=",            
-            "SDAzODMzNTcy",             
-            "NTMyNDY5ODc0"            
+            "NDExNTI0MjAwNTEyMTA3NjU2",
+            "MDg5NjQ3MzI=",
+            "MDYyNDg5MDE=",
+            "SDAzODMzNTcy",
+            "NTMyNDY5ODc0"
         ],
         regPerson: "15032325162",
         acToken: "53F44A99C6D8AADE22942CD9E1D803E8812FF4A4A8A756BE0A1659704557309F"
@@ -56,7 +53,6 @@ const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 const getBeijingDayId = (ts) => Math.floor((parseInt(ts) + 28800000) / 86400000);
 const getNowTs = () => new Date().getTime();
 const getBeijingTimeStr = () => {
-    // 强制显示北京时间 HH:mm:ss
     return new Date(new Date().getTime() + 28800000).toISOString().slice(11, 19);
 };
 
@@ -78,7 +74,7 @@ const getHeaders = () => ({
     "Referer": "https://iw68lh.aliwork.com/"
 });
 
-// --- 3. 核心业务逻辑 (保持不变，增加入参) ---
+// --- 3. 核心业务逻辑 ---
 const fetchPersonData = async (id, headers, todayDayId, regPerson, acToken) => {
     const startTime = Date.now();
     const targetUrl = 'https://dingtalk.avaryholding.com:8443/dingplus/visitorConnector/visitorStatus';
@@ -99,7 +95,7 @@ const fetchPersonData = async (id, headers, todayDayId, regPerson, acToken) => {
     try {
         const response = await axios.post(targetUrl, body, { headers, timeout: 6000 });
         const resData = response.data;
-        result.cost = Date.now() - startTime; // 计算耗时
+        result.cost = Date.now() - startTime;
 
         if (resData.code === 200 && Array.isArray(resData.data)) {
             result.success = true;
@@ -301,7 +297,7 @@ router.get('/visitor-card-data', async (req, res) => {
     }
 });
 
-// 微信文本版 (通过 ?loc=A08 或 ?loc=Q01 切换)
+// 微信文本版 (保持之前的接口逻辑不变)
 router.get('/visitor-status-Wechat', async (req, res) => {
     const loc = req.query.loc || 'A08';
     const config = CONFIGS[loc] || CONFIGS['A08'];
@@ -331,11 +327,17 @@ router.get('/visitor-status-Wechat', async (req, res) => {
     } catch (e) { res.status(500).send('Error'); }
 });
 
-// 网页主入口 (包含全新 UI 和 厂区切换逻辑)
+// 网页主入口 (支持前端丝滑无刷新切换)
 router.get('/visitor-status', async (req, res) => {
-    const loc = req.query.loc || 'A08';
-    const config = CONFIGS[loc] || CONFIGS['A08'];
-    const idListScript = JSON.stringify(config.visitorIdNos);
+    // 把两份配置都压入前端页面中，供纯前端进行快速切换
+    const allIdLists = {
+        A08: CONFIGS['A08'].visitorIdNos,
+        Q01: CONFIGS['Q01'].visitorIdNos
+    };
+    const allTitles = {
+        A08: CONFIGS['A08'].title,
+        Q01: CONFIGS['Q01'].title
+    };
 
     const html = `
 <!DOCTYPE html>
@@ -343,7 +345,7 @@ router.get('/visitor-status', async (req, res) => {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>${config.title}</title>
+    <title>访客通 Pro</title>
     <style>
         :root {
             --primary: #2563eb;
@@ -392,11 +394,11 @@ router.get('/visitor-status', async (req, res) => {
         }
         .search-input:focus { background: #cbd5e1; }
 
-        /* 厂区切换 Tab */
+        /* 厂区纯前端无刷新切换 Tab */
         .tabs { display: flex; gap: 8px; margin-top: 12px; }
         .tab { 
             flex: 1; text-align: center; padding: 8px 0; background: #e2e8f0; 
-            border-radius: 8px; color: #64748b; font-weight: 600; 
+            border-radius: 8px; color: #64748b; font-weight: 600; cursor: pointer;
             text-decoration: none; font-size: 13px; transition: all 0.2s;
             border: 1px solid transparent;
         }
@@ -518,7 +520,7 @@ router.get('/visitor-status', async (req, res) => {
 <div class="navbar">
     <div class="nav-content">
         <div class="nav-title">
-            <div class="live-dot"></div> ${config.title}
+            <div class="live-dot"></div> <span id="navTitleText"></span>
         </div>
         <div class="btn-refresh" id="refreshBtn" onclick="manualRefresh()">🔄</div>
     </div>
@@ -527,8 +529,8 @@ router.get('/visitor-status', async (req, res) => {
     </div>
     
     <div class="tabs">
-        <a href="?loc=A08" class="tab ${loc === 'A08' ? 'active' : ''}">🏢 A08 厂区</a>
-        <a href="?loc=Q01" class="tab ${loc === 'Q01' ? 'active' : ''}">🏢 Q01 厂区</a>
+        <div class="tab active" data-loc="A08" onclick="switchLoc('A08')">🏢 A08 厂区</div>
+        <div class="tab" data-loc="Q01" onclick="switchLoc('Q01')">🏢 Q01 厂区</div>
     </div>
 
     <div class="progress-bar-container">
@@ -536,19 +538,7 @@ router.get('/visitor-status', async (req, res) => {
     </div>
 </div>
 
-<div class="container" id="cardList">
-    ${config.visitorIdNos.map((id, idx) => `
-        <div class="app-card" id="wrapper-${idx}" style="padding:16px;">
-            <div style="display:flex;gap:12px;align-items:center;">
-                <div class="skeleton skeleton-circle"></div>
-                <div style="flex:1">
-                    <div class="skeleton skeleton-text"></div>
-                    <div class="skeleton skeleton-text" style="width:40%"></div>
-                </div>
-            </div>
-        </div>
-    `).join('')}
-</div>
+<div class="container" id="cardList"></div>
 
 <div class="toast-wrap" id="toastWrap"></div>
 
@@ -565,16 +555,74 @@ router.get('/visitor-status', async (req, res) => {
 </div>
 
 <script>
-    const idList = ${idListScript};
-    const currentLoc = "${loc}";
+    // 后端一次性注入配置，前端丝滑切换
+    const ALL_ID_LISTS = ${JSON.stringify(allIdLists)};
+    const ALL_TITLES = ${JSON.stringify(allTitles)};
+    
+    let currentLoc = "A08";
+    let idList = ALL_ID_LISTS[currentLoc];
+    
     const INTERVAL = 10;
     let countDown = INTERVAL;
     let timer = null;
+    
+    // 会话锁：防止快速点击切换时，旧厂区的数据回调冲刷掉新厂区的列表
+    let currentSession = Date.now(); 
 
     window.onload = function() {
+        // 初始化标题
+        document.getElementById('navTitleText').innerText = ALL_TITLES[currentLoc];
+        document.title = ALL_TITLES[currentLoc];
+        
+        renderSkeletons();
         startLoop();
         loadData(true); // 首次加载视为自动，静默
     };
+
+    // 真正的丝滑核心逻辑：点击按钮只在前端换数据
+    function switchLoc(newLoc) {
+        if (newLoc === currentLoc) return; // 重复点击无效
+        
+        currentLoc = newLoc;
+        idList = ALL_ID_LISTS[currentLoc];
+        
+        // 更新标题
+        document.getElementById('navTitleText').innerText = ALL_TITLES[currentLoc];
+        document.title = ALL_TITLES[currentLoc];
+        
+        // 切换高亮按钮
+        document.querySelectorAll('.tab').forEach(el => {
+            if (el.getAttribute('data-loc') === currentLoc) {
+                el.classList.add('active');
+            } else {
+                el.classList.remove('active');
+            }
+        });
+
+        // 切换时清空搜索框
+        document.getElementById('searchInput').value = '';
+
+        // 秒清空并加载骨架动画，视觉上最丝滑
+        renderSkeletons();
+
+        // 重新拉取新厂区数据
+        manualRefresh();
+    }
+
+    function renderSkeletons() {
+        const container = document.getElementById('cardList');
+        container.innerHTML = idList.map((id, idx) => \`
+            <div class="app-card" id="wrapper-\${idx}" style="padding:16px;">
+                <div style="display:flex;gap:12px;align-items:center;">
+                    <div class="skeleton skeleton-circle"></div>
+                    <div style="flex:1">
+                        <div class="skeleton skeleton-text"></div>
+                        <div class="skeleton skeleton-text" style="width:40%"></div>
+                    </div>
+                </div>
+            </div>
+        \`).join('');
+    }
 
     function startLoop() {
         if(timer) clearInterval(timer);
@@ -582,7 +630,6 @@ router.get('/visitor-status', async (req, res) => {
             countDown--;
             updateProgress();
             if (countDown <= 0) {
-                // --- 触发自动刷新 ---
                 loadData(true); 
                 countDown = INTERVAL;
             }
@@ -602,16 +649,19 @@ router.get('/visitor-status', async (req, res) => {
         
         countDown = INTERVAL;
         updateProgress();
-        loadData(false); // 手动触发
+        loadData(false); 
     }
 
     function loadData(isAuto) {
-        // --- 核心修改：如果是自动刷新，必须给出提示 ---
         if(isAuto) {
             showToast("⚡ 自动同步数据中...");
         } else {
             showToast("🚀 正在刷新数据...");
         }
+
+        // 刷新会话锁标识。旧的回调只要看到 currentSession != mySession 就会默默放弃，绝不串场！
+        const mySession = Date.now();
+        currentSession = mySession;
 
         let finished = 0;
         let hasErr = false;
@@ -620,12 +670,13 @@ router.get('/visitor-status', async (req, res) => {
             fetch('visitor-card-data?loc=' + currentLoc + '&id=' + encodeURIComponent(id))
                 .then(r => r.json())
                 .then(d => {
+                    // 【绝对防御】如果这期间用户点击了别的厂区，这波回来的数据直接丢掉
+                    if (currentSession !== mySession) return; 
+
                     const wrapper = document.getElementById('wrapper-' + index);
                     if(wrapper && d.html) {
-                        // 保持历史记录打开状态
                         const wasOpen = wrapper.querySelector('.history-content.show') ? true : false;
                         wrapper.outerHTML = d.html.replace('app-card', 'app-card fade-in').replace('id="wrapper-'+index+'"', 'id="wrapper-'+index+'"');
-                        // 重新获取新的DOM设置ID，因为outerHTML替换掉了
                         const newWrapper = document.querySelector('[data-key="'+ d.html.match(/data-key="([^"]+)"/)[1] +'"]');
                         if(newWrapper) {
                             newWrapper.id = 'wrapper-' + index;
@@ -638,12 +689,15 @@ router.get('/visitor-status', async (req, res) => {
                         }
                     }
                 })
-                .catch(() => { hasErr = true; })
+                .catch(() => { 
+                    if (currentSession !== mySession) return;
+                    hasErr = true; 
+                })
                 .finally(() => {
+                    if (currentSession !== mySession) return;
                     finished++;
                     if(finished === idList.length) {
                         sortAndFilter();
-                        // --- 刷新完成提示 ---
                         if(isAuto) {
                             showToast("✅ 自动更新完毕");
                         } else {
@@ -682,7 +736,6 @@ router.get('/visitor-status', async (req, res) => {
         div.innerText = msg;
         wrap.appendChild(div);
         
-        // 强制重绘触发动画
         requestAnimationFrame(() => {
             div.classList.add('show');
             setTimeout(() => {
