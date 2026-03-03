@@ -5,7 +5,7 @@ const router = express.Router();
 // --- 1. 配置区域 (全面升级支持多厂区) ---
 const CONFIGS = {
     'A08': {
-        title: "A08 访客通 Pro\n最后更新时间：2026年3月3日12:07:25",
+        title: "A08 访客通 Pro 最后更新时间：2026年3月3日12:07:25",
         visitorIdNos: [
             "MTMwMzIzMTk4NjAyMjgwODFY",
             "MTMwMzIyMTk4ODA2MjQyMDE4",
