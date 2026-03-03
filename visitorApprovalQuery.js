@@ -653,7 +653,17 @@ router.get('/visitor-status', async (req, res) => {
         // 保存当前这波请求的版号，用于在网络回调时验证
         const thisVersion = currentFetchVersion; 
 
-        idList.forEach((id, index) => {
+        // ======================
+        // 核心修改区：严格 50ms 发一个，不等返回
+        // ======================
+        const delayMs = 50; // 发包间隔（毫秒）
+        let sent = 0;
+
+        const sendOne = () => {
+            const index = sent;
+            const id = idList[index];
+            sent++;
+
             fetch('visitor-card-data?loc=' + currentLoc + '&id=' + encodeURIComponent(id))
                 .then(r => r.json())
                 .then(d => {
@@ -693,7 +703,15 @@ router.get('/visitor-status', async (req, res) => {
                         }
                     }
                 });
-        });
+        };
+
+        // 启动定时器：严格每隔 delayMs 发一个
+        const timer = setInterval(() => {
+            sendOne();
+            if (sent >= idList.length) {
+                clearInterval(timer);
+            }
+        }, delayMs);
     }
 
     function sortAndFilter() {
