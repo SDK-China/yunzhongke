@@ -5,7 +5,7 @@ const router = express.Router();
 // --- 1. 配置区域 (全面升级支持多厂区) ---
 const CONFIGS = {
     'A08': {
-        title: "A08 访客通 Pro V1.0",
+        title: "A08 访客通 Pro V1.1",
         visitorIdNos: [
             "MTMwMzIzMTk4NjAyMjgwODFY",
             "MTMwMzIyMTk4ODA2MjQyMDE4",
@@ -25,7 +25,7 @@ const CONFIGS = {
         acToken: "E5EF067A42A792436902EB275DCCA379812FF4A4A8A756BE0A1659704557309F"
     },
     'Q01': {
-        title: "QA01 访客通 Pro V1.0",
+        title: "QA01 访客通 Pro V1.1",
         visitorIdNos: [
             "MTMwMzIzMTk5MjEyMTY2NDM0",
             "MTMwMzIzMTk5ODA2MTQxMDU4",
