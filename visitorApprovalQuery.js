@@ -654,9 +654,9 @@ router.get('/visitor-status', async (req, res) => {
         const thisVersion = currentFetchVersion; 
 
         // ======================
-        // 核心修改区：严格 50ms 发一个，不等返回
+        // 核心修改区：严格 80ms 发一个，不等返回
         // ======================
-        const delayMs = 20; // 发包间隔（毫秒）
+        const delayMs = 80; // 发包间隔（毫秒）
         let sent = 0;
 
         const sendOne = () => {
