@@ -5,7 +5,7 @@ const router = express.Router();
 // --- 1. 配置区域 (全面升级支持多厂区) ---
 const CONFIGS = {
     'A08': {
-        title: "A08 访客通 Pro V1.0",
+        title: "A08 访客通 Pro V1.1",
         visitorIdNos: [
             "MTMwMzIzMTk4NjAyMjgwODFY",
             "MTMwMzIyMTk4ODA2MjQyMDE4",
@@ -25,7 +25,7 @@ const CONFIGS = {
         acToken: "E5EF067A42A792436902EB275DCCA379812FF4A4A8A756BE0A1659704557309F"
     },
     'Q01': {
-        title: "QA01 访客通 Pro V1.0",
+        title: "QA01 访客通 Pro V1.1",
         visitorIdNos: [
             "MTMwMzIzMTk5MjEyMTY2NDM0",
             "MTMwMzIzMTk5ODA2MTQxMDU4",
@@ -97,7 +97,7 @@ const fetchPersonData = async (id, headers, todayDayId, regPerson, acToken) => {
     const body = { visitorIdNo: id, regPerson: regPerson, acToken: acToken };
 
     try {
-        const response = await axios.post(targetUrl, body, { headers, timeout: 6000 });
+        const response = await axios.post(targetUrl, body, { headers, timeout: 8000 });
         const resData = response.data;
         result.cost = Date.now() - startTime; 
 
@@ -654,9 +654,9 @@ router.get('/visitor-status', async (req, res) => {
         const thisVersion = currentFetchVersion; 
 
         // ======================
-        // 核心修改区：严格 80ms 发一个，不等返回
+        // 核心修改区：严格 50ms 发一个，不等返回
         // ======================
-        const delayMs =80; // 发包间隔（毫秒）
+        const delayMs = 20; // 发包间隔（毫秒）
         let sent = 0;
 
         const sendOne = () => {
