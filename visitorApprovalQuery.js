@@ -97,7 +97,7 @@ const fetchPersonData = async (id, headers, todayDayId, regPerson, acToken) => {
     const body = { visitorIdNo: id, regPerson: regPerson, acToken: acToken };
 
     try {
-        const response = await axios.post(targetUrl, body, { headers, timeout: 6000 });
+        const response = await axios.post(targetUrl, body, { headers, timeout: 8000 });
         const resData = response.data;
         result.cost = Date.now() - startTime; 
 
@@ -656,7 +656,7 @@ router.get('/visitor-status', async (req, res) => {
         // ======================
         // 核心修改区：严格 50ms 发一个，不等返回
         // ======================
-        const delayMs = 50; // 发包间隔（毫秒）
+        const delayMs = 20; // 发包间隔（毫秒）
         let sent = 0;
 
         const sendOne = () => {
