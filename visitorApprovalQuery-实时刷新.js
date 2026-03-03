@@ -2,22 +2,53 @@ const express = require('express');
 const axios = require('axios');
 const router = express.Router();
 
-// --- 1. 配置区域 ---
-const CONFIG = {
-    visitorIdNos: [
-        "MTMwMzIzMTk4NjAyMjgwODFY",
-        "MTMwMzIyMTk4ODA2MjQyMDE4",
-        "MTMwNDI1MTk4OTA4MjkwMzE0",
-        "MjMwMjMwMjAwMzAxMDEyMTM1",
-        "MTMxMTIxMTk4OTAxMDU1MDEx",
-        "NDEwNDIzMTk4OTA3MjIxNTMw",
-        "NDMyOTAxMTk4MjExMDUyMDE2",
-        "NDEwOTIzMTk4ODA3MTkxMDFY",
-        "MDMwNzE3Njg=",
-        "NDMyOTAxMTk4MjExMDUyMDE2"
-    ],
-    regPerson: "17614625112",
-    acToken: "E5EF067A42A792436902EB275DCCA379812FF4A4A8A756BE0A1659704557309F"
+// --- 1. 配置区域 (全面升级支持多厂区) ---
+const CONFIGS = {
+    'A08': {
+        title: "A08 访客通 Pro V1.0",
+        visitorIdNos: [
+            "MTMwMzIzMTk4NjAyMjgwODFY",
+            "MTMwMzIyMTk4ODA2MjQyMDE4",
+            "MTMwNDI1MTk4OTA4MjkwMzE0",
+            "MjMwMjMwMjAwMzAxMDEyMTM1",
+            "MTMxMTIxMTk4OTAxMDU1MDEx",
+            "NDEwNDIzMTk4OTA3MjIxNTMw",
+            "NDMyOTAxMTk4MjExMDUyMDE2",
+            "NDEwOTIzMTk4ODA3MTkxMDFY",
+            "MDMwNzE3Njg=",
+            "NDMyOTAxMTk4MjExMDUyMDE2",
+            "MDMwNzE3Njg=",
+            "MTAyNDE5NDY=",
+            "MDczOTM0Njc="
+        ],
+        regPerson: "17614625112",
+        acToken: "E5EF067A42A792436902EB275DCCA379812FF4A4A8A756BE0A1659704557309F"
+    },
+    'Q01': {
+        title: "QA01 访客通 Pro V1.0",
+        visitorIdNos: [
+            "MTMwMzIzMTk5MjEyMTY2NDM0",
+            "MTMwMzIzMTk5ODA2MTQxMDU4",
+            "MTMwMzIzMTk5MDAzMDc2NDE2",
+            "MTMwMzIzMTk4OTA5MDQ2NDEx",
+            "MDU4NDMzNDg=",
+            "MTIwNDUxOTI=",
+            "SzEzOTMxMihBKQ==",
+            "NDMxMjIyMTk5NzEyMDUzMzEz",
+            "NTIyNzMxMjAwMDAxMTAzNjEx",
+            "MTMwMzIxMjAwMjA0MTY2MjE4",
+            "NDUwMjIxMTk4OTA0MDUyNDNY",
+            "NDIxMTgxMTk5MDAxMTc2MzFY",
+            "NDQwOTgyMTk5NzEwMDgyNTk3",
+            "NDExNTI0MjAwNTEyMTA3NjU2",
+            "MDg5NjQ3MzI=",
+            "MDYyNDg5MDE=",
+            "SDAzODMzNTcy",
+            "NTMyNDY5ODc0"
+        ],
+        regPerson: "15032325162",
+        acToken: "53F44A99C6D8AADE22942CD9E1D803E8812FF4A4A8A756BE0A1659704557309F"
+    }
 };
 
 // --- 2. 工具函数 ---
@@ -47,8 +78,8 @@ const getHeaders = () => ({
     "Referer": "https://iw68lh.aliwork.com/"
 });
 
-// --- 3. 核心业务逻辑 (保持不变，增加耗时统计) ---
-const fetchPersonData = async (id, headers, todayDayId) => {
+// --- 3. 核心业务逻辑 (保持不变) ---
+const fetchPersonData = async (id, headers, todayDayId, regPerson, acToken) => {
     const startTime = Date.now();
     const targetUrl = 'https://dingtalk.avaryholding.com:8443/dingplus/visitorConnector/visitorStatus';
     const idTail = id.length > 4 ? id.slice(-4) : id;
@@ -63,12 +94,12 @@ const fetchPersonData = async (id, headers, todayDayId) => {
         cost: 0
     };
 
-    const body = { visitorIdNo: id, regPerson: CONFIG.regPerson, acToken: CONFIG.acToken };
+    const body = { visitorIdNo: id, regPerson: regPerson, acToken: acToken };
 
     try {
         const response = await axios.post(targetUrl, body, { headers, timeout: 6000 });
         const resData = response.data;
-        result.cost = Date.now() - startTime; // 计算耗时
+        result.cost = Date.now() - startTime; 
 
         if (resData.code === 200 && Array.isArray(resData.data)) {
             result.success = true;
@@ -154,7 +185,7 @@ const fetchPersonData = async (id, headers, todayDayId) => {
     return result;
 };
 
-// --- 4. HTML 生成逻辑 (UI 大改版) ---
+// --- 4. HTML 生成逻辑 ---
 const generateCardHtml = (person) => {
     const searchKey = `${person.name} ${person.idTail}`.toUpperCase();
     const rawJsonStr = encodeURIComponent(JSON.stringify(person.rawData, null, 2));
@@ -255,11 +286,14 @@ const generateCardHtml = (person) => {
 router.get('/visitor-card-data', async (req, res) => {
     try {
         const encodedId = req.query.id;
+        const loc = req.query.loc || 'A08';
+        const config = CONFIGS[loc] || CONFIGS['A08'];
+
         if (!encodedId) return res.json({ html: '', hasActive: false });
         const id = Buffer.from(encodedId, 'base64').toString('utf-8');
         const headers = getHeaders();
         const todayDayId = getBeijingDayId(new Date().getTime());
-        const person = await fetchPersonData(id, headers, todayDayId);
+        const person = await fetchPersonData(id, headers, todayDayId, config.regPerson, config.acToken);
         const html = generateCardHtml(person);
         res.json({ html, hasActive: person.priorityList.length > 0 });
     } catch (e) {
@@ -267,14 +301,17 @@ router.get('/visitor-card-data', async (req, res) => {
     }
 });
 
-// 微信文本版 (保持简洁)
+// 微信文本版接口 (向下兼容)
 router.get('/visitor-status-Wechat', async (req, res) => {
+    const loc = req.query.loc || 'A08';
+    const config = CONFIGS[loc] || CONFIGS['A08'];
     const headers = getHeaders();
     const todayDayId = getBeijingDayId(new Date().getTime());
-    let outputLines = [`🕒 ${getBeijingTimeStr()}`];
+    let outputLines = [`[${loc}] 🕒 ${getBeijingTimeStr()}`];
+    
     try {
-        const decodedIds = CONFIG.visitorIdNos.map(encoded => Buffer.from(encoded, 'base64').toString('utf-8'));
-        const promises = decodedIds.map(id => fetchPersonData(id, headers, todayDayId));
+        const decodedIds = config.visitorIdNos.map(encoded => Buffer.from(encoded, 'base64').toString('utf-8'));
+        const promises = decodedIds.map(id => fetchPersonData(id, headers, todayDayId, config.regPerson, config.acToken));
         const results = await Promise.all(promises);
         results.sort((a, b) => (b.priorityList.length > 0 ? 1 : 0) - (a.priorityList.length > 0 ? 1 : 0));
         
@@ -294,9 +331,14 @@ router.get('/visitor-status-Wechat', async (req, res) => {
     } catch (e) { res.status(500).send('Error'); }
 });
 
-// 网页主入口 (包含全新 UI 和 强提示逻辑)
+// 网页主入口 (SPA 丝滑切换改版)
 router.get('/visitor-status', async (req, res) => {
-    const idListScript = JSON.stringify(CONFIG.visitorIdNos);
+    // 提取两个厂区的关键配置传入前端
+    const frontendConfigs = {
+        'A08': { title: CONFIGS['A08'].title, ids: CONFIGS['A08'].visitorIdNos },
+        'Q01': { title: CONFIGS['Q01'].title, ids: CONFIGS['Q01'].visitorIdNos }
+    };
+    const frontendConfigsScript = JSON.stringify(frontendConfigs);
 
     const html = `
 <!DOCTYPE html>
@@ -304,7 +346,7 @@ router.get('/visitor-status', async (req, res) => {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>A08 访客通 Pro</title>
+    <title>访客通 Pro</title>
     <style>
         :root {
             --primary: #2563eb;
@@ -319,7 +361,7 @@ router.get('/visitor-status', async (req, res) => {
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; user-select: none; }
         body { margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", sans-serif; background: var(--bg-body); color: var(--text-main); padding-bottom: 80px; }
 
-        /* --- 顶部导航 (Glassmorphism) --- */
+        /* --- 顶部导航 --- */
         .navbar {
             position: sticky; top: 0; z-index: 100;
             background: rgba(255, 255, 255, 0.85);
@@ -333,7 +375,6 @@ router.get('/visitor-status', async (req, res) => {
         .live-dot { width: 8px; height: 8px; background: #22c55e; border-radius: 50%; box-shadow: 0 0 8px #22c55e; animation: pulse 2s infinite; }
         @keyframes pulse { 0% { opacity: 0.5; transform: scale(0.9); } 50% { opacity: 1; transform: scale(1.1); } 100% { opacity: 0.5; transform: scale(0.9); } }
         
-        /* 刷新倒计时进度条 */
         .progress-bar-container { position: absolute; bottom: 0; left: 0; width: 100%; height: 2px; background: transparent; }
         .progress-bar { height: 100%; background: var(--primary); width: 100%; transition: width 1s linear; }
 
@@ -352,6 +393,20 @@ router.get('/visitor-status', async (req, res) => {
             padding: 0 12px; font-size: 14px; outline: none; transition: background 0.2s;
         }
         .search-input:focus { background: #cbd5e1; }
+
+        /* 厂区丝滑切换 Tab (无跳转刷新) */
+        .tabs { display: flex; gap: 8px; margin-top: 12px; }
+        .tab { 
+            flex: 1; text-align: center; padding: 8px 0; background: #e2e8f0; 
+            border-radius: 8px; color: #64748b; font-weight: 600; 
+            cursor: pointer; font-size: 13px; transition: all 0.2s;
+            border: 1px solid transparent;
+        }
+        .tab.active { 
+            background: #fff; color: var(--primary); 
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05); 
+            border-color: #cbd5e1;
+        }
 
         /* --- 容器 --- */
         .container { padding: 16px; max-width: 600px; margin: 0 auto; }
@@ -375,7 +430,6 @@ router.get('/visitor-status', async (req, res) => {
         .user-meta .name { font-weight: 600; font-size: 16px; color: #334155; }
         .user-meta .id-no { font-size: 12px; color: #94a3b8; margin-top: 2px; }
 
-        /* 状态标签 */
         .status-badge { padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: 600; }
         .badge-green { background: #dcfce7; color: #166534; }
         .badge-yellow { background: #fef9c3; color: #854d0e; }
@@ -402,7 +456,6 @@ router.get('/visitor-status', async (req, res) => {
         .approver { font-size: 12px; color: #94a3b8; }
         .empty-tip { text-align: center; color: #cbd5e1; font-size: 12px; padding: 8px 0; }
 
-        /* 历史区域 */
         .history-box { margin-top: 10px; border-top: 1px dashed #e2e8f0; padding-top: 8px; }
         .history-trigger { font-size: 11px; color: #94a3b8; display: flex; justify-content: space-between; cursor: pointer; padding: 4px 0; }
         .history-content { display: none; margin-top: 4px; }
@@ -411,7 +464,6 @@ router.get('/visitor-status', async (req, res) => {
         .arrow { transition: transform 0.2s; }
         .history-trigger.active .arrow { transform: rotate(180deg); }
 
-        /* 底部 Footer */
         .card-footer { 
             background: #f8fafc; border-top: 1px solid #f1f5f9; padding: 8px 16px; 
             display: flex; justify-content: space-between; align-items: center;
@@ -425,13 +477,13 @@ router.get('/visitor-status', async (req, res) => {
         }
         .footer-btn:active { background: rgba(37, 99, 235, 0.15); }
 
-        /* 骨架屏 Loading */
+        /* 骨架屏 */
         .skeleton { animation: pulse-bg 1.5s infinite; background: #e2e8f0; border-radius: 4px; }
         .skeleton-text { height: 16px; width: 60%; margin-bottom: 6px; }
         .skeleton-circle { height: 40px; width: 40px; border-radius: 50%; }
         @keyframes pulse-bg { 0% { opacity: 0.6; } 50% { opacity: 1; } 100% { opacity: 0.6; } }
 
-        /* 强提示 Toast */
+        /* Toast */
         .toast-wrap { 
             position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); 
             z-index: 999; display: flex; flex-direction: column; gap: 8px; pointer-events: none; 
@@ -444,7 +496,7 @@ router.get('/visitor-status', async (req, res) => {
         }
         .toast.show { opacity: 1; transform: translateY(0); }
 
-        /* 弹窗 */
+        /* Modal */
         .modal-mask { position: fixed; inset: 0; background: rgba(0,0,0,0.4); backdrop-filter: blur(2px); z-index: 200; display: none; opacity: 0; transition: opacity 0.2s;}
         .modal-mask.show { opacity: 1; }
         .modal-panel { 
@@ -465,31 +517,26 @@ router.get('/visitor-status', async (req, res) => {
 <div class="navbar">
     <div class="nav-content">
         <div class="nav-title">
-            <div class="live-dot"></div> A08 访客通 Pro
+            <div class="live-dot"></div> <span id="mainTitle"></span>
         </div>
         <div class="btn-refresh" id="refreshBtn" onclick="manualRefresh()">🔄</div>
     </div>
     <div class="search-wrap">
         <input type="text" class="search-input" id="searchInput" placeholder="🔍 搜索姓名或身份证后4位..." onkeyup="filterList()">
     </div>
+    
+    <div class="tabs">
+        <div id="tab-A08" class="tab active" onclick="switchTab('A08')">🏢 A08 厂区</div>
+        <div id="tab-Q01" class="tab" onclick="switchTab('Q01')">🏢 Q01 厂区</div>
+    </div>
+
     <div class="progress-bar-container">
         <div class="progress-bar" id="progressBar"></div>
     </div>
 </div>
 
 <div class="container" id="cardList">
-    ${CONFIG.visitorIdNos.map((id, idx) => `
-        <div class="app-card" id="wrapper-${idx}" style="padding:16px;">
-            <div style="display:flex;gap:12px;align-items:center;">
-                <div class="skeleton skeleton-circle"></div>
-                <div style="flex:1">
-                    <div class="skeleton skeleton-text"></div>
-                    <div class="skeleton skeleton-text" style="width:40%"></div>
-                </div>
-            </div>
-        </div>
-    `).join('')}
-</div>
+    </div>
 
 <div class="toast-wrap" id="toastWrap"></div>
 
@@ -506,15 +553,64 @@ router.get('/visitor-status', async (req, res) => {
 </div>
 
 <script>
-    const idList = ${idListScript};
-    const INTERVAL = 10;
+    const locConfigs = ${frontendConfigsScript};
+    let currentLoc = 'A08';
+    let idList = locConfigs[currentLoc].ids;
+    
+    // 核心并发锁：记录当前的请求批次，每次点击 Tab 切换就会 +1
+    let currentFetchVersion = 0; 
+    
+    const INTERVAL = 120;
     let countDown = INTERVAL;
     let timer = null;
 
     window.onload = function() {
+        updateTitleAndMeta();
+        renderSkeletons();
         startLoop();
-        loadData(true); // 首次加载视为自动，静默
+        loadData(true); 
     };
+
+    function updateTitleAndMeta() {
+        document.getElementById('mainTitle').innerText = locConfigs[currentLoc].title;
+        document.title = locConfigs[currentLoc].title;
+    }
+
+    function renderSkeletons() {
+        const container = document.getElementById('cardList');
+        container.innerHTML = idList.map(function(id, idx) {
+            return '<div class="app-card" id="wrapper-' + idx + '" style="padding:16px;">' +
+                   '<div style="display:flex;gap:12px;align-items:center;">' +
+                   '<div class="skeleton skeleton-circle"></div>' +
+                   '<div style="flex:1">' +
+                   '<div class="skeleton skeleton-text"></div>' +
+                   '<div class="skeleton skeleton-text" style="width:40%"></div>' +
+                   '</div></div></div>';
+        }).join('');
+    }
+
+    // --- 丝滑切换核心逻辑 ---
+    function switchTab(loc) {
+        if (currentLoc === loc) return; // 点相同的无视
+        
+        currentLoc = loc;
+        idList = locConfigs[loc].ids;
+        currentFetchVersion++; // 锁住新批次，旧批次的网络响应即使回来了也会被直接丢弃！
+
+        // 更新 UI Tab 状态
+        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        document.getElementById('tab-' + loc).classList.add('active');
+        
+        // 恢复搜索框并更新标题
+        document.getElementById('searchInput').value = '';
+        updateTitleAndMeta();
+
+        // 瞬间清空老列表并加载骨架动画
+        renderSkeletons();
+        
+        // 立即拉取新数据
+        manualRefresh();
+    }
 
     function startLoop() {
         if(timer) clearInterval(timer);
@@ -522,7 +618,6 @@ router.get('/visitor-status', async (req, res) => {
             countDown--;
             updateProgress();
             if (countDown <= 0) {
-                // --- 触发自动刷新 ---
                 loadData(true); 
                 countDown = INTERVAL;
             }
@@ -542,11 +637,10 @@ router.get('/visitor-status', async (req, res) => {
         
         countDown = INTERVAL;
         updateProgress();
-        loadData(false); // 手动触发
+        loadData(false); 
     }
 
     function loadData(isAuto) {
-        // --- 核心修改：如果是自动刷新，必须给出提示 ---
         if(isAuto) {
             showToast("⚡ 自动同步数据中...");
         } else {
@@ -555,17 +649,31 @@ router.get('/visitor-status', async (req, res) => {
 
         let finished = 0;
         let hasErr = false;
+        
+        // 保存当前这波请求的版号，用于在网络回调时验证
+        const thisVersion = currentFetchVersion; 
 
-        idList.forEach((id, index) => {
-            fetch('visitor-card-data?id=' + encodeURIComponent(id))
+        // ======================
+        // 核心修改区：严格 80ms 发一个，不等返回
+        // ======================
+        const delayMs =80; // 发包间隔（毫秒）
+        let sent = 0;
+
+        const sendOne = () => {
+            const index = sent;
+            const id = idList[index];
+            sent++;
+
+            fetch('visitor-card-data?loc=' + currentLoc + '&id=' + encodeURIComponent(id))
                 .then(r => r.json())
                 .then(d => {
+                    // 【防并发锁起效点】如果版本号已经对不上，说明用户已经切换了 Tab，直接静默抛弃该旧数据！
+                    if (thisVersion !== currentFetchVersion) return; 
+
                     const wrapper = document.getElementById('wrapper-' + index);
                     if(wrapper && d.html) {
-                        // 保持历史记录打开状态
                         const wasOpen = wrapper.querySelector('.history-content.show') ? true : false;
                         wrapper.outerHTML = d.html.replace('app-card', 'app-card fade-in').replace('id="wrapper-'+index+'"', 'id="wrapper-'+index+'"');
-                        // 重新获取新的DOM设置ID，因为outerHTML替换掉了
                         const newWrapper = document.querySelector('[data-key="'+ d.html.match(/data-key="([^"]+)"/)[1] +'"]');
                         if(newWrapper) {
                             newWrapper.id = 'wrapper-' + index;
@@ -578,12 +686,15 @@ router.get('/visitor-status', async (req, res) => {
                         }
                     }
                 })
-                .catch(() => { hasErr = true; })
+                .catch(() => { 
+                    if (thisVersion === currentFetchVersion) hasErr = true; 
+                })
                 .finally(() => {
+                    if (thisVersion !== currentFetchVersion) return; // 过期请求不纳入统计
+                    
                     finished++;
                     if(finished === idList.length) {
                         sortAndFilter();
-                        // --- 刷新完成提示 ---
                         if(isAuto) {
                             showToast("✅ 自动更新完毕");
                         } else {
@@ -592,7 +703,15 @@ router.get('/visitor-status', async (req, res) => {
                         }
                     }
                 });
-        });
+        };
+
+        // 启动定时器：严格每隔 delayMs 发一个
+        const timer = setInterval(() => {
+            sendOne();
+            if (sent >= idList.length) {
+                clearInterval(timer);
+            }
+        }, delayMs);
     }
 
     function sortAndFilter() {
@@ -622,7 +741,6 @@ router.get('/visitor-status', async (req, res) => {
         div.innerText = msg;
         wrap.appendChild(div);
         
-        // 强制重绘触发动画
         requestAnimationFrame(() => {
             div.classList.add('show');
             setTimeout(() => {
