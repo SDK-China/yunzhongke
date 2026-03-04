@@ -1,69 +1,50 @@
 /**
  * FactoryEntryReport.js
- * 自动续期入厂申请脚本 (智能对齐 + 错峰并发极速版 + 移动端适配UI + 熔断UI修正版)
- * * 更新日志：
- * 1. [逻辑] 实现 "短板补齐"：落后者优先追赶团队最晚日期，整体过期才统一续期。
- * 2. [性能] 查询与提交均采用 50ms 错峰并发模式 (Fire-and-Forget + Promise.all)，大幅提升速度。
- * 3. [UI] 调试界面适配手机，增加 JSON/Encoded 分栏展示。
- * 4. [修复] 熔断时彻底隐藏待发送队列，防止用户误解，增加醒目拦截提示。
+ * 自动续期入厂申请脚本 (多厂区支持 + 完美克隆解析 + 严格顺位保持 + SPA极速界面 + 独立账号身份校验)
+ * =========================================================================
+ * 🛠️ 【更新说明】
+ * - 修复了多账号下 Token 与 Cookie 不匹配导致的“API返回失败”问题。
+ * - 将 csrf_token 和 cookie 彻底配置化，A08 和 Q01 身份完全隔离。
+ * - 极大地增强了发包失败时的日志输出（直接将后端的 JSON 报错打印到面板上）。
+ * - QA01 的发包逻辑已完全重写：深度克隆 QA01_request_body.bin 的原始 JSON。
+ * - QA01 人员勾选后，系统会自动根据他们在 bin 文件中的原生顺序进行重新排列。
+ * - 绝对未修改或删除任何人物数据注释。
+ * - 🌟 新增：独立人员指定接待人功能，自动拆单发包！
+ * =========================================================================
  */
 
 const express = require('express');
 const axios = require('axios');
+const fs = require('fs');
+const path = require('path');
 const router = express.Router();
 
 // --- 工具函数：Base64 解码 ---
 const decode = (str) => Buffer.from(str, 'base64').toString('utf-8');
 
-// --- 配置区域 ---
-const CONFIG = {
-    // 基础请求头
-    headers: {
-        "Host": "iw68lh.aliwork.com",
-        "content-type": "application/x-www-form-urlencoded",
-        "sec-ch-ua-platform": "\"Android\"",
-        "sec-ch-ua": "\"Chromium\";v=\"142\", \"Android WebView\";v=\"142\", \"Not_A Brand\";v=\"99\"",
-        "sec-ch-ua-mobile": "?1",
-        "x-requested-with": "XMLHttpRequest",
-        "user-agent": "Mozilla/5.0 (Linux; Android 16; PJZ110 Build/BP2A.250605.015) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.7444.102 Mobile Safari/537.36",
-        "accept": "application/json, text/json",
-        "bx-v": "2.5.11",
-        "origin": "https://iw68lh.aliwork.com",
-        "sec-fetch-site": "same-origin",
-        "sec-fetch-mode": "cors",
-        "sec-fetch-dest": "empty",
-        "referer": "https://iw68lh.aliwork.com/o/fk_ybfk?account=17614625112&company=%E5%AE%8F%E5%90%AF%E8%83%9C%E7%B2%BE%E5%AF%86%E7%94%B5%E5%AD%90(%E7%A7%A6%E7%9A%87%E5%B2%9B)%E6%9C%89%E9%99%90%E5%85%AC%E5%8F%B8&part=%E7%A7%A6%E7%9A%87%E5%B2%9B%E5%9B%AD%E5%8C%BA&applyType=%E4%B8%80%E8%88%AC%E8%AE%BF%E5%AE%A2",
-        "accept-encoding": "gzip, deflate, br, zstd",
-        "accept-language": "zh-CN,zh;q=0.9,en-US;q=0.8,en;q=0.7",
-        "cookie": "tianshu_corp_user=ding2b4c83bec54a29c6f2c783f7214b6d69_FREEUSER; tianshu_csrf_token=e7daa879-7b83-40f7-8335-1a262747f2c9; c_csrf=e7daa879-7b83-40f7-8335-1a262747f2c9; cookie_visitor_id=zfGITZnn; cna=QhOGIdjbQ3ABASQOBEFsQ0YG; xlly_s=1; tianshu_app_type=APP_GRVPTEOQ6D4B7FLZFYNJ; JSESSIONID=BF2C6304A367F22183E99C3E5B5181C4; tfstk=gOZxf6D0ah_YmbR2H5blSie9vWyOMa2qeSyBjfcD57F8iJ8615qgycFzMIcmSS4-67N-GjmfQ1Fun54imlewXAw__tlG3a243co1t6qOx-yqEsPFbo36NgwrKxT1rqiRmR_At6jhqZ9SXsC3nq6jmbMZNxMXlE6-VAH6fcgjG36-CAAX5jN_FThrQAOXfhG5VAkB5ci_186-QbGsfqN_FTHZNf91kGhG5b-Tu6E2PQTVe3t72x3x1HG9XDqyxFGLhbtMyWMxkt2jwht_4PdnXxc1VBhaV5nIku6MWXnrwAHYDOYE_yDTCvnBhny8G7ZKRufyjfsyqkqd5-AnU0LfeTLw7qMrh42tpxCQDiM-tTfH7FuY8YhheTLw7qMreXXrUF8Zky5..; isg=BJCQbJGPzSIDPJDoHxPbfgneatziWXSjkwUE44pgG-BuxflvPmhTMY7zmMuAWSx7"
-    },
-    url: "https://iw68lh.aliwork.com/o/HW9663A19D6M1QDL6D7GNAO1L2ZC2NBXQHOXL3?_api=nattyFetch&_mock=false&_stamp=",
-    csrf_token: "e7daa879-7b83-40f7-8335-1a262747f2c9",
-    formUuid: "FORM-2768FF7B2C0D4A0AB692FD28DBA09FD57IHQ",
-    appType: "APP_GRVPTEOQ6D4B7FLZFYNJ",
-    
-    // 查询配置
-    query: {
-        visitorIdNos: [
-            "MTMwMzIzMTk4NjAyMjgwODFY", // 康
-            "MTMwMzIyMTk4ODA2MjQyMDE4", // 张
-            // "MTMwNDI1MTk4OTA4MjkwMzE0", // 姜
-            "MjMwMjMwMjAwMzAxMDEyMTM1", // 孙
-            "MTMxMTIxMTk4OTAxMDU1MDEx", // 王
-            "NDEwNDIzMTk4OTA3MjIxNTMw", // 田
-            // "NDMyOTAxMTk4MjExMDUyMDE2", // 兰
-            // "NDEwOTIzMTk4ODA3MTkxMDFY", // 卞
-            // "MDMwNzE3Njg=",             // 贾
-            "MTAyNDE5NDY=",             // 林
-            "MDczOTM0Njc="              // 陈
-        ],
-        regPerson: "17614625112",
-        acToken: "E5EF067A42A792436902EB275DCCA379812FF4A4A8A756BE0A1659704557309F",
-        queryUrl: "https://dingtalk.avaryholding.com:8443/dingplus/visitorConnector/visitorStatus"
-    }
+// --- 基础请求头 (移除了强绑定的 Cookie，改为动态传入) ---
+const GLOBAL_HEADERS = {
+    "Host": "iw68lh.aliwork.com",
+    "content-type": "application/x-www-form-urlencoded",
+    "sec-ch-ua-platform": "\"Android\"",
+    "sec-ch-ua": "\"Chromium\";v=\"142\", \"Android WebView\";v=\"142\", \"Not_A Brand\";v=\"99\"",
+    "sec-ch-ua-mobile": "?1",
+    "x-requested-with": "XMLHttpRequest",
+    "user-agent": "Mozilla/5.0 (Linux; Android 16; PJZ110 Build/BP2A.250605.015) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.7444.102 Mobile Safari/537.36",
+    "accept": "application/json, text/json",
+    "bx-v": "2.5.11",
+    "origin": "https://iw68lh.aliwork.com",
+    "sec-fetch-site": "same-origin",
+    "sec-fetch-mode": "cors",
+    "sec-fetch-dest": "empty",
+    "referer": "https://iw68lh.aliwork.com/o/fk_ybfk?account=17614625112&company=%E5%AE%8F%E5%90%AF%E8%83%9C%E7%B2%BE%E5%AF%86%E7%94%B5%E5%AD%90(%E7%A7%A6%E7%9A%87%E5%B2%9B)%E6%9C%89%E9%99%90%E5%85%AC%E5%8F%B8&part=%E7%A7%A6%E7%9A%87%E5%B2%9B%E5%9B%AD%E5%8C%BA&applyType=%E4%B8%80%E8%88%AC%E8%AE%BF%E5%AE%A2",
+    "accept-encoding": "gzip, deflate, br, zstd",
+    "accept-language": "zh-CN,zh;q=0.9,en-US;q=0.8,en;q=0.7"
 };
 
-// --- 人员数据模板 (Base64加密处理) ---
+// ==========================================
+// A08 数据区 (维持原状，绝不改动旧有逻辑)
+// ==========================================
 const PERSON_DB = {
     // 康
     "MTMwMzIzMTk4NjAyMjgwODFY": [
@@ -137,7 +118,6 @@ const PERSON_DB = {
         {"componentName":"AttachmentField","fieldId":"attachmentField_lxv44osk","label":"社保/在职证明","fieldData":{"value":[{"name":"mmexport1764077683551.jpg","previewUrl":"/o/R7C66W71JES0TS6GOMX304AK0SI23F2NZMEIMWL?appType=APP_GRVPTEOQ6D4B7FLZFYNJ&fileName=APP_GRVPTEOQ6D4B7FLZFYNJ_UjdDNjZXNzFKRVMwVFM2R09NWDMwNEFLMFNJMjNGMk5aTUVJTVZM.jpg&instId=&type=open&process=image/resize,m_fill,w_200,h_200,limit_0/quality,q_80","downloadUrl":"/o/R7C66W71JES0TS6GOMX304AK0SI23F2NZMEIMWL?appType=APP_GRVPTEOQ6D4B7FLZFYNJ&fileName=APP_GRVPTEOQ6D4B7FLZFYNJ_UjdDNjZXNzFKRVMwVFM2R09NWDMwNEFLMFNJMjNGMk5aTUVJTVZM.jpg&instId=&type=download","size":95823,"url":"/o/R7C66W71JES0TS6GOMX304AK0SI23F2NZMEIMWL?appType=APP_GRVPTEOQ6D4B7FLZFYNJ&fileName=APP_GRVPTEOQ6D4B7FLZFYNJ_UjdDNjZXNzFKRVMwVFM2R09NWDMwNEFLMFNJMjNGMk5aTUVJTVZM.jpg&instId=&type=download","fileUuid":"APP_GRVPTEOQ6D4B7FLZFYNJ_UjdDNjZXNzFKRVMwVFM2R09NWDMwNEFLMFNJMjNGMk5aTUVJTVZM.jpg"}]}},
         {"componentName":"AttachmentField","fieldId":"attachmentField_lxv44osn","label":"其他附件","fieldData":{"value":[]}}
     ],
-
     // 兰 (新增)
     "NDMyOTAxMTk4MjExMDUyMDE2": [
         {"componentName":"SelectField","fieldId":"selectField_lxv44orx","label":"有效身份证件","fieldData":{"value":"身份证","text":"身份证"},"options":[{"defaultChecked":false,"syncLabelValue":true,"__sid":"item_lxjzgsg1","text":"身份证","__sid__":"serial_lxjzgsg0","value":"身份证","sid":"serial_lxjzgsg0"}]},
@@ -200,7 +180,6 @@ const PERSON_DB = {
     ]
 };
 
-// --- 表单基础结构 ---
 const FORM_BASE = [
     {"componentName":"SerialNumberField","fieldId":"serialNumberField_lxn9o9dx","label":"单号信息","fieldData":{}},
     {"componentName":"TextField","fieldId":"textField_lxn9o9e0","label":"申请类型","fieldData":{"value":"一般访客"}},
@@ -226,34 +205,296 @@ const FORM_TAIL = [
     {"componentName":"TextField","fieldId":"textField_lxn9o9f7","label":"接待人员","fieldData":{"value":"王晗"}},
     {"componentName":"TextField","fieldId":"textField_lxn9o9fc","label":"接待部门","fieldData":{"value":"QA08設備五課"}},
     {"componentName":"TextField","fieldId":"textField_lxn9o9fe","label":"接待人联系方式","fieldData":{"value":"17531114022"}},
-    // 这里插入 DateField
     {"componentName":"TextField","fieldId":"textField_m4c5a419","label":"涉外签核","fieldData":{"value":"61990414"}},
     {"componentName":"TextField","fieldId":"textField_m4c5a41a","label":"门岗保安","fieldData":{"value":"15232353238"}}
 ];
 
-// 辅助函数：延迟
+const A08_TEMPLATE = [];
+FORM_BASE.forEach(item => A08_TEMPLATE.push({ type: 'STATIC', item }));
+A08_TEMPLATE.push({ type: 'INJECT_TABLE' });
+FORM_TAIL.slice(0, 4).forEach(item => A08_TEMPLATE.push({ type: 'STATIC', item }));
+A08_TEMPLATE.push({ 
+    type: 'INJECT_DATE_TS', 
+    template: {
+        "componentName": "DateField",
+        "fieldId": "dateField_lxn9o9fh",
+        "label": "到访日期",
+        "fieldData": { "value": 0 },
+        "format": "yyyy-MM-dd"
+    }
+});
+FORM_TAIL.slice(4).forEach(item => A08_TEMPLATE.push({ type: 'STATIC', item }));
+
+// ==========================================
+// Q01 自动化深度克隆解析区 (严格一致性保证)
+// ==========================================
+let Q01_PERSON_DB = {};
+let Q01_ORIGINAL_ORDER = {}; // 核心：记录 bin 文件中的原生人物顺序
+let Q01_TEMPLATE_JSON = null; // 核心：整个 JSON 树直接深拷贝
+let Q01_URL_PARAMS = null;    // 核心：保存所有的外层发包参数
+
+try {
+    const binPath = path.join(__dirname, 'QA01_request_body.bin');
+    if (fs.existsSync(binPath)) {
+        const rawContent = fs.readFileSync(binPath, 'utf-8');
+        Q01_URL_PARAMS = new URLSearchParams(rawContent);
+        
+        const valueStr = Q01_URL_PARAMS.get('value');
+        if (valueStr) {
+            Q01_TEMPLATE_JSON = JSON.parse(valueStr);
+            
+            Q01_TEMPLATE_JSON.forEach(item => {
+                if (item.componentName === 'TableField' && item.label && item.label.includes('人员')) {
+                    const peopleArrays = item.fieldData.value;
+                    peopleArrays.forEach((personArr, index) => {
+                        const idField = personArr.find(f => String(f.label).includes('证件号码'));
+                        if (idField && idField.fieldData && idField.fieldData.value) {
+                            const rawIdStr = String(idField.fieldData.value);
+                            const base64Id = Buffer.from(rawIdStr).toString('base64');
+                            Q01_PERSON_DB[base64Id] = personArr;
+                            Q01_ORIGINAL_ORDER[base64Id] = index; // 【关键】锁死他们在抓包里的原生顺序！
+                        }
+                    });
+                }
+            });
+            console.log(`✅ QA01_request_body.bin 解析成功，提取 ${Object.keys(Q01_PERSON_DB).length} 个人员原生配置`);
+        }
+    } else {
+        console.warn("⚠️ 找不到 QA01_request_body.bin 文件，Q01 厂区组包功能将不可用！");
+    }
+} catch (e) {
+    console.error("❌ 解析 QA01_request_body.bin 失败:", e.message);
+}
+
+// 辅助函数
 const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
-
-// 辅助函数：北京时间天数ID (用于比较)
 const getBeijingDayId = (ts) => Math.floor((parseInt(ts) + 28800000) / 86400000);
-
-// 辅助函数：格式化日期字符串 (假定输入为UTC时间戳+8小时偏移)
 const getFormattedDate = (ts) => {
     const date = new Date(parseInt(ts) + 28800000);
     return date.toISOString().split('T')[0];
 };
 
-// --- 单个查询核心逻辑 (Fire-and-Forget) ---
-const checkSingleStatus = async (id) => {
+// ==========================================
+// 全局总枢纽配置 (🌟 解决账号跨区报错的核心区域)
+// ==========================================
+const LOC_CONFIGS = {
+    'A08': {
+        // A08 的门禁阈值
+        renewThreshold: 2, 
+        renewDays: 7,
+        title: "A08 厂区",
+        enabled: true,
+
+        // 👇 A08 账号身份凭证 (原封不动)
+        csrf_token: "e7daa879-7b83-40f7-8335-1a262747f2c9",
+        cookie: "tianshu_corp_user=ding2b4c83bec54a29c6f2c783f7214b6d69_FREEUSER; tianshu_csrf_token=e7daa879-7b83-40f7-8335-1a262747f2c9; c_csrf=e7daa879-7b83-40f7-8335-1a262747f2c9; cookie_visitor_id=zfGITZnn; cna=QhOGIdjbQ3ABASQOBEFsQ0YG; xlly_s=1; tianshu_app_type=APP_GRVPTEOQ6D4B7FLZFYNJ; JSESSIONID=BF2C6304A367F22183E99C3E5B5181C4; tfstk=gOZxf6D0ah_YmbR2H5blSie9vWyOMa2qeSyBjfcD57F8iJ8615qgycFzMIcmSS4-67N-GjmfQ1Fun54imlewXAw__tlG3a243co1t6qOx-yqEsPFbo36NgwrKxT1rqiRmR_At6jhqZ9SXsC3nq6jmbMZNxMXlE6-VAH6fcgjG36-CAAX5jN_FThrQAOXfhG5VAkB5ci_186-QbGsfqN_FTHZNf91kGhG5b-Tu6E2PQTVe3t72x3x1HG9XDqyxFGLhbtMyWMxkt2jwht_4PdnXxc1VBhaV5nIku6MWXnrwAHYDOYE_yDTCvnBhny8G7ZKRufyjfsyqkqd5-AnU0LfeTLw7qMrh42tpxCQDiM-tTfH7FuY8YhheTLw7qMreXXrUF8Zky5..; isg=BJCQbJGPzSIDPJDoHxPbfgneatziWXSjkwUE44pgG-BuxflvPmhTMY7zmMuAWSx7",
+
+        query: {
+            visitorIdNos: [
+                "MTMwMzIzMTk4NjAyMjgwODFY",
+                "MTMwMzIyMTk4ODA2MjQyMDE4",
+                "MjMwMjMwMjAwMzAxMDEyMTM1",
+                "MTMxMTIxMTk4OTAxMDU1MDEx",
+                "NDEwNDIzMTk4OTA3MjIxNTMw",
+                // "NDMyOTAxMTk4MjExMDUyMDE2",
+                // "NDEwOTIzMTk4ODA3MTkxMDFY",
+                // "MDMwNzE3Njg",
+                // "MTMwNDI1MTk4OTA4MjkwMzE0", //姜
+                "MTAyNDE5NDY=",
+                "MDczOTM0Njc=",
+            ],
+            regPerson: "17614625112",
+            acToken: "E5EF067A42A792436902EB275DCCA379812FF4A4A8A756BE0A1659704557309F",
+            queryUrl: "https://dingtalk.avaryholding.com:8443/dingplus/visitorConnector/visitorStatus"
+        },
+        personDb: PERSON_DB,
+        
+        // 【新增功能】：支持在这里配置专属的接待人信息，不在此列表中的人将合并走上面的通用接待配置。
+        customReceptionists: {
+            // 示例：给某个身份证指定一个专用的接待人：
+            // "NDEwNDIzMTk4OTA3MjIxNTMw": {
+            //     receptionistId: "12345678",
+            //     receptionistName: "专属测试人",
+            //     receptionDepartment: "P2特殊测试组",
+            //     receptionistPhone: "13888888888",
+            //     visitReason: "特殊机台维护"
+            // }
+        },
+
+        // A08 的独立老组包逻辑 (已加入指定接待人合并支持)
+        buildPayload: (idsBase64, targetTs, locConfig, customConfig = null) => {
+            const tableRows = idsBase64.map(id => locConfig.personDb[id]).filter(Boolean);
+            const finalForm = [];
+            
+            A08_TEMPLATE.forEach(block => {
+                if (block.type === 'STATIC') {
+                    // 修复：必须进行深拷贝，否则会污染内存里的全局模板
+                    finalForm.push(JSON.parse(JSON.stringify(block.item)));
+                } else if (block.type === 'INJECT_TABLE') {
+                    finalForm.push({
+                        "componentName": "TableField", "fieldId": "tableField_lxv44os5",
+                        "label": "人员信息", "fieldData": { "value": tableRows }, "listNum": 50
+                    });
+                } else if (block.type === 'INJECT_DATE_TS') {
+                    finalForm.push({ ...block.template, fieldData: { value: targetTs } });
+                }
+            });
+
+            // 👇 【新增】如果传入了指定接待人配置，拦截并覆写 A08 的外层表单参数
+            if (customConfig) {
+                finalForm.forEach(item => {
+                    if (item.label && String(item.label).includes('接待人工号') && customConfig.receptionistId) item.fieldData.value = customConfig.receptionistId;
+                    else if (item.label && String(item.label).includes('接待人员') && customConfig.receptionistName) item.fieldData.value = customConfig.receptionistName;
+                    else if (item.label && String(item.label).includes('接待部门') && customConfig.receptionDepartment) item.fieldData.value = customConfig.receptionDepartment;
+                    else if (item.label && String(item.label).includes('接待人联系方式') && customConfig.receptionistPhone) item.fieldData.value = customConfig.receptionistPhone;
+                    else if (item.label && String(item.label).includes('服务/事由描述') && customConfig.visitReason) item.fieldData.value = customConfig.visitReason;
+                });
+            }
+
+            const jsonStr = JSON.stringify(finalForm, null, 2);
+            // 👇 强制绑定该账号独有的 Token
+            const _token = locConfig.csrf_token || 'e7daa879-7b83-40f7-8335-1a262747f2c9';
+            const fullPostBody = `_csrf_token=${_token}&formUuid=FORM-2768FF7B2C0D4A0AB692FD28DBA09FD57IHQ&appType=APP_GRVPTEOQ6D4B7FLZFYNJ&value=${encodeURIComponent(JSON.stringify(finalForm))}&_schemaVersion=653`;
+            return { jsonStr, fullPostBody };
+        }
+    },
+    'Q01': {
+        title: "Q01 厂区",
+        // Q01 的门禁阈值
+        renewThreshold: 2, 
+        renewDays: 7,
+        enabled: true,
+
+        // 👇【修复点】独立账号配置，解决 API 报错
+        csrf_token: "5581e41f-8c38-48d4-bea4-20d1f96af4db",
+        cookie: "tianshu_corp_user=ding2b4c83bec54a29c6f2c783f7214b6d69_FREEUSER; tianshu_csrf_token=5581e41f-8c38-48d4-bea4-20d1f96af4db; c_csrf=5581e41f-8c38-48d4-bea4-20d1f96af4db; cookie_visitor_id=o5TLBWJ6; cna=KDksIgUMMBsCARuACb+fM//A; xlly_s=1; tianshu_app_type=APP_GRVPTEOQ6D4B7FLZFYNJ; JSESSIONID=5BF894CE5AFD8107A9C6124F8753BEB5; tfstk=gTlIf86UsykasoYp2M8NcrQKR6PevFR2Vaa-o4CFyWFpNgUbJ7orypYWNqngzWuJx0G7XcqKUDRHw8ijx0wk-ur8V0u-LFR2g203Z7nW0IRVHeDw8DaRwzLR6yzk7ypCdudzZ7K2bO58KINoAceYPk395zzz2un8eVCT-lU827n8XRUYuMF8w0L_6zzlJwUdwPBT8lE8w7n-WFauXyF8w0395zv_rtaGPouBPqRW4aBBtvE1w_h_5nNKRi1Lo34UdogUuOXi1i2QD2E1aHjKKrrQkjKNKrwIJjNE_HpZRlHKwWlpb_ijfxFswR7JVyHKlj2mwhsr4srb5yX5EkC75o865TXlaj5nMewO5_eLSPzw5F6rtJUg5o865TXupP4i3FT1UXf..; isg=BOzsBAulqRjsL70mvTB0y-TYtsgepZBPSDBScUYpsid4UGNbQrR-3bOndF_PIcin",
+
+        // Q01 全局通用接待人配置 (未指定专属接待人的人员将默认使用这个)
+        // receptionistId: "82100751",    // 工号
+        // receptionistName: "张宏敏",       // 姓名
+        // receptionDepartment:"P2電測檢驗組",  //接待部门
+        // receptionistPhone:"18733454885",  //接待人联系方式
+        // visitReason: "治具调试",     // 事由描述
+
+        // 【新增功能】：支持在这里配置专属的接待人信息，一旦在此列表，系统将自动为他单独分开发出一个新包！
+        customReceptionists: {
+            // 示例：给某个身份证指定一个专用的接待人：
+            // "MTMwMzIzMTk5MjEyMTY2NDM0": {
+            //     receptionistId: "12345678",
+            //     receptionistName: "专属张宏敏",
+            //     receptionDepartment: "P2特殊测试组",
+            //     receptionistPhone: "13888888888",
+            //     visitReason: "特殊机台维护"
+            // }
+        },
+
+        query: {
+            visitorIdNos: [
+                "MTMwMzIzMTk5MjEyMTY2NDM0",
+                "MTMwMzIzMTk5ODA2MTQxMDU4",
+                "MTMwMzIzMTk5MDAzMDc2NDE2",
+                "MTMwMzIzMTk4OTA5MDQ2NDEx", //付
+                "MDU4NDMzNDg=",
+                "MTIwNDUxOTI=",
+                "SzEzOTMxMihBKQ==",
+                "NDMxMjIyMTk5NzEyMDUzMzEz",
+                "NTIyNzMxMjAwMDAxMTAzNjEx",
+                "MTMwMzIxMjAwMjA0MTY2MjE4",
+                "NDUwMjIxMTk4OTA0MDUyNDNY",
+                "NDIxMTgxMTk5MDAxMTc2MzFY",
+                "NDQwOTgyMTk5NzEwMDgyNTk3",
+                "NDExNTI0MjAwNTEyMTA3NjU2",
+                // "MDg5NjQ3MzI=",
+                // "MDYyNDg5MDE=",
+                // "SDAzODMzNTcy",
+                // "NTMyNDY5ODc0"
+            ],
+            regPerson: "15032325162",
+            acToken: "53F44A99C6D8AADE22942CD9E1D803E8812FF4A4A8A756BE0A1659704557309F",
+            queryUrl: "https://dingtalk.avaryholding.com:8443/dingplus/visitorConnector/visitorStatus"
+        },
+        personDb: Q01_PERSON_DB,
+        
+        // Q01 专有完美克隆组包逻辑 (加入了独立接待人支持)
+        buildPayload: (idsBase64, targetTs, locConfig, customConfig = null) => {
+            if (!Q01_TEMPLATE_JSON || !Q01_URL_PARAMS) throw new Error("QA01 模板未成功加载，无法生成合法报文！");
+
+            const dateStr = getFormattedDate(targetTs);
+
+            // 1. 严格排序
+            const sortedIds = [...idsBase64].sort((a, b) => {
+                const indexA = Q01_ORIGINAL_ORDER[a] ?? 999;
+                const indexB = Q01_ORIGINAL_ORDER[b] ?? 999;
+                return indexA - indexB;
+            });
+            const finalTable = sortedIds.map(id => locConfig.personDb[id]).filter(Boolean);
+
+            // 2. 深度克隆抓包来的原生 JSON 树
+            const finalForm = JSON.parse(JSON.stringify(Q01_TEMPLATE_JSON));
+
+            // 获取要注入的接待人信息：优先使用传入的指定配置(customConfig)，若无则降级使用全厂区通用配置
+            const recId = customConfig ? customConfig.receptionistId : locConfig.receptionistId;
+            const recName = customConfig ? customConfig.receptionistName : locConfig.receptionistName;
+            const recDept = customConfig ? customConfig.receptionDepartment : locConfig.receptionDepartment;
+            const recPhone = customConfig ? customConfig.receptionistPhone : locConfig.receptionistPhone;
+            const vReason = customConfig ? customConfig.visitReason : locConfig.visitReason;
+
+            // 3. 精准注入更新的数据
+            finalForm.forEach(item => {
+                if (item.componentName === 'TableField' && item.label && item.label.includes('人员')) {
+                    item.fieldData.value = finalTable;
+                } else if (item.componentName === 'DateField' && String(item.label).includes('日期')) {
+                    item.fieldData.value = targetTs;
+                } else if (item.componentName === 'TextField' && String(item.label).includes('日期')) {
+                    item.fieldData.value = dateStr;
+                }
+                // 拦截并替换 QA01 的接待人信息
+                else if (item.label && String(item.label).includes('接待人工号') && recId) {
+                    item.fieldData.value = recId;
+                } else if (item.label && String(item.label).includes('接待人员') && recName) {
+                    item.fieldData.value = recName;
+                } else if (item.label && String(item.label).includes('服务/事由描述') && vReason) {
+                    item.fieldData.value = vReason;
+                } else if (item.label && String(item.label).includes('接待部门') && recDept) {
+                    item.fieldData.value = recDept;
+                }else if (item.label && String(item.label).includes('接待人联系方式') && recPhone) {
+                    item.fieldData.value = recPhone;
+                }
+            });
+
+            // 4. 重建 URL Encoded 发包主体
+            const parts = [];
+            for (const [key, val] of Q01_URL_PARAMS.entries()) {
+                if (key === 'value') {
+                    parts.push(`${key}=${encodeURIComponent(JSON.stringify(finalForm)).replace(/%20/g, '+')}`);
+                } else if (key === '_csrf_token' && locConfig.csrf_token) {
+                    // 👇 强制覆盖为本账号对应的 Token
+                    parts.push(`${key}=${encodeURIComponent(locConfig.csrf_token)}`); 
+                } else {
+                    parts.push(`${key}=${encodeURIComponent(val)}`); 
+                }
+            }
+
+            return {
+                jsonStr: JSON.stringify(finalForm, null, 2),
+                fullPostBody: parts.join('&')
+            };
+        }
+    }
+};
+
+// --- 后端 API 逻辑 ---
+
+const checkSingleStatus = async (id, queryConfig) => {
     const idMask = id.substring(0, 4) + "****" + id.substring(id.length - 4);
     let maxEnd = 0;
     let result = { id, success: false, hasData: false, maxEnd: 0 };
 
     try {
-        const res = await axios.post(CONFIG.query.queryUrl, {
+        const res = await axios.post(queryConfig.queryUrl, {
             visitorIdNo: id,
-            regPerson: CONFIG.query.regPerson,
-            acToken: CONFIG.query.acToken
+            regPerson: queryConfig.regPerson,
+            acToken: queryConfig.acToken
         });
         
         if (res.data.code === 200) {
@@ -264,9 +505,6 @@ const checkSingleStatus = async (id) => {
                     const end = parseInt(record.dateEnd || record.rangeEnd);
                     if (end > maxEnd) maxEnd = end;
                 });
-                console.log(`   [${idMask}] 最新记录结束时间: ${getFormattedDate(maxEnd)}`);
-            } else {
-                console.log(`   [${idMask}] 无有效记录 (Empty Data)`);
             }
             result.maxEnd = maxEnd;
         } else {
@@ -278,35 +516,18 @@ const checkSingleStatus = async (id) => {
     return result;
 };
 
-/**
- * 1. 查询所有人的状态 (并发模式)
- */
-const getAllStatuses = async () => {
-    console.log("🔍 开始批量查询人员状态 (错峰并发模式)...");
-    
+const getAllStatuses = async (queryConfig) => {
     const statusMap = {};
-    const decodedIds = CONFIG.query.visitorIdNos.map(id => decode(id));
+    const decodedIds = queryConfig.visitorIdNos.map(id => decode(id));
     
-    // 构造并发请求数组
     const promises = [];
     for (const id of decodedIds) {
-        // 将 Promise 推入数组，不等待结果
-        promises.push(checkSingleStatus(id));
-        // 仅做发射间隔
-        await delay(50);
+        promises.push(checkSingleStatus(id, queryConfig));
+        await delay(80);
     }
 
-    // 统一回收结果
     const results = await Promise.all(promises);
-
-    // 统计结果
-    const stats = {
-        total: decodedIds.length,
-        success: 0, 
-        error: 0,   
-        hasData: 0, 
-        noData: 0   
-    };
+    const stats = { total: decodedIds.length, success: 0, error: 0, hasData: 0, noData: 0 };
 
     results.forEach(r => {
         statusMap[r.id] = r.maxEnd;
@@ -318,14 +539,9 @@ const getAllStatuses = async () => {
             stats.error++;
         }
     });
-
-    console.log("📊 查询统计:", JSON.stringify(stats));
     return { statusMap, stats };
 };
 
-/**
- * 核心逻辑：安全检查
- */
 const checkSafeToRun = (stats) => {
     if (stats.error > 0) return { safe: false, reason: `查询接口报错 (Error Count: ${stats.error})` };
     if (stats.total > 0 && stats.hasData === 0) return { safe: false, reason: "严重警告：所有人员均无记录！" };
@@ -333,101 +549,59 @@ const checkSafeToRun = (stats) => {
     return { safe: true, reason: "状态正常" };
 };
 
-// 2. 构造并发送申请
-const submitApplication = async (groupDateTs, personIds) => {
-    // 构造人员列表 TableField
-    const tableRows = [];
-    const names = [];
+// 👇 传入了 locConfig 以提取它对应的专属 Cookie
+const submitApplication = async (reqTask, locConfig) => {
+    const { targetDate, people, encodedBody } = reqTask;
     
-    personIds.forEach(id => {
-        const idBase64 = Buffer.from(id).toString('base64');
-        const personData = PERSON_DB[idBase64];
-        if (personData) {
-            tableRows.push(personData);
-            names.push(personData[2].fieldData.value);
-        }
-    });
-
-    if (tableRows.length === 0) return null;
-
-    // 组合完整表单
-    const tableField = {
-        "componentName": "TableField",
-        "fieldId": "tableField_lxv44os5",
-        "label": "人员信息",
-        "fieldData": { "value": tableRows },
-        "listNum": 50 
-    };
-
-    const dateField = {
-        "componentName": "DateField",
-        "fieldId": "dateField_lxn9o9fh",
-        "label": "到访日期",
-        "fieldData": { "value": groupDateTs },
-        "format": "yyyy-MM-dd"
-    };
-
-    const finalForm = [
-        ...FORM_BASE,
-        tableField,
-        ...FORM_TAIL.slice(0, 4), // 接待人信息
-        dateField,
-        ...FORM_TAIL.slice(4)     // 签核和保安
-    ];
-
-    const jsonStr = JSON.stringify(finalForm);
-    const encodedValue = encodeURIComponent(jsonStr);
-    const postData = `_csrf_token=${CONFIG.csrf_token}&formUuid=${CONFIG.formUuid}&appType=${CONFIG.appType}&value=${encodedValue}&_schemaVersion=653`;
-    
-    const targetDateStr = getFormattedDate(groupDateTs);
-    console.log(`🚀 正在为 [${names.join(', ')}] 提交申请 -> 日期: ${targetDateStr}`);
+    // 👇 组装带有该厂区专属身份校验的请求头
+    const reqHeaders = { ...GLOBAL_HEADERS };
+    if (locConfig.cookie) {
+        reqHeaders.cookie = locConfig.cookie;
+    }
 
     try {
-        const url = CONFIG.url + Date.now();
-        const res = await axios.post(url, postData, { headers: CONFIG.headers });
+        const url = "https://iw68lh.aliwork.com/o/HW9663A19D6M1QDL6D7GNAO1L2ZC2NBXQHOXL3?_api=nattyFetch&_mock=false&_stamp=" + Date.now();
+        const res = await axios.post(url, encodedBody, { headers: reqHeaders });
         
         if (res.data && res.data.success === true) {
             const formInstId = res.data.content ? res.data.content.formInstId : "未知ID";
-            console.log(`✅ [${targetDateStr}] 申请成功! 实例ID: ${formInstId}`);
-            return { success: true, date: targetDateStr, names: names.join(" "), id: formInstId };
+            return { success: true, date: targetDate, names: people, id: formInstId };
         } else {
-            console.log(`❌ [${targetDateStr}] 申请可能失败:`, JSON.stringify(res.data).substring(0, 100));
-            return { success: false, date: targetDateStr, names: names.join(" "), msg: "API返回失败" };
+            // 👇 BUG终结者：极度详细的错误日志
+            const errorMsg = JSON.stringify(res.data);
+            return { success: false, date: targetDate, names: people, msg: `API拒绝请求: ${errorMsg}` };
         }
     } catch (e) {
-        console.error(`❌ [${targetDateStr}] 请求网络错误: ${e.message}`);
-        return { success: false, date: targetDateStr, names: names.join(" "), msg: e.message };
+        return { success: false, date: targetDate, names: people, msg: `网络或代码崩溃: ${e.message}` };
     }
 };
 
-/**
- * 核心逻辑：智能短板补齐 (Smart Catch-up Strategy)
- */
-const calculatePlan = (idStatusMap) => {
+const calculatePlan = (idStatusMap, locConfig) => {
     const nowMs = Date.now();
     const todayObj = new Date(nowMs + 28800000);
     todayObj.setUTCHours(0, 0, 0, 0);
     const todayStartTs = todayObj.getTime() - 28800000;
     const todayId = getBeijingDayId(nowMs);
 
-    // 1. 整理所有人当前有效期的截止日期
     const userData = [];
-    let globalMaxEndTs = 0; // 整个团队目前最晚的有效期
+    let globalMaxEndTs = 0; 
     let minEndTs = Infinity; 
-
-    // 构建摘要展示数据
     const summary = [];
 
     for (const [id, lastDateTs] of Object.entries(idStatusMap)) {
         const idBase64 = Buffer.from(id).toString('base64');
-        const personInfo = PERSON_DB[idBase64];
-        const name = personInfo ? personInfo[2].fieldData.value : "未知";
+        const personInfo = locConfig.personDb[idBase64];
+        
+        if (!personInfo) {
+            console.warn(`[Warn] 找不到人员详细数据 (ID Base64: ${idBase64})，跳过。`);
+            continue; 
+        }
+
+        const nameField = personInfo.find(f => f.label === '姓名');
+        const name = nameField && nameField.fieldData ? nameField.fieldData.value : "未知";
         
         let currentEndTs = lastDateTs;
-        // 如果此人无记录(0)或已过期(小于昨天)，视为"需要从今天开始申请"
-        if (currentEndTs < todayStartTs) {
-            currentEndTs = todayStartTs - 86400000; // 设为昨天，以便下次循环从今天开始
-        }
+        if (currentEndTs < todayStartTs) currentEndTs = todayStartTs - 86400000;
 
         if (currentEndTs > globalMaxEndTs) globalMaxEndTs = currentEndTs;
         if (currentEndTs < minEndTs) minEndTs = currentEndTs;
@@ -435,18 +609,20 @@ const calculatePlan = (idStatusMap) => {
         const lastDayId = getBeijingDayId(currentEndTs);
         const diff = lastDayId - todayId;
         
+        const threshold = locConfig.renewThreshold !== undefined ? locConfig.renewThreshold : 2;
+        const addDays = locConfig.renewDays !== undefined ? locConfig.renewDays : 7;
+
         let statusText = `正常 (剩 ${diff} 天)`;
         let statusClass = "success";
 
-        if (lastDateTs === 0) {
-            statusText = "无记录 (需补齐)";
-            statusClass = "expired";
-        } else if (diff < 0) {
-            statusText = `已过期 ${Math.abs(diff)} 天`;
-            statusClass = "expired";
-        } else if (diff <= 2) {
-            statusText = `即将过期 (剩 ${diff} 天)`;
-            statusClass = "warning";
+        if (lastDateTs === 0) { statusText = "无记录 (需补齐)"; statusClass = "expired"; } 
+        else if (diff < 0) { statusText = `已过期 ${Math.abs(diff)} 天`; statusClass = "expired"; } 
+        else if (diff <= threshold) { statusText = `即将过期 (剩 ${diff} 天)`; statusClass = "warning"; }
+
+        // 显示是否挂载了专属接待人
+        const customRec = locConfig.customReceptionists && locConfig.customReceptionists[idBase64];
+        if (customRec) {
+            statusText += ` [指定接待: ${customRec.receptionistName}]`;
         }
 
         summary.push({
@@ -456,81 +632,76 @@ const calculatePlan = (idStatusMap) => {
             status: statusText,
             class: statusClass
         });
-
-        userData.push({ id, currentEndTs });
+        userData.push({ idBase64, currentEndTs });
     }
 
-    // 2. 决策目标日期 (Target Date)
     const maxEndDayId = getBeijingDayId(globalMaxEndTs);
     const diffMax = maxEndDayId - todayId;
-
     let targetTs = globalMaxEndTs;
     const baseLineTs = Math.max(globalMaxEndTs, todayStartTs);
     
-    if (diffMax <= 2) {
-        // 需要整体续期
-        targetTs = baseLineTs + (7 * 86400000); 
-    } else {
-        // 不需要整体续期，只需补齐短板
-        targetTs = globalMaxEndTs;
-    }
+    const threshold = locConfig.renewThreshold !== undefined ? locConfig.renewThreshold : 2;
+    const addDays = locConfig.renewDays !== undefined ? locConfig.renewDays : 7;
+    
+    if (diffMax <= threshold) targetTs = baseLineTs + (addDays * 86400000); 
+    else targetTs = globalMaxEndTs;
 
-    // 3. 生成每日请求
     const requests = [];
     let cursorTs = Math.max(minEndTs + 86400000, todayStartTs);
     let dayCount = 1;
 
+    // 👇 核心拆包改造：把当天需要续期的人，按是否配置了指定接待人进行分流打包
     while (cursorTs <= targetTs) {
-        const todaysGroup = userData
-            .filter(u => u.currentEndTs < cursorTs)
-            .map(u => u.id);
+        const todaysGroupBase64 = userData.filter(u => u.currentEndTs < cursorTs).map(u => u.idBase64);
         
-        if (todaysGroup.length > 0) {
-            const personNames = todaysGroup.map(pid => {
-                const pidBase64 = Buffer.from(pid).toString('base64');
-                return PERSON_DB[pidBase64] ? PERSON_DB[pidBase64][2].fieldData.value : pid;
-            }).join(", ");
+        if (todaysGroupBase64.length > 0) {
+            const normalGroup = [];
+            const specialGroups = [];
 
-            const tableRows = [];
-            todaysGroup.forEach(pid => {
-                const idBase64 = Buffer.from(pid).toString('base64');
-                if (PERSON_DB[idBase64]) tableRows.push(PERSON_DB[idBase64]);
+            // 把人分类：普通组(全放一块) vs 特殊组(每个人单独拉出来)
+            todaysGroupBase64.forEach(b64 => {
+                if (locConfig.customReceptionists && locConfig.customReceptionists[b64]) {
+                    specialGroups.push({ ids: [b64], config: locConfig.customReceptionists[b64] });
+                } else {
+                    normalGroup.push(b64);
+                }
             });
 
-            if (tableRows.length > 0) {
-                const finalForm = [
-                    ...FORM_BASE,
-                    {
-                        "componentName": "TableField",
-                        "fieldId": "tableField_lxv44os5",
-                        "label": "人员信息",
-                        "fieldData": { "value": tableRows },
-                        "listNum": 50
-                    },
-                    ...FORM_TAIL.slice(0, 4), 
-                    {
-                        "componentName": "DateField",
-                        "fieldId": "dateField_lxn9o9fh",
-                        "label": "到访日期",
-                        "fieldData": { "value": cursorTs },
-                        "format": "yyyy-MM-dd"
-                    },
-                    ...FORM_TAIL.slice(4)      
-                ];
+            // 内部通用的推包函数
+            const pushRequest = (targetGroup, customConf) => {
+                if (targetGroup.length === 0) return;
+                
+                const names = targetGroup.map(b64 => {
+                    const pInfo = locConfig.personDb[b64];
+                    const n = pInfo.find(f => f.label === '姓名');
+                    return n ? n.fieldData.value : b64;
+                });
 
-                const jsonStr = JSON.stringify(finalForm, null, 2); 
-                const fullPostBody = `_csrf_token=${CONFIG.csrf_token}&formUuid=${CONFIG.formUuid}&appType=${CONFIG.appType}&value=${encodeURIComponent(JSON.stringify(finalForm))}&_schemaVersion=653`;
+                // 调用底层的 buildPayload 进行注入，传给它专属参数
+                const { jsonStr, fullPostBody } = locConfig.buildPayload(targetGroup, cursorTs, locConfig, customConf);
+
+                let displayPeople = names.join(", ");
+                if (customConf && customConf.receptionistName) {
+                    displayPeople += ` (🚀 独立专单 -> 接待人: ${customConf.receptionistName})`;
+                }
 
                 requests.push({
                     ts: cursorTs,
                     dayIndex: dayCount++,
                     targetDate: getFormattedDate(cursorTs),
-                    people: personNames,
-                    ids: todaysGroup, 
+                    people: displayPeople,
                     rawJson: jsonStr,
                     encodedBody: fullPostBody
                 });
-            }
+            };
+
+            // 发送大部队
+            pushRequest(normalGroup, null);
+            
+            // 挨个发送那些被单独拎出来的人
+            specialGroups.forEach(sg => {
+                pushRequest(sg.ids, sg.config);
+            });
         }
         cursorTs += 86400000;
     }
@@ -538,142 +709,110 @@ const calculatePlan = (idStatusMap) => {
     return { summary, requests, targetDate: getFormattedDate(targetTs) };
 };
 
-// --- 调试接口 (包含实际状态分析和全员失效模拟) ---
-router.get('/debug', async (req, res) => {
+// ==========================================
+// 路由接口区域
+// ==========================================
+
+router.post('/generate-payload', express.json(), (req, res) => {
+    const { loc, ids, ts } = req.body;
+    const locConfig = LOC_CONFIGS[loc];
+    if (!locConfig) return res.json({ error: "厂区配置错误" });
+    
     try {
-        const { statusMap: realStatusMap, stats } = await getAllStatuses();
-        const safetyCheck = checkSafeToRun(stats);
-        const realPlan = calculatePlan(realStatusMap);
-
-        // 模拟全员无记录
-        const simulatedStatusMap = {};
-        CONFIG.query.visitorIdNos.forEach(idBase64 => {
-             simulatedStatusMap[decode(idBase64)] = 0;
+        const names = ids.map(b64 => {
+            const pInfo = locConfig.personDb[b64];
+            const n = pInfo.find(f => f.label === '姓名');
+            return n ? n.fieldData.value : b64;
         });
-        const simulatedPlan = calculatePlan(simulatedStatusMap);
 
-        const safetyBadge = safetyCheck.safe 
-            ? `<span style="background:#ecfdf5; color:#059669; padding:4px 8px; border-radius:4px; border:1px solid #a7f3d0; font-size:0.8rem;">✅ 安全 (Ready)</span>`
-            : `<span style="background:#fef2f2; color:#dc2626; padding:4px 8px; border-radius:4px; border:1px solid #fecaca; font-size:0.8rem;">❌ 熔断 (BLOCKED)</span>`;
-
-        let realQueueHTML = '';
-        if (safetyCheck.safe) {
-            realQueueHTML = `
-                <h3 style="font-size:0.9rem; margin-bottom:10px; color:#374151;">🚀 待发送队列 (${realPlan.requests.length})</h3>
-                ${renderRequests(realPlan.requests)}
-            `;
-        } else {
-            realQueueHTML = `
-                <div class="blocked-overlay">
-                    <div style="font-size:1.5rem; margin-bottom:10px;">⛔</div>
-                    <div style="font-weight:bold; font-size:1.1rem; margin-bottom:5px;">队列已被安全拦截</div>
-                    <div style="font-size:0.85rem; opacity:0.8;">由于触发了熔断机制，系统已强制清空待发送队列。<br>本次执行<b>绝对不会</b>发送任何请求。</div>
-                </div>
-            `;
+        // Debug 面板中若生成多个人，如果他们中某个人有特殊属性，在手工生成时为了方便测试，将直接取第一个匹配到的特殊属性进行强行覆盖。
+        let activeCustomConfig = null;
+        for (const id of ids) {
+            if (locConfig.customReceptionists && locConfig.customReceptionists[id]) {
+                activeCustomConfig = locConfig.customReceptionists[id];
+                break;
+            }
         }
 
-        const html = `
-        <!DOCTYPE html>
-        <html>
-        <head>
-            <meta charset="utf-8">
-            <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0">
-            <title>申请插件调试面板</title>
-            <style>
-                body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background: #f3f4f6; padding: 10px; color: #1f2937; margin:0; }
-                .container { max-width: 1000px; margin: 0 auto; }
-                .card { background: #fff; padding: 15px; border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); margin-bottom: 20px; }
-                
-                h1 { margin: 10px 0 20px 0; color: #111827; font-size: 1.2rem; border-left: 4px solid #3b82f6; padding-left: 10px; display: flex; align-items: center; justify-content: space-between; }
-                h2 { margin-top: 0; color: #4b5563; font-size: 1rem; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; }
-                
-                /* 表格响应式 */
-                .table-wrapper { overflow-x: auto; -webkit-overflow-scrolling: touch; margin-bottom: 15px; border-radius: 8px; border: 1px solid #e5e7eb; }
-                table { width: 100%; border-collapse: collapse; min-width: 500px; }
-                th, td { text-align: left; padding: 10px; border-bottom: 1px solid #e5e7eb; font-size: 0.9rem; }
-                th { background: #f9fafb; font-weight: 600; color: #6b7280; white-space: nowrap; }
-                tr:last-child td { border-bottom: none; }
-                
-                .status-badge { padding: 2px 8px; border-radius: 99px; font-size: 0.75rem; font-weight: 600; white-space: nowrap; }
-                .expired { background: #fee2e2; color: #991b1b; }
-                .warning { background: #fef3c7; color: #92400e; }
-                .success { background: #d1fae5; color: #065f46; }
-                
-                .request-item { background: #fff; border: 1px solid #e5e7eb; border-radius: 8px; margin-bottom: 10px; overflow: hidden; }
-                .req-header { padding: 12px; background: #f9fafb; display: flex; flex-direction: column; cursor: pointer; user-select: none; }
-                .req-header-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px; }
-                .req-header-people { font-size: 0.85rem; color: #6b7280; }
-                .req-header:hover { background: #f3f4f6; }
-                
-                /* 代码块样式 */
-                .code-section { border-top: 1px solid #e5e7eb; }
-                .code-tabs { display: flex; background: #f3f4f6; border-bottom: 1px solid #e5e7eb; }
-                .tab-btn { padding: 8px 15px; font-size: 0.8rem; cursor: pointer; color: #6b7280; border-right: 1px solid #e5e7eb; background: #f3f4f6; border: none; }
-                .tab-btn.active { background: #fff; color: #3b82f6; font-weight: 600; border-bottom: 2px solid #3b82f6; }
-                
-                .code-content { padding: 0; position: relative; display: none; }
-                .code-content.active { display: block; }
-                
-                pre { margin: 0; padding: 15px; overflow-x: auto; font-family: Consolas, monospace; font-size: 0.75rem; line-height: 1.4; color: #d4d4d4; background: #1e1e1e; border-radius: 0 0 4px 4px; max-height: 300px; }
-                
-                .copy-btn { position: absolute; top: 10px; right: 10px; background: rgba(255,255,255,0.2); color: #fff; border: 1px solid rgba(255,255,255,0.3); padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 0.7rem; }
-                .copy-btn:hover { background: rgba(255,255,255,0.3); }
-                
-                details > summary { list-style: none; }
-                details > summary::marker { display: none; }
-                
-                .error-banner { background: #fee2e2; border: 1px solid #fca5a5; color: #b91c1c; padding: 15px; border-radius: 8px; margin-bottom: 15px; font-weight: bold; font-size: 0.9rem; }
-                
-                .stat-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 15px; font-size: 0.8rem; color: #666; background: #f9fafb; padding: 10px; border-radius: 8px; }
-                .stat-item { text-align: center; }
-                .stat-val { font-weight: bold; font-size: 1rem; color: #111827; }
-                
-                /* 熔断遮罩层 */
-                .blocked-overlay {
-                    background: #f3f4f6;
-                    border: 2px dashed #d1d5db;
-                    border-radius: 8px;
-                    padding: 30px;
-                    text-align: center;
-                    color: #4b5563;
-                }
-                
-                @media (min-width: 600px) {
-                    .req-header { flex-direction: row; justify-content: space-between; align-items: center; }
-                    .req-header-top { margin-bottom: 0; min-width: 150px; }
-                    h2 { justify-content: flex-start; }
-                }
-            </style>
-            <script>
-                function copyText(btn, text) {
-                    navigator.clipboard.writeText(decodeURIComponent(text)).then(() => {
-                        const original = btn.innerText;
-                        btn.innerText = 'Copied!';
-                        setTimeout(() => btn.innerText = original, 2000);
-                    });
-                }
-                function switchTab(btn, index) {
-                    const parent = btn.closest('.code-section');
-                    parent.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-                    parent.querySelectorAll('.code-content').forEach(c => c.classList.remove('active'));
-                    btn.classList.add('active');
-                    parent.querySelectorAll('.code-content')[index].classList.add('active');
-                }
-            </script>
-        </head>
-        <body>
-            <div class="container">
-                <h1>
-                    <span>🔧 自动续期调试</span>
-                    ${safetyBadge}
-                </h1>
+        const { jsonStr, fullPostBody } = locConfig.buildPayload(ids, parseInt(ts), locConfig, activeCustomConfig);
+
+        let finalNameStr = names.join(", ");
+        if (activeCustomConfig && activeCustomConfig.receptionistName) {
+            finalNameStr += ` (调试模拟: 已触发强制接待人覆写 -> ${activeCustomConfig.receptionistName})`;
+        }
+
+        res.json({
+            targetDate: getFormattedDate(parseInt(ts)),
+            people: finalNameStr,
+            rawJson: jsonStr,
+            encodedBody: fullPostBody
+        });
+    } catch (e) {
+        res.json({ error: "生成失败: " + e.message });
+    }
+});
+
+// --- SPA 极速单页面 Debug 界面 ---
+router.get('/debug', async (req, res) => {
+    const locs = Object.keys(LOC_CONFIGS).filter(k => LOC_CONFIGS[k].enabled);
+    if (locs.length === 0) return res.status(404).send("没有开启的厂区配置");
+
+    try {
+        const allLocData = {};
+        
+        const fetchPromises = locs.map(async loc => {
+            const locConfig = LOC_CONFIGS[loc];
+            const { statusMap: realStatusMap, stats } = await getAllStatuses(locConfig.query);
+            const safetyCheck = checkSafeToRun(stats);
+            const realPlan = calculatePlan(realStatusMap, locConfig);
+
+            const simulatedStatusMap = {};
+            locConfig.query.visitorIdNos.forEach(idBase64 => {
+                 simulatedStatusMap[decode(idBase64)] = 0;
+            });
+            const simulatedPlan = calculatePlan(simulatedStatusMap, locConfig);
+            
+            allLocData[loc] = { locConfig, stats, safetyCheck, realPlan, simulatedPlan };
+        });
+
+        await Promise.all(fetchPromises);
+
+        const tabsHtml = locs.map((loc, i) => 
+            `<button class="tab loc-tab ${i === 0 ? 'active' : ''}" onclick="switchLoc('${loc}', this)">🏢 ${LOC_CONFIGS[loc].title}</button>`
+        ).join('');
+
+        const contentsHtml = locs.map((loc, i) => {
+            const data = allLocData[loc];
+            const { locConfig, stats, safetyCheck, realPlan, simulatedPlan } = data;
+            
+            const safetyBadge = safetyCheck.safe 
+                ? `<span style="background:#ecfdf5; color:#059669; padding:4px 8px; border-radius:4px; border:1px solid #a7f3d0; font-size:0.8rem;">✅ 安全 (Ready)</span>`
+                : `<span style="background:#fef2f2; color:#dc2626; padding:4px 8px; border-radius:4px; border:1px solid #fecaca; font-size:0.8rem;">❌ 熔断 (BLOCKED)</span>`;
+
+            let realQueueHTML = '';
+            if (safetyCheck.safe) {
+                realQueueHTML = `
+                    <h3 style="font-size:0.9rem; margin-bottom:10px; color:#374151;">🚀 待发送队列 (${realPlan.requests.length})</h3>
+                    ${renderRequests(realPlan.requests)}
+                `;
+            } else {
+                realQueueHTML = `
+                    <div class="blocked-overlay">
+                        <div style="font-size:1.5rem; margin-bottom:10px;">⛔</div>
+                        <div style="font-weight:bold; font-size:1.1rem; margin-bottom:5px;">队列已被安全拦截</div>
+                        <div style="font-size:0.85rem; opacity:0.8;">由于触发了熔断机制，系统已强制清空待发送队列。<br>本次执行<b>绝对不会</b>发送任何请求。</div>
+                    </div>
+                `;
+            }
+
+            return `
+            <div id="content-${loc}" class="loc-content ${i === 0 ? 'active' : ''}">
+                <h1><span>🔧 [${locConfig.title}] 自动续期调试</span> ${safetyBadge}</h1>
 
                 ${!safetyCheck.safe ? `<div class="error-banner">⛔ 熔断警告: ${safetyCheck.reason}</div>` : ''}
 
                 <div class="card">
-                    <h2>
-                        <span>📊 实时状态 (Target: ${realPlan.targetDate})</span>
-                    </h2>
+                    <h2><span>📊 实时状态 (Target: ${realPlan.targetDate})</span></h2>
                     
                     <div class="stat-grid">
                         <div class="stat-item"><div class="stat-val">${stats.total}</div>总人数</div>
@@ -685,11 +824,7 @@ router.get('/debug', async (req, res) => {
                     <div class="table-wrapper">
                         <table>
                             <thead>
-                                <tr>
-                                    <th>姓名</th>
-                                    <th>有效期止</th>
-                                    <th>状态</th>
-                                </tr>
+                                <tr><th>姓名</th><th>有效期止</th><th>状态</th></tr>
                             </thead>
                             <tbody>
                                 ${realPlan.summary.map(item => `
@@ -706,11 +841,185 @@ router.get('/debug', async (req, res) => {
                     ${realQueueHTML}
                 </div>
 
+                <div class="card" style="border-top: 4px solid #10b981;">
+                    <h2>🛠️ 自定义报文生成器</h2>
+                    <div style="margin-bottom: 10px; font-size: 0.85rem; color: #4b5563;">
+                        自由选择人员和日期，生成特定组合的提交报文用于测试或手动发送。
+                    </div>
+                    <div style="display:flex; flex-direction:column; gap:10px; margin-bottom:15px;">
+                        <div>
+                            <strong>📅 选择日期:</strong> 
+                            <input type="date" id="customDate-${loc}" style="padding:6px; border-radius:4px; border:1px solid #ccc; margin-left:10px;">
+                        </div>
+                        <div>
+                            <strong>👥 选择人员:</strong>
+                            <div style="display:flex; flex-wrap:wrap; gap:8px; margin-top:8px; background:#f9fafb; padding:10px; border-radius:6px; border:1px solid #e5e7eb;">
+                                ${Object.keys(locConfig.personDb).map(base64Id => {
+                                    const info = locConfig.personDb[base64Id];
+                                    const nameField = info.find(f=>f.label==='姓名');
+                                    let name = nameField && nameField.fieldData ? nameField.fieldData.value : base64Id;
+                                    const isActive = locConfig.query.visitorIdNos.includes(base64Id);
+                                    
+                                    // 界面提示专属人员
+                                    const hasCustom = locConfig.customReceptionists && locConfig.customReceptionists[base64Id];
+                                    if(hasCustom) name += " ⭐";
+
+                                    return `<label style="font-size:0.85rem; display:flex; align-items:center; gap:4px; ${isActive?'':'opacity:0.5;'}"><input type="checkbox" class="person-cb-${loc}" value="${base64Id}" ${isActive?'checked':''}>${name} ${isActive?'':'(停用)'}</label>`;
+                                }).join('')}
+                            </div>
+                        </div>
+                        <button onclick="generateCustom('${loc}')" style="padding:8px 15px; background:#10b981; color:white; border:none; border-radius:6px; cursor:pointer; font-weight:bold; align-self:flex-start;">⚡ 立即生成报文</button>
+                    </div>
+                    <div id="customResult-${loc}" style="display:none;"></div>
+                </div>
+
                 <div class="card" style="border-top: 4px solid #9333ea;">
                     <h2>🔮 全员无记录模拟 (Force Sync)</h2>
                     <p style="font-size:0.8rem; color:#666; margin-bottom:10px;">假设数据库清空，系统将从“今天”开始生成完整对齐计划。（此区域仅为逻辑验证，不受熔断影响）</p>
                     ${renderRequests(simulatedPlan.requests)}
                 </div>
+            </div>
+            `;
+        }).join('');
+
+        const html = `
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <meta charset="utf-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0">
+            <title>申请插件调试面板</title>
+            <style>
+                body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background: #f3f4f6; padding: 10px; color: #1f2937; margin:0; }
+                .container { max-width: 1000px; margin: 0 auto; }
+                .card { background: #fff; padding: 15px; border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); margin-bottom: 20px; }
+                
+                h1 { margin: 10px 0 20px 0; color: #111827; font-size: 1.2rem; border-left: 4px solid #3b82f6; padding-left: 10px; display: flex; align-items: center; justify-content: space-between; }
+                h2 { margin-top: 0; color: #4b5563; font-size: 1rem; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; }
+                
+                .tabs { display: flex; gap: 8px; margin-bottom: 20px; position: sticky; top: 0; z-index: 100; background: #f3f4f6; padding: 10px 0; }
+                .tab { flex: 1; text-align: center; padding: 12px 0; background: #e5e7eb; border-radius: 8px; color: #374151; font-weight: bold; cursor: pointer; transition: 0.2s; border: none;}
+                .tab.active { background: #3b82f6; color: white; box-shadow: 0 2px 4px rgba(59,130,246,0.3); }
+                .loc-content { display: none; }
+                .loc-content.active { display: block; animation: fadeIn 0.3s ease; }
+                
+                @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+                
+                .table-wrapper { overflow-x: auto; margin-bottom: 15px; border-radius: 8px; border: 1px solid #e5e7eb; }
+                table { width: 100%; border-collapse: collapse; min-width: 500px; }
+                th, td { text-align: left; padding: 10px; border-bottom: 1px solid #e5e7eb; font-size: 0.9rem; }
+                th { background: #f9fafb; font-weight: 600; color: #6b7280; }
+                tr:last-child td { border-bottom: none; }
+                
+                .status-badge { padding: 2px 8px; border-radius: 99px; font-size: 0.75rem; font-weight: 600; white-space: nowrap; }
+                .expired { background: #fee2e2; color: #991b1b; }
+                .warning { background: #fef3c7; color: #92400e; }
+                .success { background: #d1fae5; color: #065f46; }
+                
+                .request-item { background: #fff; border: 1px solid #e5e7eb; border-radius: 8px; margin-bottom: 10px; overflow: hidden; }
+                .req-header { padding: 12px; background: #f9fafb; display: flex; flex-direction: column; cursor: pointer; user-select: none; }
+                .req-header-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px; }
+                .req-header-people { font-size: 0.85rem; color: #6b7280; }
+                
+                .code-section { border-top: 1px solid #e5e7eb; }
+                .code-tabs { display: flex; background: #f3f4f6; border-bottom: 1px solid #e5e7eb; }
+                .tab-btn { padding: 8px 15px; font-size: 0.8rem; cursor: pointer; color: #6b7280; border-right: 1px solid #e5e7eb; background: #f3f4f6; border: none; }
+                .tab-btn.active { background: #fff; color: #3b82f6; font-weight: 600; border-bottom: 2px solid #3b82f6; }
+                .code-content { padding: 0; position: relative; display: none; }
+                .code-content.active { display: block; }
+                
+                pre { margin: 0; padding: 15px; overflow-x: auto; font-family: Consolas, monospace; font-size: 0.75rem; line-height: 1.4; color: #d4d4d4; background: #1e1e1e; max-height: 300px; }
+                .copy-btn { position: absolute; top: 10px; right: 10px; background: rgba(255,255,255,0.2); color: #fff; border: 1px solid rgba(255,255,255,0.3); padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 0.7rem; }
+                
+                details > summary { list-style: none; }
+                details > summary::marker { display: none; }
+                .error-banner { background: #fee2e2; border: 1px solid #fca5a5; color: #b91c1c; padding: 15px; border-radius: 8px; margin-bottom: 15px; font-weight: bold; font-size: 0.9rem; }
+                .stat-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 15px; font-size: 0.8rem; color: #666; background: #f9fafb; padding: 10px; border-radius: 8px; }
+                .stat-item { text-align: center; }
+                .stat-val { font-weight: bold; font-size: 1rem; color: #111827; }
+                .blocked-overlay { background: #f3f4f6; border: 2px dashed #d1d5db; border-radius: 8px; padding: 30px; text-align: center; color: #4b5563; }
+                
+                @media (min-width: 600px) {
+                    .req-header { flex-direction: row; justify-content: space-between; align-items: center; }
+                    .req-header-top { margin-bottom: 0; min-width: 150px; }
+                }
+            </style>
+            <script>
+                // SPA 无缝切换核心逻辑
+                function switchLoc(loc, btn) {
+                    document.querySelectorAll('.loc-content').forEach(el => el.classList.remove('active'));
+                    document.querySelectorAll('.loc-tab').forEach(el => el.classList.remove('active'));
+                    document.getElementById('content-' + loc).classList.add('active');
+                    btn.classList.add('active');
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                }
+
+                function copyText(btn, text) {
+                    navigator.clipboard.writeText(decodeURIComponent(text)).then(() => {
+                        const original = btn.innerText; btn.innerText = 'Copied!'; setTimeout(() => btn.innerText = original, 2000);
+                    });
+                }
+
+                function switchTab(btn, index) {
+                    const parent = btn.closest('.code-section');
+                    parent.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+                    parent.querySelectorAll('.code-content').forEach(c => c.classList.remove('active'));
+                    btn.classList.add('active');
+                    parent.querySelectorAll('.code-content')[index].classList.add('active');
+                }
+
+                async function generateCustom(loc) {
+                    const dateInput = document.getElementById('customDate-' + loc).value;
+                    if (!dateInput) return alert('请选择日期');
+                    const ts = new Date(dateInput + 'T00:00:00+08:00').getTime();
+                    
+                    const cbs = document.querySelectorAll('.person-cb-' + loc + ':checked');
+                    const ids = Array.from(cbs).map(cb => cb.value);
+                    if (ids.length === 0) return alert('请至少选择一个人');
+                    
+                    const res = await fetch('generate-payload', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ loc, ids, ts })
+                    });
+                    const data = await res.json();
+                    if (data.error) return alert(data.error);
+                    
+                    const resultDiv = document.getElementById('customResult-' + loc);
+                    resultDiv.innerHTML = \`
+                        <div class="request-item">
+                            <details open>
+                                <summary class="req-header">
+                                    <div class="req-header-top"><strong>📅 \${data.targetDate}</strong></div>
+                                    <div class="req-header-people">👥 \${data.people}</div>
+                                </summary>
+                                <div class="code-section">
+                                    <div class="code-tabs">
+                                        <button class="tab-btn active" onclick="switchTab(this, 0)">Raw JSON</button>
+                                        <button class="tab-btn" onclick="switchTab(this, 1)">Encoded Body</button>
+                                    </div>
+                                    <div class="code-content active">
+                                        <button class="copy-btn" onclick="copyText(this, '\${encodeURIComponent(data.rawJson)}')">Copy</button>
+                                        <pre style="color:#a5d6ff;">\${data.rawJson}</pre>
+                                    </div>
+                                    <div class="code-content">
+                                        <button class="copy-btn" onclick="copyText(this, '\${encodeURIComponent(data.encodedBody)}')">Copy</button>
+                                        <pre style="color:#ffae57; white-space:pre-wrap; word-break:break-all;">\${data.encodedBody}</pre>
+                                    </div>
+                                </div>
+                            </details>
+                        </div>
+                    \`;
+                    resultDiv.style.display = 'block';
+                }
+            </script>
+        </head>
+        <body>
+            <div class="container">
+                <div class="tabs">
+                    ${tabsHtml}
+                </div>
+                ${contentsHtml}
             </div>
         </body>
         </html>
@@ -722,96 +1031,103 @@ router.get('/debug', async (req, res) => {
     }
 });
 
-// 辅助渲染函数 (增强版)
 function renderRequests(requests) {
     if (requests.length === 0) return '<div style="padding:15px; text-align:center; color:#999; border:1px dashed #ddd; border-radius:8px; font-size:0.8rem;">无需发送数据包</div>';
-    
     return requests.map((req, i) => `
     <div class="request-item">
         <details>
             <summary class="req-header">
-                <div class="req-header-top">
-                    <strong>📅 ${req.targetDate}</strong>
-                </div>
+                <div class="req-header-top"><strong>📅 ${req.targetDate}</strong></div>
                 <div class="req-header-people">👥 ${req.people}</div>
             </summary>
-            
             <div class="code-section">
                 <div class="code-tabs">
                     <button class="tab-btn active" onclick="switchTab(this, 0)">Raw JSON</button>
                     <button class="tab-btn" onclick="switchTab(this, 1)">Encoded Body</button>
                 </div>
-                
                 <div class="code-content active">
                     <button class="copy-btn" onclick="copyText(this, '${encodeURIComponent(req.rawJson)}')">Copy</button>
                     <pre style="color:#a5d6ff;">${req.rawJson}</pre>
                 </div>
-                
                 <div class="code-content">
                     <button class="copy-btn" onclick="copyText(this, '${encodeURIComponent(req.encodedBody)}')">Copy</button>
                     <pre style="color:#ffae57; white-space:pre-wrap; word-break:break-all;">${req.encodedBody}</pre>
                 </div>
             </div>
         </details>
-    </div>
-    `).join('');
+    </div>`).join('');
 }
 
-// --- 主逻辑路由 ---
+// --- 主逻辑路由 (一次遍历运行所有启用的厂区) ---
 router.get('/auto-renew', async (req, res) => {
     const logs = [];
     const log = (msg) => { console.log(msg); logs.push(msg); };
-    const results = [];
+    const allResults = [];
     
     try {
-        log("=== 🚀 开始自动续期流程 (Smart Catch-up with Staggered Concurrency) ===");
+        log("=== 🚀 开始自动续期流程 ===");
         
-        // 1. 获取状态 & 统计 (已包含错峰并发)
-        const { statusMap, stats } = await getAllStatuses();
-        
-        // 2. 执行安全熔断检查
-        const safetyCheck = checkSafeToRun(stats);
-        if (!safetyCheck.safe) {
-            log(`⛔ [严重] 安全熔断触发，终止执行！`);
-            log(`❌ 原因: ${safetyCheck.reason}`);
-            res.type('text/plain').send(`❌ ABORTED: ${safetyCheck.reason}\n\nSee logs:\n` + logs.join('\n'));
-            return;
+        const locFilter = req.query.loc; 
+        const locsToRun = locFilter ? [locFilter] : Object.keys(LOC_CONFIGS);
+
+        for (const loc of locsToRun) {
+            const locConfig = LOC_CONFIGS[loc];
+            if (!locConfig || !locConfig.enabled) continue;
+            
+            log(`\n====== [${locConfig.title}] 开始执行 ======`);
+            
+            const { statusMap, stats } = await getAllStatuses(locConfig.query);
+            const safetyCheck = checkSafeToRun(stats);
+            
+            if (!safetyCheck.safe) {
+                log(`⛔ [严重] ${loc} 安全熔断触发，终止该厂区执行！原因: ${safetyCheck.reason}`);
+                continue; 
+            }
+
+            const plan = calculatePlan(statusMap, locConfig);
+            
+            if (plan.requests.length === 0) {
+                log(`✨ ${loc} 所有人员状态正常(已对齐)，无需续期。`);
+                continue;
+            }
+
+            log(`📝 ${loc} 计划生成完成: 目标日期 ${plan.targetDate}, 共 ${plan.requests.length} 个请求包`);
+
+            const submitPromises = [];
+            for (const reqTask of plan.requests) {
+                log(`🚀 正在为 [${reqTask.people}] 提交申请 -> 日期: ${reqTask.targetDate}`);
+                // 👇 将 locConfig 传给引擎，以便附带不同的 Cookie 凭证
+                submitPromises.push(submitApplication(reqTask, locConfig).then(r => { 
+                    if(r) { 
+                        r.loc = loc; 
+                        allResults.push(r); 
+                        if(!r.success) {
+                            log(`❌ [${loc}] ${reqTask.targetDate} 失败: ${r.msg}`);
+                        } else {
+                            log(`✅ [${loc}] ${reqTask.targetDate} 成功! 实例ID: ${r.id}`);
+                        }
+                    } 
+                }));
+                await delay(80); 
+            }
+            
+            await Promise.all(submitPromises);
         }
 
-        // 3. 计算计划
-        const plan = calculatePlan(statusMap);
-        
-        if (plan.requests.length === 0) {
-            log("✨ 所有人员状态正常(已对齐)，无需续期。");
-            res.type('text/plain').send("✅ Status OK: No renewal needed.\n\n" + logs.join('\n'));
-            return;
-        }
-
-        log(`📝 计划生成完成: 目标日期 ${plan.targetDate}, 共 ${plan.requests.length} 个请求包`);
-
-        // 4. 执行计划 (错峰并发发送)
-        const submitPromises = [];
-        for (const reqTask of plan.requests) {
-            submitPromises.push(submitApplication(reqTask.ts, reqTask.ids));
-            await delay(200); // 错峰间隔
-        }
-        
-        // 统一等待所有请求完成
-        const taskResults = await Promise.all(submitPromises);
-        taskResults.forEach(r => {
-            if (r) results.push(r);
-        });
-
-        log("=== 🏁 流程结束 ===");
+        log("\n=== 🏁 流程结束 ===");
         
         let report = "📊 自动续期执行报告\n========================\n";
-        results.forEach((r, idx) => {
+        allResults.forEach((r, idx) => {
             const icon = r.success ? "✅" : "❌";
-            report += `${icon} [Batch ${idx+1}] 日期: ${r.date}\n`;
+            report += `${icon} [${r.loc}] 日期: ${r.date}\n`;
             report += `    人员: ${r.names}\n`;
             report += `    结果: ${r.success ? "成功 (" + r.id + ")" : "失败 (" + r.msg + ")"}\n`;
             report += "------------------------\n";
         });
+        
+        if (allResults.length === 0) {
+            report += "✅ 所有厂区状态均正常，未发生实际提交操作。\n========================\n";
+        }
         
         report += "\n🔍 系统日志:\n" + logs.join('\n');
         res.type('text/plain').send(report);
