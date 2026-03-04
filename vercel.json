@@ -1,26 +1,22 @@
 {
-  "version": 2,
-  "builds": [
-    {
-      "src": "index.js",
-      "use": "@vercel/node"
-    }
-  ],
-  "routes": [
-    {
-      "src": "/(.*)",
-      "dest": "index.js"
-    }
-  ],
-  "functions": {
-    "index.js": {
-      "includeFiles": "QA01_request_body.bin"
-    }
-  },
-  "crons": [
-    {
-      "path": "/FactoryEntryReport/auto-renew",
-      "schedule": "0 0 * * *"
-    }
-  ]
+    "version": 2,
+    "builds": [
+        {
+            "src": "index.js",
+            "use": "@vercel/node"
+        }
+    ],
+    
+    "routes": [
+        {
+            "src": "/(.*)",
+            "dest": "index.js"
+        }
+    ],
+    "crons": [
+        {
+            "path": "/FactoryEntryReport/auto-renew",
+            "schedule": "0 0 * * *"
+        }
+    ]
 }
