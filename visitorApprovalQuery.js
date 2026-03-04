@@ -5,7 +5,7 @@ const router = express.Router();
 // --- 1. 配置区域 (全面升级支持多厂区) ---
 const CONFIGS = {
     'A08': {
-        title: "A08 访客通 Pro V1.1",
+        title: "A08 访客通 Pro V1.2",
         visitorIdNos: [
             "MTMwMzIzMTk4NjAyMjgwODFY",
             "MTMwMzIyMTk4ODA2MjQyMDE4",
@@ -25,7 +25,7 @@ const CONFIGS = {
         acToken: "E5EF067A42A792436902EB275DCCA379812FF4A4A8A756BE0A1659704557309F"
     },
     'Q01': {
-        title: "QA01 访客通 Pro V1.1",
+        title: "QA01 访客通 Pro V1.2",
         visitorIdNos: [
             "MTMwMzIzMTk5MjEyMTY2NDM0",
             "MTMwMzIzMTk5ODA2MTQxMDU4",
@@ -111,7 +111,11 @@ const fetchPersonData = async (id, headers, todayDayId, regPerson, acToken) => {
 
                 const groups = {};
                 records.forEach(item => {
-                    const statusType = String(item.flowStatus) === '1' ? 'PENDING' : 'APPROVED';
+                    // 【改动1】增加拒绝状态的判断
+                    let statusType = 'APPROVED';
+                    if (String(item.flowStatus) === '1') statusType = 'PENDING';
+                    if (String(item.flowStatus) === '3') statusType = 'REJECTED'; 
+                    
                     const key = `${item.rPersonName || '未知'}_${statusType}`;
                     if (!groups[key]) groups[key] = [];
                     groups[key].push(item);
@@ -137,9 +141,10 @@ const fetchPersonData = async (id, headers, todayDayId, regPerson, acToken) => {
                     mergedList.push(currentRange);
                 });
 
-                const approvedRanges = mergedList.filter(m => String(m.flowStatus) !== '1');
+                // 【改动2】排除 审核中(1) 和 拒绝(3)，其余才是真正的通过范围
+                const approvedRanges = mergedList.filter(m => String(m.flowStatus) !== '1' && String(m.flowStatus) !== '3');
                 mergedList = mergedList.filter(item => {
-                    if (String(item.flowStatus) !== '1') return true;
+                    if (String(item.flowStatus) !== '1' && String(item.flowStatus) !== '3') return true;
                     const pStart = parseInt(item.rangeStart);
                     const pEnd = parseInt(item.rangeEnd);
                     return !approvedRanges.some(approved => {
@@ -154,14 +159,16 @@ const fetchPersonData = async (id, headers, todayDayId, regPerson, acToken) => {
                     const endId = getBeijingDayId(item.rangeEnd);
                     let type = 'ACTIVE';
 
+                    // 【改动3】优先判断是否为拒绝
                     if (endId < todayDayId) type = 'HISTORY'; 
+                    else if (String(item.flowStatus) === '3') type = 'REJECTED'; 
                     else if (String(item.flowStatus) === '1') type = 'PENDING';
                     else if (startId > todayDayId) type = 'FUTURE';
                     else type = 'ACTIVE';
                     
                     const baseItem = { ...item, _type: type };
 
-                    if (type === 'FUTURE' || type === 'PENDING') {
+                    if (type === 'FUTURE' || type === 'PENDING' || type === 'REJECTED') {
                         result.priorityList.push({ ...baseItem, _displayStart: item.rangeStart, _displayEnd: item.rangeEnd });
                     } else if (type === 'ACTIVE') {
                         result.priorityList.push({ ...baseItem, _displayStart: (startId < todayDayId) ? getNowTs() : item.rangeStart, _displayEnd: item.rangeEnd });
@@ -195,8 +202,10 @@ const generateCardHtml = (person) => {
     const hasActive = person.priorityList.some(i => i._type === 'ACTIVE');
     const hasPending = person.priorityList.some(i => i._type === 'PENDING');
     const hasFuture = person.priorityList.some(i => i._type === 'FUTURE');
+    const hasRejected = person.priorityList.some(i => i._type === 'REJECTED'); // 【改动4】
 
     if (hasActive) statusBadge = '<span class="status-badge badge-green">生效中</span>';
+    else if (hasRejected) statusBadge = '<span class="status-badge badge-red">已拒绝</span>'; // 展示拒绝角标
     else if (hasPending) statusBadge = '<span class="status-badge badge-yellow">审核中</span>';
     else if (hasFuture) statusBadge = '<span class="status-badge badge-blue">已预约</span>';
     else if (!person.success) statusBadge = '<span class="status-badge badge-red">失败</span>';
@@ -210,6 +219,7 @@ const generateCardHtml = (person) => {
         if (item._type === 'ACTIVE') { tagClass = 'tag-green'; iconClass = 'dot-green'; tagName = '今日'; }
         if (item._type === 'FUTURE') { tagClass = 'tag-blue'; iconClass = 'dot-blue'; tagName = '预约'; }
         if (item._type === 'PENDING') { tagClass = 'tag-yellow'; iconClass = 'dot-yellow'; tagName = '审核'; }
+        if (item._type === 'REJECTED') { tagClass = 'tag-red'; iconClass = 'dot-red'; tagName = '拒绝'; } // 红色拒绝标签
         
         return `
             <div class="row-item main-row">
@@ -235,19 +245,25 @@ const generateCardHtml = (person) => {
                     const startStr = getFormattedDate(item._displayStart);
                     const endStr = getFormattedDate(item._displayEnd);
                     const isPending = String(item.flowStatus) === '1';
+                    const isRejected = String(item.flowStatus) === '3';
+                    
+                    let historyDot = 'dot-gray-light';
+                    let historyTag = '';
+                    if (isPending) { historyDot = 'dot-yellow'; historyTag = '<span style="color:#f59e0b;font-size:10px;margin-left:4px">[审]</span>'; }
+                    if (isRejected) { historyDot = 'dot-red'; historyTag = '<span style="color:#ef4444;font-size:10px;margin-left:4px">[拒]</span>'; }
+
                     return `
                     <div class="row-item history-row">
                         <div class="row-left">
-                            <div class="dot ${isPending ? 'dot-yellow' : 'dot-gray-light'}"></div>
+                            <div class="dot ${historyDot}"></div>
                             <div class="time-range">${startStr} - ${endStr}</div>
-                            ${isPending ? '<span style="color:#f59e0b;font-size:10px;margin-left:4px">[审]</span>' : ''}
+                            ${historyTag}
                         </div>
                     </div>`;
                 }).join('')}
             </div>
         </div>
     ` : '';
-
     return `
         <div class="app-card fade-in" data-key="${searchKey}">
             <div class="card-header">
@@ -321,7 +337,10 @@ router.get('/visitor-status-Wechat', async (req, res) => {
             else {
                 outputLines.push(`\n👤 ${p.name}`);
                 p.priorityList.forEach(i => {
-                    const icon = i._type === 'PENDING' ? '🟡' : (i._type === 'ACTIVE' ? '🟢' : '🔵');
+                    let icon = '🔵';
+                    if (i._type === 'PENDING') icon = '🟡';
+                    else if (i._type === 'ACTIVE') icon = '🟢';
+                    else if (i._type === 'REJECTED') icon = '🔴';
                     outputLines.push(`${icon} ${getFormattedDate(i._displayStart)}-${getFormattedDate(i._displayEnd)}`);
                 });
             }
@@ -440,18 +459,25 @@ router.get('/visitor-status', async (req, res) => {
         .card-body { padding: 12px 16px; }
         .row-item { display: flex; justify-content: space-between; align-items: center; padding: 6px 0; }
         .row-left { display: flex; align-items: center; gap: 8px; }
+        
+        /* 圆点样式大全（包含红色） */
         .dot { width: 8px; height: 8px; border-radius: 50%; }
         .dot-green { background: #22c55e; box-shadow: 0 0 0 2px #dcfce7; }
         .dot-blue { background: #3b82f6; box-shadow: 0 0 0 2px #dbeafe; }
         .dot-yellow { background: #eab308; box-shadow: 0 0 0 2px #fef9c3; }
+        .dot-red { background: #ef4444; box-shadow: 0 0 0 2px #fee2e2; } 
         .dot-gray { background: #cbd5e1; }
         .dot-gray-light { background: #e2e8f0; }
         
         .time-range { font-size: 14px; font-weight: 500; color: #334155; font-family: monospace; letter-spacing: -0.5px; }
+        
+        /* 标签样式大全（包含红色） */
         .mini-tag { font-size: 10px; padding: 1px 5px; border-radius: 4px; transform: scale(0.9); }
         .tag-green { background: #22c55e; color: white; }
         .tag-blue { background: #3b82f6; color: white; }
         .tag-yellow { background: #eab308; color: white; }
+        .tag-red { background: #ef4444; color: white; }
+        .tag-gray { background: #f1f5f9; color: #64748b; }
         
         .approver { font-size: 12px; color: #94a3b8; }
         .empty-tip { text-align: center; color: #cbd5e1; font-size: 12px; padding: 8px 0; }
