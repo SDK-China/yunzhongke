@@ -334,8 +334,8 @@ const LOC_CONFIGS = {
     'Q01': {
         title: "Q01 厂区",
         // Q01 的门禁阈值
-        renewThreshold: 5, 
-        renewDays: 5,
+        renewThreshold: 2, 
+        renewDays: 7,
         enabled: true,
 
         // 👇【修复点】独立账号配置，解决 API 报错
