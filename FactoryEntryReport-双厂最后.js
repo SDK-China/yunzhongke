@@ -351,24 +351,24 @@ const LOC_CONFIGS = {
 
         query: {
             visitorIdNos: [
-                "MTMwMzIzMTk5MjEyMTY2NDM0",
-                "MTMwMzIzMTk5ODA2MTQxMDU4",
-                "MTMwMzIzMTk5MDAzMDc2NDE2",
-                "MTMwMzIzMTk4OTA5MDQ2NDEx", //付
-                "MDU4NDMzNDg=",
-                "MTIwNDUxOTI=",
-                "SzEzOTMxMihBKQ==",
-                "NDMxMjIyMTk5NzEyMDUzMzEz",
-                "NTIyNzMxMjAwMDAxMTAzNjEx",
-                "MTMwMzIxMjAwMjA0MTY2MjE4",
-                "NDUwMjIxMTk4OTA0MDUyNDNY",
-                "NDIxMTgxMTk5MDAxMTc2MzFY",
-                "NDQwOTgyMTk5NzEwMDgyNTk3",
-                "NDExNTI0MjAwNTEyMTA3NjU2",
-                // "MDg5NjQ3MzI=",
-                // "MDYyNDg5MDE=",
-                // "SDAzODMzNTcy",
-                // "NTMyNDY5ODc0"
+                "MTMwMzIzMTk5MjEyMTY2NDM0",  //张江路
+                "MTMwMzIzMTk5ODA2MTQxMDU4", //刘宏飞
+                "MTMwMzIzMTk5MDAzMDc2NDE2", //张江宽
+                "MTMwMzIzMTk4OTA5MDQ2NDEx", //付海超
+                "MDU4NDMzNDg=", //张道玄
+                "MTIwNDUxOTI=", //张乃文
+                "SzEzOTMxMihBKQ==", //陈毅鸿
+                "NDMxMjIyMTk5NzEyMDUzMzEz", //向林  
+                "NTIyNzMxMjAwMDAxMTAzNjEx", //王煊廷
+                "MTMwMzIxMjAwMjA0MTY2MjE4", //邵相辉 
+                "NDUwMjIxMTk4OTA0MDUyNDNY", //曾静 
+                "NDIxMTgxMTk5MDAxMTc2MzFY", //余新旺 
+                "NDQwOTgyMTk5NzEwMDgyNTk3", //周勇驰 
+                "NDExNTI0MjAwNTEyMTA3NjU2", //杨瑞 
+                // "MDg5NjQ3MzI=", //赖彦翔 
+                // "MDYyNDg5MDE=", //马可为
+                // "SDAzODMzNTcy", //冼延浩
+                // "NTMyNDY5ODc0" //Denis Gerassimenko
             ],
             regPerson: "15032325162",
             acToken: "53F44A99C6D8AADE22942CD9E1D803E8812FF4A4A8A756BE0A1659704557309F",

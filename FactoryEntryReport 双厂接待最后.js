@@ -3,13 +3,11 @@
  * 自动续期入厂申请脚本 (多厂区支持 + 完美克隆解析 + 严格顺位保持 + SPA极速界面 + 独立账号身份校验)
  * =========================================================================
  * 🛠️ 【更新说明】
- * - 修复了多账号下 Token 与 Cookie 不匹配导致的“API返回失败”问题。
- * - 将 csrf_token 和 cookie 彻底配置化，A08 和 Q01 身份完全隔离。
- * - 极大地增强了发包失败时的日志输出（直接将后端的 JSON 报错打印到面板上）。
- * - QA01 的发包逻辑已完全重写：深度克隆 QA01_request_body.bin 的原始 JSON。
- * - QA01 人员勾选后，系统会自动根据他们在 bin 文件中的原生顺序进行重新排列。
- * - 绝对未修改或删除任何人物数据注释。
- * - 🌟 新增：独立人员指定接待人功能，自动拆单发包！
+ * - 🌟 新增“影分身”双轨独立检测：配置了专属接待人并开启 keepNormal 的人，系统会分别独立计算两者的到期时间！
+ * - 🌟 新增“智能拼车”：如果多人指定了同一个专属接待人，系统会自动把他们合并到同一个包里发出！
+ * - 🌟 新增“独立规则”：专属分身可以配置自己独有的 renewThreshold(阈值) 和 renewDays(天数)！
+ * - 升级严谨熔断机制：只要有一人报错 或 >50%无记录，直接触发终极锁死，彻底杜绝异常环境疯狂发包。
+ * - 绝对未修改或删除任何人物数据及注释。
  * =========================================================================
  */
 
@@ -70,16 +68,16 @@ const PERSON_DB = {
         {"componentName":"AttachmentField","fieldId":"attachmentField_lxv44osk","label":"社保/在职证明","fieldData":{"value":[{"name":"mmexport1759201655801.jpg","previewUrl":"/o/LLF66FD1VJ8ZU56HEFRI4BPWPUBG22DMDF6GMO4?appType=APP_GRVPTEOQ6D4B7FLZFYNJ&fileName=APP_GRVPTEOQ6D4B7FLZFYNJ_TExGNjZGRDFWSjhaVTU2SEVGUkk0QlBXUFVCRzIyRE1ERjZHTU40.jpg&instId=&type=open&process=image/resize,m_fill,w_200,h_200,limit_0/quality,q_80","downloadUrl":"/o/LLF66FD1VJ8ZU56HEFRI4BPWPUBG22DMDF6GMO4?appType=APP_GRVPTEOQ6D4B7FLZFYNJ&fileName=APP_GRVPTEOQ6D4B7FLZFYNJ_TExGNjZGRDFWSjhaVTU2SEVGUkk0QlBXUFVCRzIyRE1ERjZHTU40.jpg&instId=&type=download","size":304370,"url":"/o/LLF66FD1VJ8ZU56HEFRI4BPWPUBG22DMDF6GMO4?appType=APP_GRVPTEOQ6D4B7FLZFYNJ&fileName=APP_GRVPTEOQ6D4B7FLZFYNJ_TExGNjZGRDFWSjhaVTU2SEVGUkk0QlBXUFVCRzIyRE1ERjZHTU40.jpg&instId=&type=download","fileUuid":"APP_GRVPTEOQ6D4B7FLZFYNJ_TExGNjZGRDFWSjhaVTU2SEVGUkk0QlBXUFVCRzIyRE1ERjZHTU40.jpg"}]}},
         {"componentName":"AttachmentField","fieldId":"attachmentField_lxv44osn","label":"其他附件","fieldData":{"value":[]}}
     ],
-    // 姜
+   // 姜 (已同步 2026-03-04 最新抓包数据)
     "MTMwNDI1MTk4OTA4MjkwMzE0": [
         {"componentName":"SelectField","fieldId":"selectField_lxv44orx","label":"有效身份证件","fieldData":{"value":"身份证","text":"身份证"},"options":[{"defaultChecked":false,"syncLabelValue":true,"__sid":"item_lxjzgsg1","text":"身份证","__sid__":"serial_lxjzgsg0","value":"身份证","sid":"serial_lxjzgsg0"}]},
         {"componentName":"TextField","fieldId":"textField_lxv44ory","label":"证件号码","fieldData":{"value": decode("MTMwNDI1MTk4OTA4MjkwMzE0")}},
         {"componentName":"TextField","fieldId":"textField_lxv44orw","label":"姓名","fieldData":{"value": decode("5aec5bu66b6Z")}},
         {"componentName":"SelectField","fieldId":"selectField_mbyjhot6","label":"区号","fieldData":{"value":"86","text":"+86"},"options":[{"defaultChecked":true,"syncLabelValue":false,"__sid":"item_megqe4lm","text":"+86","__sid__":"serial_megqe4ll","value":"86","sid":"serial_mbyjf8gm"}]},
-        {"componentName":"TextField","fieldId":"textField_lxv44orz","label":"联系方式","fieldData":{"value": decode("MTM2MjU0MjIzNDY=") }},
-        {"componentName":"ImageField","fieldId":"imageField_ly9i5k5q","label":"免冠照片","fieldData":{"value":[{"name":"mmexport1759201658197.jpg","previewUrl":"https://dingtalk.avaryholding.com:8443/dingplus/image/20250930/ec928e3f5759064c4e2e1bf9cfc30f14.jpg","downloadUrl":"https://dingtalk.avaryholding.com:8443/dingplus/image/20250930/ec928e3f5759064c4e2e1bf9cfc30f14.jpg","size":58436,"url":"https://dingtalk.avaryholding.com:8443/dingplus/image/20250930/ec928e3f5759064c4e2e1bf9cfc30f14.jpg"}]}},
-        {"componentName":"AttachmentField","fieldId":"attachmentField_lxv44osj","label":"身份证照片","fieldData":{"value":[{"name":"mmexport1759201657241.jpg","previewUrl":"/o/U1B66W914K8ZZWUFFNE4PBZVZH2G28D8FF6GMV4?appType=APP_GRVPTEOQ6D4B7FLZFYNJ&fileName=APP_GRVPTEOQ6D4B7FLZFYNJ_VTFCNjZXOTE0SzhaWldVRkZORTRQQlpWWkgyRzI3RDhGRjZHTVU0.jpg&instId=&type=open&process=image/resize,m_fill,w_200,h_200,limit_0/quality,q_80","downloadUrl":"/o/U1B66W914K8ZZWUFFNE4PBZVZH2G28D8FF6GMV4?appType=APP_GRVPTEOQ6D4B7FLZFYNJ&fileName=APP_GRVPTEOQ6D4B7FLZFYNJ_VTFCNjZXOTE0SzhaWldVRkZORTRQQlpWWkgyRzI3RDhGRjZHTVU0.jpg&instId=&type=download","size":37638,"url":"/o/U1B66W914K8ZZWUFFNE4PBZVZH2G28D8FF6GMV4?appType=APP_GRVPTEOQ6D4B7FLZFYNJ&fileName=APP_GRVPTEOQ6D4B7FLZFYNJ_VTFCNjZXOTE0SzhaWldVRkZORTRQQlpWWkgyRzI3RDhGRjZHTVU0.jpg&instId=&type=download","fileUuid":"APP_GRVPTEOQ6D4B7FLZFYNJ_VTFCNjZXOTE0SzhaWldVRkZORTRQQlpWWkgyRzI3RDhGRjZHTVU0.jpg"}]}},
-        {"componentName":"AttachmentField","fieldId":"attachmentField_lxv44osk","label":"社保/在职证明","fieldData":{"value":[{"name":"mmexport1759201655801.jpg","previewUrl":"/o/6AG66W814L8ZPWYU9EOKXB6NTR892OPBFF6GMQ5?appType=APP_GRVPTEOQ6D4B7FLZFYNJ&fileName=APP_GRVPTEOQ6D4B7FLZFYNJ_NkFHNjZXODE0TDhaUFdZVTlFT0tYQjZOVFI4OTJPUEJGRjZHTVA1.jpg&instId=&type=open&process=image/resize,m_fill,w_200,h_200,limit_0/quality,q_80","downloadUrl":"/o/6AG66W814L8ZPWYU9EOKXB6NTR892OPBFF6GMQ5?appType=APP_GRVPTEOQ6D4B7FLZFYNJ&fileName=APP_GRVPTEOQ6D4B7FLZFYNJ_NkFHNjZXODE0TDhaUFdZVTlFT0tYQjZOVFI4OTJPUEJGRjZHTVA1.jpg&instId=&type=download","size":304370,"url":"/o/6AG66W814L8ZPWYU9EOKXB6NTR892OPBFF6GMQ5?appType=APP_GRVPTEOQ6D4B7FLZFYNJ&fileName=APP_GRVPTEOQ6D4B7FLZFYNJ_NkFHNjZXODE0TDhaUFdZVTlFT0tYQjZOVFI4OTJPUEJGRjZHTVA1.jpg&instId=&type=download","fileUuid":"APP_GRVPTEOQ6D4B7FLZFYNJ_NkFHNjZXODE0TDhaUFdZVTlFT0tYQjZOVFI4OTJPUEJGRjZHTVA1.jpg"}]}},
+        {"componentName":"TextField","fieldId":"textField_lxv44orz","label":"联系方式","fieldData":{"value": decode("MTMzMTUzOTY2MDc=") }}, // 已更新为 13315396607 的 Base64
+        {"componentName":"ImageField","fieldId":"imageField_ly9i5k5q","label":"免冠照片","fieldData":{"value":[{"name":"mmexport1772611546795.jpg","previewUrl":"https://dingtalk.avaryholding.com:8443/dingplus/image/20260304/4a240b9a1d92ad988ee252d3eb83f583.jpg","downloadUrl":"https://dingtalk.avaryholding.com:8443/dingplus/image/20260304/4a240b9a1d92ad988ee252d3eb83f583.jpg","size":173548,"url":"https://dingtalk.avaryholding.com:8443/dingplus/image/20260304/4a240b9a1d92ad988ee252d3eb83f583.jpg"}]}},
+        {"componentName":"AttachmentField","fieldId":"attachmentField_lxv44osj","label":"身份证照片","fieldData":{"value":[{"name":"mmexport1772611479286.jpg","previewUrl":"/o/W6D66371ZXN37V9ZHQY155MBLB4T2STL4RBMM88?appType=APP_GRVPTEOQ6D4B7FLZFYNJ&fileName=APP_GRVPTEOQ6D4B7FLZFYNJ_VzZENjYzNzFaWE4zN1Y5WkhRWTE1NU1CTEI0VDJTVEw0UkJNTTc4.jpg&instId=&type=open&process=image/resize,m_fill,w_200,h_200,limit_0/quality,q_80","downloadUrl":"/o/W6D66371ZXN37V9ZHQY155MBLB4T2STL4RBMM88?appType=APP_GRVPTEOQ6D4B7FLZFYNJ&fileName=APP_GRVPTEOQ6D4B7FLZFYNJ_VzZENjYzNzFaWE4zN1Y5WkhRWTE1NU1CTEI0VDJTVEw0UkJNTTc4.jpg&instId=&type=download","size":437235,"url":"/o/W6D66371ZXN37V9ZHQY155MBLB4T2STL4RBMM88?appType=APP_GRVPTEOQ6D4B7FLZFYNJ&fileName=APP_GRVPTEOQ6D4B7FLZFYNJ_VzZENjYzNzFaWE4zN1Y5WkhRWTE1NU1CTEI0VDJTVEw0UkJNTTc4.jpg&instId=&type=download","fileUuid":"APP_GRVPTEOQ6D4B7FLZFYNJ_VzZENjYzNzFaWE4zN1Y5WkhRWTE1NU1CTEI0VDJTVEw0UkJNTTc4.jpg"}]}},
+        {"componentName":"AttachmentField","fieldId":"attachmentField_lxv44osk","label":"社保/在职证明","fieldData":{"value":[{"name":"2_在职证明.pdf","previewUrl":"/dingtalk/mobile/APP_GRVPTEOQ6D4B7FLZFYNJ/inst/preview?appType=APP_GRVPTEOQ6D4B7FLZFYNJ&fileName=APP_GRVPTEOQ6D4B7FLZFYNJ_UlpFNjY4NzFFOU8zSElNSU5ETEJDNFdXVkwzUTJZR1NBUkJNTTI1.pdf&fileSize=75650&downloadUrl=APP_GRVPTEOQ6D4B7FLZFYNJ_UlpFNjY4NzFFOU8zSElNSU5ETEJDNFdXVkwzUTJZR1NBUkJNTTI1.pdf","downloadUrl":"/o/RZE66871E9O3HIMINDLBC4WWVL3Q2YGSARBMM35?appType=APP_GRVPTEOQ6D4B7FLZFYNJ&fileName=APP_GRVPTEOQ6D4B7FLZFYNJ_UlpFNjY4NzFFOU8zSElNSU5ETEJDNFdXVkwzUTJZR1NBUkJNTTI1.pdf&instId=&type=download","size":75650,"url":"/o/RZE66871E9O3HIMINDLBC4WWVL3Q2YGSARBMM35?appType=APP_GRVPTEOQ6D4B7FLZFYNJ&fileName=APP_GRVPTEOQ6D4B7FLZFYNJ_UlpFNjY4NzFFOU8zSElNSU5ETEJDNFdXVkwzUTJZR1NBUkJNTTI1.pdf&instId=&type=download","fileUuid":"APP_GRVPTEOQ6D4B7FLZFYNJ_UlpFNjY4NzFFOU8zSElNSU5ETEJDNFdXVkwzUTJZR1NBUkJNTTI1.pdf"}]}},
         {"componentName":"AttachmentField","fieldId":"attachmentField_lxv44osn","label":"其他附件","fieldData":{"value":[]}}
     ],
     // 孙
@@ -124,7 +122,7 @@ const PERSON_DB = {
         {"componentName":"TextField","fieldId":"textField_lxv44ory","label":"证件号码","fieldData":{"value": decode("NDMyOTAxMTk4MjExMDUyMDE2")}},
         {"componentName":"TextField","fieldId":"textField_lxv44orw","label":"姓名","fieldData":{"value": decode("5YWw5paM")}},
         {"componentName":"SelectField","fieldId":"selectField_mbyjhot6","label":"区号","fieldData":{"value":"86","text":"+86"},"options":[{"defaultChecked":true,"syncLabelValue":false,"__sid":"item_megqe4lm","text":"+86","__sid__":"serial_megqe4ll","value":"86","sid":"serial_mbyjf8gm"}]},
-        {"componentName":"TextField","fieldId":"textField_lxv44orz","label":"联系方式","fieldData":{"value": decode("MTM4MTI5NTM1MzA=") }},
+        {"componentName":"TextField","fieldId":"textField_lxv44orz","label":"联系方式","fieldData":{"value": decode("MTM0MTI5NTM1MzA=") }},
         {"componentName":"ImageField","fieldId":"imageField_ly9i5k5q","label":"免冠照片","fieldData":{"value":[{"name":"1000010214.jpg","previewUrl":"https://dingtalk.avaryholding.com:8443/dingplus/image/20251212/fd7e8c2de382ff60fa06a0b133726925.jpg","downloadUrl":"https://dingtalk.avaryholding.com:8443/dingplus/image/20251212/fd7e8c2de382ff60fa06a0b133726925.jpg","size":36681,"url":"https://dingtalk.avaryholding.com:8443/dingplus/image/20251212/fd7e8c2de382ff60fa06a0b133726925.jpg"}]}},
         {"componentName":"AttachmentField","fieldId":"attachmentField_lxv44osj","label":"身份证照片","fieldData":{"value":[{"name":"mmexport1765527972471.jpg","previewUrl":"/o/KPE66S71GVE1CFXGNA63M4ESVXGL3DBR4M2JMH?appType=APP_GRVPTEOQ6D4B7FLZFYNJ&fileName=APP_GRVPTEOQ6D4B7FLZFYNJ_S1BFNjZTNzFHVkUxQ0ZYR05BNjNNNEVTVlhHTDNEQlI0TTJKTUc$.jpg&instId=&type=open&process=image/resize,m_fill,w_200,h_200,limit_0/quality,q_80","downloadUrl":"/o/KPE66S71GVE1CFXGNA63M4ESVXGL3DBR4M2JMH?appType=APP_GRVPTEOQ6D4B7FLZFYNJ&fileName=APP_GRVPTEOQ6D4B7FLZFYNJ_S1BFNjZTNzFHVkUxQ0ZYR05BNjNNNEVTVlhHTDNEQlI0TTJKTUc$.jpg&instId=&type=download","size":214657,"url":"/o/KPE66S71GVE1CFXGNA63M4ESVXGL3DBR4M2JMH?appType=APP_GRVPTEOQ6D4B7FLZFYNJ&fileName=APP_GRVPTEOQ6D4B7FLZFYNJ_S1BFNjZTNzFHVkUxQ0ZYR05BNjNNNEVTVlhHTDNEQlI0TTJKTUc$.jpg&instId=&type=download","fileUuid":"APP_GRVPTEOQ6D4B7FLZFYNJ_S1BFNjZTNzFHVkUxQ0ZYR05BNjNNNEVTVlhHTDNEQlI0TTJKTUc$.jpg"}]}},
         {"componentName":"AttachmentField","fieldId":"attachmentField_lxv44osk","label":"社保/在职证明","fieldData":{"value":[{"name":"1_在职证明.pdf","previewUrl":"/dingtalk/mobile/APP_GRVPTEOQ6D4B7FLZFYNJ/inst/preview?appType=APP_GRVPTEOQ6D4B7FLZFYNJ&fileName=APP_GRVPTEOQ6D4B7FLZFYNJ_TUo5NjZBOTEwV0UxVlpBWUdKOTg0Q09GVTlBMjNVQlo0TTJKTUI%24.pdf&fileSize=71755&downloadUrl=APP_GRVPTEOQ6D4B7FLZFYNJ_TUo5NjZBOTEwV0UxVlpBWUdKOTg0Q09GVTlBMjNVQlo0TTJKTUI$.pdf","downloadUrl":"/o/MJ966A910WE1VZAYGJ984COFU9A23UBZ4M2JMC?appType=APP_GRVPTEOQ6D4B7FLZFYNJ&fileName=APP_GRVPTEOQ6D4B7FLZFYNJ_TUo5NjZBOTEwV0UxVlpBWUdKOTg0Q09GVTlBMjNVQlo0TTJKTUI$.pdf&instId=&type=download","size":71755,"url":"/o/MJ966A910WE1VZAYGJ984COFU9A23UBZ4M2JMC?appType=APP_GRVPTEOQ6D4B7FLZFYNJ&fileName=APP_GRVPTEOQ6D4B7FLZFYNJ_TUo5NjZBOTEwV0UxVlpBWUdKOTg0Q09GVTlBMjNVQlo0TTJKTUI$.pdf&instId=&type=download","fileUuid":"APP_GRVPTEOQ6D4B7FLZFYNJ_TUo5NjZBOTEwV0UxVlpBWUdKOTg0Q09GVTlBMjNVQlo0TTJKTUI$.pdf"}]}},
@@ -299,7 +297,7 @@ const LOC_CONFIGS = {
                 // "NDMyOTAxMTk4MjExMDUyMDE2",
                 // "NDEwOTIzMTk4ODA3MTkxMDFY",
                 // "MDMwNzE3Njg",
-                // "MTMwNDI1MTk4OTA4MjkwMzE0", //姜
+                "MTMwNDI1MTk4OTA4MjkwMzE0", //姜
                 "MTAyNDE5NDY=",
                 "MDczOTM0Njc=",
             ],
@@ -309,16 +307,42 @@ const LOC_CONFIGS = {
         },
         personDb: PERSON_DB,
         
-        // 【新增功能】：支持在这里配置专属的接待人信息，不在此列表中的人将合并走上面的通用接待配置。
+        // 【新增功能】：支持在这里配置专属的接待人信息
         customReceptionists: {
-            // 示例：给某个身份证指定一个专用的接待人：
-            // "NDEwNDIzMTk4OTA3MjIxNTMw": {
-            //     receptionistId: "12345678",
-            //     receptionistName: "专属测试人",
-            //     receptionDepartment: "P2特殊测试组",
-            //     receptionistPhone: "13888888888",
-            //     visitReason: "特殊机台维护"
-            // }
+            // 康伟强
+            "MTMwMzIzMTk4NjAyMjgwODFY": {
+                receptionistId: "A2449801",
+                receptionistName: "龚旭明",
+                receptionDepartment: "QA01設備五課",
+                receptionistPhone: "17703340319",
+                visitReason: "设备维护与保养",
+                keepNormal: true,             // 🌟 核心：设为 true，系统就会为他发一份指定的包，再跟大部队发一份原始包！
+                renewThreshold: 2,            // 独立：剩2天时触发专属包
+                renewDays: 7                  // 独立：一次续7天
+            },
+            // 张强
+            "MTMwMzIyMTk4ODA2MjQyMDE4": {
+                receptionistId: "A2449801",
+                receptionistName: "龚旭明",
+                receptionDepartment: "QA01設備五課",
+                receptionistPhone: "17703340319",
+                visitReason: "设备维护与保养",
+                keepNormal: true,           // 🌟 核心：设为 true，同样双开！
+                renewThreshold: 2,            // 独立：剩2天时触发专属包
+                renewDays: 7                  // 独立：一次续7天
+            },
+             // 姜建龙
+            "MTMwNDI1MTk4OTA4MjkwMzE0": {
+                receptionistId: "A2449801",
+                receptionistName: "龚旭明",
+                receptionDepartment: "QA01設備五課",
+                receptionistPhone: "17703340319",
+                visitReason: "设备维护与保养",
+                keepNormal: false,           // 🌟 核心：设为 true，同样双开！
+                renewThreshold: 2,            // 独立：剩2天时触发专属包
+                renewDays: 7                  // 独立：一次续7天
+            }
+            
         },
 
         // A08 的独立老组包逻辑 (已加入指定接待人合并支持)
@@ -376,7 +400,7 @@ const LOC_CONFIGS = {
         // receptionistPhone:"18733454885",  //接待人联系方式
         // visitReason: "治具调试",     // 事由描述
 
-        // 【新增功能】：支持在这里配置专属的接待人信息，一旦在此列表，系统将自动为他单独分开发出一个新包！
+        // 【新增功能】：支持在这里配置专属的接待人信息
         customReceptionists: {
             // 示例：给某个身份证指定一个专用的接待人：
             // "MTMwMzIzMTk5MjEyMTY2NDM0": {
@@ -384,30 +408,31 @@ const LOC_CONFIGS = {
             //     receptionistName: "专属张宏敏",
             //     receptionDepartment: "P2特殊测试组",
             //     receptionistPhone: "13888888888",
-            //     visitReason: "特殊机台维护"
+            //     visitReason: "特殊机台维护",
+            //     keepNormal: true
             // }
         },
 
         query: {
             visitorIdNos: [
-                "MTMwMzIzMTk5MjEyMTY2NDM0",
-                "MTMwMzIzMTk5ODA2MTQxMDU4",
-                "MTMwMzIzMTk5MDAzMDc2NDE2",
-                "MTMwMzIzMTk4OTA5MDQ2NDEx", //付
-                "MDU4NDMzNDg=",
-                "MTIwNDUxOTI=",
-                "SzEzOTMxMihBKQ==",
-                "NDMxMjIyMTk5NzEyMDUzMzEz",
-                "NTIyNzMxMjAwMDAxMTAzNjEx",
-                "MTMwMzIxMjAwMjA0MTY2MjE4",
-                "NDUwMjIxMTk4OTA0MDUyNDNY",
-                "NDIxMTgxMTk5MDAxMTc2MzFY",
-                "NDQwOTgyMTk5NzEwMDgyNTk3",
-                "NDExNTI0MjAwNTEyMTA3NjU2",
-                // "MDg5NjQ3MzI=",
-                // "MDYyNDg5MDE=",
-                // "SDAzODMzNTcy",
-                // "NTMyNDY5ODc0"
+                "MTMwMzIzMTk5MjEyMTY2NDM0",  //张江路
+                "MTMwMzIzMTk5ODA2MTQxMDU4", //刘宏飞
+                "MTMwMzIzMTk5MDAzMDc2NDE2", //张江宽
+                "MTMwMzIzMTk4OTA5MDQ2NDEx", //付海超
+                "MDU4NDMzNDg=", //张道玄
+                "MTIwNDUxOTI=", //张乃文
+                "SzEzOTMxMihBKQ==", //陈毅鸿
+                "NDMxMjIyMTk5NzEyMDUzMzEz", //向林  
+                "NTIyNzMxMjAwMDAxMTAzNjEx", //王煊廷
+                "MTMwMzIxMjAwMjA0MTY2MjE4", //邵相辉 
+                "NDUwMjIxMTk4OTA0MDUyNDNY", //曾静 
+                "NDIxMTgxMTk5MDAxMTc2MzFY", //余新旺 
+                "NDQwOTgyMTk5NzEwMDgyNTk3", //周勇驰 
+                "NDExNTI0MjAwNTEyMTA3NjU2", //杨瑞 
+                // "MDg5NjQ3MzI=", //赖彦翔 
+                // "MDYyNDg5MDE=", //马可为
+                // "SDAzODMzNTcy", //冼延浩
+                // "NTMyNDY5ODc0" //Denis Gerassimenko
             ],
             regPerson: "15032325162",
             acToken: "53F44A99C6D8AADE22942CD9E1D803E8812FF4A4A8A756BE0A1659704557309F",
@@ -487,8 +512,7 @@ const LOC_CONFIGS = {
 
 const checkSingleStatus = async (id, queryConfig) => {
     const idMask = id.substring(0, 4) + "****" + id.substring(id.length - 4);
-    let maxEnd = 0;
-    let result = { id, success: false, hasData: false, maxEnd: 0 };
+    let result = { id, success: false, hasData: false, records: [] };
 
     try {
         const res = await axios.post(queryConfig.queryUrl, {
@@ -497,18 +521,15 @@ const checkSingleStatus = async (id, queryConfig) => {
             acToken: queryConfig.acToken
         });
         
-        if (res.data.code === 200) {
+        if (res.data && res.data.code === 200) {
             result.success = true;
-            if (res.data.data && res.data.data.length > 0) {
-                result.hasData = true;
-                res.data.data.forEach(record => {
-                    const end = parseInt(record.dateEnd || record.rangeEnd);
-                    if (end > maxEnd) maxEnd = end;
-                });
+            if (res.data.data && Array.isArray(res.data.data)) {
+                result.records = res.data.data;
+                if (result.records.length > 0) result.hasData = true;
             }
-            result.maxEnd = maxEnd;
         } else {
-            console.error(`   [${idMask}] API错误: Code ${res.data.code}`);
+            const errCode = res.data ? res.data.code : 'UNKNOWN';
+            console.error(`   [${idMask}] API错误: Code ${errCode}`);
         }
     } catch (e) {
         console.error(`   [${idMask}] 网络/请求出错: ${e.message}`);
@@ -530,7 +551,7 @@ const getAllStatuses = async (queryConfig) => {
     const stats = { total: decodedIds.length, success: 0, error: 0, hasData: 0, noData: 0 };
 
     results.forEach(r => {
-        statusMap[r.id] = r.maxEnd;
+        statusMap[r.id] = r.records || [];
         if (r.success) {
             stats.success++;
             if (r.hasData) stats.hasData++;
@@ -542,10 +563,17 @@ const getAllStatuses = async (queryConfig) => {
     return { statusMap, stats };
 };
 
+// 🌟 严谨铁壁熔断机制
 const checkSafeToRun = (stats) => {
-    if (stats.error > 0) return { safe: false, reason: `查询接口报错 (Error Count: ${stats.error})` };
-    if (stats.total > 0 && stats.hasData === 0) return { safe: false, reason: "严重警告：所有人员均无记录！" };
-    if (stats.noData > 0) return { safe: false, reason: `异常警告：有人员无记录 (${stats.noData}/${stats.total})` };
+    // 1. 网络/Cookie/Token错误：只要有1个人报错，立刻阻断
+    if (stats.error > 0) return { safe: false, reason: `请求报错或Cookie失效 (失败: ${stats.error}人)` };
+    // 2. 无配置人员
+    if (stats.total === 0) return { safe: false, reason: "配置名单为空，无需运行" };
+    // 3. 终极锁死：全员无记录 (可能被系统拉黑、Token被封)
+    if (stats.total > 0 && stats.hasData === 0) return { safe: false, reason: "极其严重：全员均无记录！可能遭遇接口结构变更或彻底封禁，触发100%锁死熔断！" };
+    // 4. 防雪崩：查询人数较多时，如果超过一半突然查不到记录，高度疑似接口数据被截断
+    if (stats.total >= 4 && (stats.noData / stats.total) >= 0.5) return { safe: false, reason: `高危异常：超过半数人员 (${stats.noData}/${stats.total}) 突然查不到记录，触发防雪崩熔断！` };
+    
     return { safe: true, reason: "状态正常" };
 };
 
@@ -583,12 +611,13 @@ const calculatePlan = (idStatusMap, locConfig) => {
     const todayStartTs = todayObj.getTime() - 28800000;
     const todayId = getBeijingDayId(nowMs);
 
-    const userData = [];
+    const virtualUsers = [];
     let globalMaxEndTs = 0; 
     let minEndTs = Infinity; 
     const summary = [];
 
-    for (const [id, lastDateTs] of Object.entries(idStatusMap)) {
+    // 核心改造：“影分身”双轨制，普通单和专属单完全分离开来独立计算！
+    for (const [id, records] of Object.entries(idStatusMap)) {
         const idBase64 = Buffer.from(id).toString('base64');
         const personInfo = locConfig.personDb[idBase64];
         
@@ -600,7 +629,37 @@ const calculatePlan = (idStatusMap, locConfig) => {
         const nameField = personInfo.find(f => f.label === '姓名');
         const name = nameField && nameField.fieldData ? nameField.fieldData.value : "未知";
         
-        let currentEndTs = lastDateTs;
+        const customConf = locConfig.customReceptionists && locConfig.customReceptionists[idBase64];
+        const trackNormal = !customConf || customConf.keepNormal; // 是否需要发普通单
+        const trackCustom = !!customConf;                         // 是否需要发专属单
+
+        const getMaxEnd = (filterFn) => {
+            let max = 0;
+            records.forEach(r => {
+                if (filterFn(r)) {
+                    const end = parseInt(r.dateEnd || r.rangeEnd);
+                    if (end > max) max = end;
+                }
+            });
+            return max;
+        };
+
+        // 处理普通轨迹 (排除掉挂在专属工号下的记录)
+        if (trackNormal) {
+            const maxEndTs = getMaxEnd(r => !customConf || r.rPerson !== customConf.receptionistId);
+            virtualUsers.push({ idBase64, type: 'normal', maxEndTs, customConf: null, name });
+        }
+
+        // 处理专属轨迹 (只查挂在专属工号下的记录！)
+        if (trackCustom) {
+            const maxEndTs = getMaxEnd(r => r.rPerson === customConf.receptionistId);
+            virtualUsers.push({ idBase64, type: 'custom', maxEndTs, customConf, name: name + " ⭐" });
+        }
+    }
+
+    // 第二遍循环：构建界面信息，并确定每个人的个人目标边界 targetEndTs
+    virtualUsers.forEach(vu => {
+        let currentEndTs = vu.maxEndTs;
         if (currentEndTs < todayStartTs) currentEndTs = todayStartTs - 86400000;
 
         if (currentEndTs > globalMaxEndTs) globalMaxEndTs = currentEndTs;
@@ -609,79 +668,93 @@ const calculatePlan = (idStatusMap, locConfig) => {
         const lastDayId = getBeijingDayId(currentEndTs);
         const diff = lastDayId - todayId;
         
-        const threshold = locConfig.renewThreshold !== undefined ? locConfig.renewThreshold : 2;
-        const addDays = locConfig.renewDays !== undefined ? locConfig.renewDays : 7;
+        // 读取个体独立的阈值和天数配置
+        const threshold = vu.customConf && vu.customConf.renewThreshold !== undefined ? vu.customConf.renewThreshold : (locConfig.renewThreshold !== undefined ? locConfig.renewThreshold : 2);
+        const addDays = vu.customConf && vu.customConf.renewDays !== undefined ? vu.customConf.renewDays : (locConfig.renewDays !== undefined ? locConfig.renewDays : 7);
 
         let statusText = `正常 (剩 ${diff} 天)`;
         let statusClass = "success";
+        let needRenew = false;
 
-        if (lastDateTs === 0) { statusText = "无记录 (需补齐)"; statusClass = "expired"; } 
-        else if (diff < 0) { statusText = `已过期 ${Math.abs(diff)} 天`; statusClass = "expired"; } 
-        else if (diff <= threshold) { statusText = `即将过期 (剩 ${diff} 天)`; statusClass = "warning"; }
-
-        // 显示是否挂载了专属接待人
-        const customRec = locConfig.customReceptionists && locConfig.customReceptionists[idBase64];
-        if (customRec) {
-            statusText += ` [指定接待: ${customRec.receptionistName}]`;
+        if (vu.maxEndTs === 0) { 
+            statusText = "无记录 (需补齐)"; 
+            statusClass = "expired"; 
+            needRenew = true;
+        } 
+        else if (diff < 0) { 
+            statusText = `已过期 ${Math.abs(diff)} 天`; 
+            statusClass = "expired"; 
+            needRenew = true;
+        } 
+        else if (diff <= threshold) { 
+            statusText = `即将过期 (剩 ${diff} 天)`; 
+            statusClass = "warning"; 
+            needRenew = true;
         }
 
+        if (vu.type === 'custom') {
+            statusText += ` [专属接待: ${vu.customConf.receptionistName}${vu.customConf.keepNormal ? ' ➕ 双开大单' : ''}] (规则: <=${threshold}天续${addDays}天)`;
+        }
+
+        const rawId = decode(vu.idBase64);
+        const idMask = rawId.substring(0, 4) + "****" + rawId.substring(rawId.length - 4);
+
         summary.push({
-            name,
-            idMask: id.substring(0, 4) + "***" + id.substring(id.length - 4),
-            lastDate: lastDateTs === 0 ? "无记录" : getFormattedDate(lastDateTs),
+            name: vu.name,
+            idMask: idMask,
+            lastDate: vu.maxEndTs === 0 ? "无记录" : getFormattedDate(vu.maxEndTs),
             status: statusText,
             class: statusClass
         });
-        userData.push({ idBase64, currentEndTs });
-    }
+        
+        // 绑定最终推演用的字段
+        vu.currentEndTs = currentEndTs;
+        // 个体的目标推演时间（极其核心：保证每个人的续期天数独立互不干扰）
+        const baseLineTs = Math.max(currentEndTs, todayStartTs);
+        vu.targetEndTs = needRenew ? baseLineTs + (addDays * 86400000) : currentEndTs;
+    });
 
-    const maxEndDayId = getBeijingDayId(globalMaxEndTs);
-    const diffMax = maxEndDayId - todayId;
-    let targetTs = globalMaxEndTs;
-    const baseLineTs = Math.max(globalMaxEndTs, todayStartTs);
-    
-    const threshold = locConfig.renewThreshold !== undefined ? locConfig.renewThreshold : 2;
-    const addDays = locConfig.renewDays !== undefined ? locConfig.renewDays : 7;
-    
-    if (diffMax <= threshold) targetTs = baseLineTs + (addDays * 86400000); 
-    else targetTs = globalMaxEndTs;
+    let globalTargetTs = Math.max(...virtualUsers.map(vu => vu.targetEndTs));
+    if (globalTargetTs < todayStartTs || !isFinite(globalTargetTs)) globalTargetTs = todayStartTs;
 
     const requests = [];
     let cursorTs = Math.max(minEndTs + 86400000, todayStartTs);
+    if (!isFinite(cursorTs)) cursorTs = todayStartTs;
     let dayCount = 1;
 
-    // 👇 核心拆包改造：把当天需要续期的人，按是否配置了指定接待人进行分流打包
-    while (cursorTs <= targetTs) {
-        const todaysGroupBase64 = userData.filter(u => u.currentEndTs < cursorTs).map(u => u.idBase64);
+    // 👇 核心拆包改造：把当天需要续期的人，按指定的接待人进行全自动拼车合并！
+    while (cursorTs <= globalTargetTs) {
+        // 精准过滤出 今天确实需要开单 的虚拟角色
+        const todaysVirtuals = virtualUsers.filter(vu => vu.currentEndTs < cursorTs && cursorTs <= vu.targetEndTs);
         
-        if (todaysGroupBase64.length > 0) {
+        if (todaysVirtuals.length > 0) {
             const normalGroup = [];
-            const specialGroups = [];
+            const specialGroupsMap = {}; // 拼车集合
 
-            // 把人分类：普通组(全放一块) vs 特殊组(每个人单独拉出来)
-            todaysGroupBase64.forEach(b64 => {
-                if (locConfig.customReceptionists && locConfig.customReceptionists[b64]) {
-                    specialGroups.push({ ids: [b64], config: locConfig.customReceptionists[b64] });
+            // 把人分类：普通组(全放一块) vs 特殊拼车组(按接待人ID拼车)
+            todaysVirtuals.forEach(vu => {
+                if (vu.type === 'normal') {
+                    normalGroup.push(vu);
                 } else {
-                    normalGroup.push(b64);
+                    const recId = vu.customConf.receptionistId || 'unknown';
+                    if (!specialGroupsMap[recId]) specialGroupsMap[recId] = [];
+                    specialGroupsMap[recId].push(vu);
                 }
             });
 
             // 内部通用的推包函数
-            const pushRequest = (targetGroup, customConf) => {
-                if (targetGroup.length === 0) return;
+            const pushRequest = (vuGroup, isCustom) => {
+                if (vuGroup.length === 0) return;
                 
-                const names = targetGroup.map(b64 => {
-                    const pInfo = locConfig.personDb[b64];
-                    const n = pInfo.find(f => f.label === '姓名');
-                    return n ? n.fieldData.value : b64;
-                });
+                const idsBase64 = vuGroup.map(v => v.idBase64);
+                const names = vuGroup.map(v => v.name);
+                const customConf = isCustom ? vuGroup[0].customConf : null;
 
                 // 调用底层的 buildPayload 进行注入，传给它专属参数
-                const { jsonStr, fullPostBody } = locConfig.buildPayload(targetGroup, cursorTs, locConfig, customConf);
+                const { jsonStr, fullPostBody } = locConfig.buildPayload(idsBase64, cursorTs, locConfig, customConf);
 
                 let displayPeople = names.join(", ");
-                if (customConf && customConf.receptionistName) {
+                if (isCustom && customConf && customConf.receptionistName) {
                     displayPeople += ` (🚀 独立专单 -> 接待人: ${customConf.receptionistName})`;
                 }
 
@@ -696,17 +769,17 @@ const calculatePlan = (idStatusMap, locConfig) => {
             };
 
             // 发送大部队
-            pushRequest(normalGroup, null);
+            pushRequest(normalGroup, false);
             
-            // 挨个发送那些被单独拎出来的人
-            specialGroups.forEach(sg => {
-                pushRequest(sg.ids, sg.config);
+            // 拼车发送所有的特殊单
+            Object.values(specialGroupsMap).forEach(sgGroup => {
+                pushRequest(sgGroup, true);
             });
         }
         cursorTs += 86400000;
     }
 
-    return { summary, requests, targetDate: getFormattedDate(targetTs) };
+    return { summary, requests, targetDate: getFormattedDate(globalTargetTs) };
 };
 
 // ==========================================
@@ -768,7 +841,7 @@ router.get('/debug', async (req, res) => {
 
             const simulatedStatusMap = {};
             locConfig.query.visitorIdNos.forEach(idBase64 => {
-                 simulatedStatusMap[decode(idBase64)] = 0;
+                 simulatedStatusMap[decode(idBase64)] = []; // 模拟0记录直接传空数组
             });
             const simulatedPlan = calculatePlan(simulatedStatusMap, locConfig);
             
@@ -800,7 +873,7 @@ router.get('/debug', async (req, res) => {
                     <div class="blocked-overlay">
                         <div style="font-size:1.5rem; margin-bottom:10px;">⛔</div>
                         <div style="font-weight:bold; font-size:1.1rem; margin-bottom:5px;">队列已被安全拦截</div>
-                        <div style="font-size:0.85rem; opacity:0.8;">由于触发了熔断机制，系统已强制清空待发送队列。<br>本次执行<b>绝对不会</b>发送任何请求。</div>
+                        <div style="font-size:0.85rem; opacity:0.8;">${safetyCheck.reason}<br>本次执行<b>绝对不会</b>发送任何请求。</div>
                     </div>
                 `;
             }
@@ -812,19 +885,19 @@ router.get('/debug', async (req, res) => {
                 ${!safetyCheck.safe ? `<div class="error-banner">⛔ 熔断警告: ${safetyCheck.reason}</div>` : ''}
 
                 <div class="card">
-                    <h2><span>📊 实时状态 (Target: ${realPlan.targetDate})</span></h2>
+                    <h2><span>📊 实时状态 (推演至: ${realPlan.targetDate})</span></h2>
                     
                     <div class="stat-grid">
-                        <div class="stat-item"><div class="stat-val">${stats.total}</div>总人数</div>
-                        <div class="stat-item"><div class="stat-val" style="color:#059669">${stats.success}</div>成功</div>
-                        <div class="stat-item"><div class="stat-val" style="color:#dc2626">${stats.error}</div>错误</div>
-                        <div class="stat-item"><div class="stat-val">${stats.noData}</div>无记录</div>
+                        <div class="stat-item"><div class="stat-val">${stats.total}</div>总查询人数</div>
+                        <div class="stat-item"><div class="stat-val" style="color:#059669">${stats.success}</div>接口成功</div>
+                        <div class="stat-item"><div class="stat-val" style="color:#dc2626">${stats.error}</div>接口报错</div>
+                        <div class="stat-item"><div class="stat-val">${stats.noData}</div>查询无记录</div>
                     </div>
 
                     <div class="table-wrapper">
                         <table>
                             <thead>
-                                <tr><th>姓名</th><th>有效期止</th><th>状态</th></tr>
+                                <tr><th>姓名/轨迹</th><th>有效期止</th><th>状态</th></tr>
                             </thead>
                             <tbody>
                                 ${realPlan.summary.map(item => `
@@ -1091,7 +1164,7 @@ router.get('/auto-renew', async (req, res) => {
                 continue;
             }
 
-            log(`📝 ${loc} 计划生成完成: 目标日期 ${plan.targetDate}, 共 ${plan.requests.length} 个请求包`);
+            log(`📝 ${loc} 计划生成完成: 目标推演至 ${plan.targetDate}, 共 ${plan.requests.length} 个请求包`);
 
             const submitPromises = [];
             for (const reqTask of plan.requests) {

@@ -5,7 +5,7 @@ const router = express.Router();
 // --- 1. 配置区域 (全面升级支持多厂区) ---
 const CONFIGS = {
     'A08': {
-        title: "A08 访客通 Pro V1.2",
+        title: "A08 访客通 Pro V1.4",
         visitorIdNos: [
             "MTMwMzIzMTk4NjAyMjgwODFY",
             "MTMwMzIyMTk4ODA2MjQyMDE4",
@@ -25,7 +25,7 @@ const CONFIGS = {
         acToken: "E5EF067A42A792436902EB275DCCA379812FF4A4A8A756BE0A1659704557309F"
     },
     'Q01': {
-        title: "QA01 访客通 Pro V1.2",
+        title: "QA01 访客通 Pro V1.4",
         visitorIdNos: [
             "MTMwMzIzMTk5MjEyMTY2NDM0",
             "MTMwMzIzMTk5ODA2MTQxMDU4",
@@ -78,7 +78,7 @@ const getHeaders = () => ({
     "Referer": "https://iw68lh.aliwork.com/"
 });
 
-// --- 3. 核心业务逻辑 (保持不变) ---
+// --- 3. 核心业务逻辑 (内聚化分组逻辑，一人一卡) ---
 const fetchPersonData = async (id, headers, todayDayId, regPerson, acToken) => {
     const startTime = Date.now();
     const targetUrl = 'https://dingtalk.avaryholding.com:8443/dingplus/visitorConnector/visitorStatus';
@@ -88,9 +88,9 @@ const fetchPersonData = async (id, headers, todayDayId, regPerson, acToken) => {
         name: '未知',
         idTail: idTail,
         success: false,
-        priorityList: [],
-        historyList: [],
-        rawData: [],
+        approverGroups: [], // 核心数据结构变为按接待人分组的数组
+        globalStatus: { hasActive: false, hasPending: false, hasFuture: false, hasRejected: false },
+        rawData: [], // 恢复全局 rawData
         cost: 0
     };
 
@@ -103,87 +103,112 @@ const fetchPersonData = async (id, headers, todayDayId, regPerson, acToken) => {
 
         if (resData.code === 200 && Array.isArray(resData.data)) {
             result.success = true;
-            result.rawData = resData.data;
+            result.rawData = resData.data; // 保持原始总数据
             
             if (resData.data.length > 0) {
-                const records = resData.data;
-                result.name = records[0].visitorName || '未知';
+                result.name = resData.data[0].visitorName || '未知';
 
-                const groups = {};
-                records.forEach(item => {
-                    // 【改动1】增加拒绝状态的判断
-                    let statusType = 'APPROVED';
-                    if (String(item.flowStatus) === '1') statusType = 'PENDING';
-                    if (String(item.flowStatus) === '3') statusType = 'REJECTED'; 
-                    
-                    const key = `${item.rPersonName || '未知'}_${statusType}`;
-                    if (!groups[key]) groups[key] = [];
-                    groups[key].push(item);
+                // 【改动】首先按接待人 (rPersonName) 将原始数据分堆
+                const rawByApprover = {};
+                resData.data.forEach(item => {
+                    const approver = item.rPersonName || '未知接待人';
+                    if (!rawByApprover[approver]) rawByApprover[approver] = [];
+                    rawByApprover[approver].push(item);
                 });
 
-                let mergedList = [];
-                Object.values(groups).forEach(groupList => {
-                    groupList.sort((a, b) => b.dateStart - a.dateStart);
-                    let currentRange = { ...groupList[0], rangeStart: groupList[0].dateStart, rangeEnd: groupList[0].dateEnd };
+                // 对每个接待人的数据进行独立的梳理和合并
+                for (const [approver, records] of Object.entries(rawByApprover)) {
+                    const groupObj = {
+                        approver: approver,
+                        priorityList: [],
+                        historyList: [],
+                        rawData: records
+                    };
 
-                    for (let i = 1; i < groupList.length; i++) {
-                        const nextItem = groupList[i];
-                        const diffDays = getBeijingDayId(currentRange.rangeStart) - getBeijingDayId(nextItem.dateEnd);
-                        const breakMerge = (getBeijingDayId(currentRange.rangeStart) >= todayDayId) && (getBeijingDayId(nextItem.dateEnd) < todayDayId);
-
-                        if (diffDays <= 1 && !breakMerge) {
-                            currentRange.rangeStart = nextItem.dateStart;
-                        } else {
-                            mergedList.push(currentRange);
-                            currentRange = { ...nextItem, rangeStart: nextItem.dateStart, rangeEnd: nextItem.dateEnd };
-                        }
-                    }
-                    mergedList.push(currentRange);
-                });
-
-                // 【改动2】排除 审核中(1) 和 拒绝(3)，其余才是真正的通过范围
-                const approvedRanges = mergedList.filter(m => String(m.flowStatus) !== '1' && String(m.flowStatus) !== '3');
-                mergedList = mergedList.filter(item => {
-                    if (String(item.flowStatus) !== '1' && String(item.flowStatus) !== '3') return true;
-                    const pStart = parseInt(item.rangeStart);
-                    const pEnd = parseInt(item.rangeEnd);
-                    return !approvedRanges.some(approved => {
-                        const aStart = parseInt(approved.rangeStart);
-                        const aEnd = parseInt(approved.rangeEnd);
-                        return (aStart <= pEnd && aEnd >= pStart);
+                    const groups = {};
+                    records.forEach(item => {
+                        // 【改动1】增加拒绝状态的判断
+                        let statusType = 'APPROVED';
+                        if (String(item.flowStatus) === '1') statusType = 'PENDING';
+                        if (String(item.flowStatus) === '3') statusType = 'REJECTED'; 
+                        
+                        const key = statusType;
+                        if (!groups[key]) groups[key] = [];
+                        groups[key].push(item);
                     });
-                });
 
-                mergedList.forEach(item => {
-                    const startId = getBeijingDayId(item.rangeStart);
-                    const endId = getBeijingDayId(item.rangeEnd);
-                    let type = 'ACTIVE';
+                    let mergedList = [];
+                    Object.values(groups).forEach(groupList => {
+                        groupList.sort((a, b) => b.dateStart - a.dateStart);
+                        let currentRange = { ...groupList[0], rangeStart: groupList[0].dateStart, rangeEnd: groupList[0].dateEnd };
 
-                    // 【改动3】优先判断是否为拒绝
-                    if (endId < todayDayId) type = 'HISTORY'; 
-                    else if (String(item.flowStatus) === '3') type = 'REJECTED'; 
-                    else if (String(item.flowStatus) === '1') type = 'PENDING';
-                    else if (startId > todayDayId) type = 'FUTURE';
-                    else type = 'ACTIVE';
+                        for (let i = 1; i < groupList.length; i++) {
+                            const nextItem = groupList[i];
+                            const diffDays = getBeijingDayId(currentRange.rangeStart) - getBeijingDayId(nextItem.dateEnd);
+                            const breakMerge = (getBeijingDayId(currentRange.rangeStart) >= todayDayId) && (getBeijingDayId(nextItem.dateEnd) < todayDayId);
+
+                            if (diffDays <= 1 && !breakMerge) {
+                                currentRange.rangeStart = nextItem.dateStart;
+                            } else {
+                                mergedList.push(currentRange);
+                                currentRange = { ...nextItem, rangeStart: nextItem.dateStart, rangeEnd: nextItem.dateEnd };
+                            }
+                        }
+                        mergedList.push(currentRange);
+                    });
+
+                    // 【改动2】排除 审核中(1) 和 拒绝(3)，其余才是真正的通过范围
+                    const approvedRanges = mergedList.filter(m => String(m.flowStatus) !== '1' && String(m.flowStatus) !== '3');
+                    mergedList = mergedList.filter(item => {
+                        if (String(item.flowStatus) !== '1' && String(item.flowStatus) !== '3') return true;
+                        const pStart = parseInt(item.rangeStart);
+                        const pEnd = parseInt(item.rangeEnd);
+                        return !approvedRanges.some(approved => {
+                            const aStart = parseInt(approved.rangeStart);
+                            const aEnd = parseInt(approved.rangeEnd);
+                            return (aStart <= pEnd && aEnd >= pStart);
+                        });
+                    });
+
+                    mergedList.forEach(item => {
+                        const startId = getBeijingDayId(item.rangeStart);
+                        const endId = getBeijingDayId(item.rangeEnd);
+                        let type = 'ACTIVE';
+
+                        // 【改动3】优先判断是否为拒绝
+                        if (endId < todayDayId) type = 'HISTORY'; 
+                        else if (String(item.flowStatus) === '3') type = 'REJECTED'; 
+                        else if (String(item.flowStatus) === '1') type = 'PENDING';
+                        else if (startId > todayDayId) type = 'FUTURE';
+                        else type = 'ACTIVE';
+                        
+                        const baseItem = { ...item, _type: type };
+
+                        if (type === 'FUTURE' || type === 'PENDING' || type === 'REJECTED') {
+                            groupObj.priorityList.push({ ...baseItem, _displayStart: item.rangeStart, _displayEnd: item.rangeEnd });
+                        } else if (type === 'ACTIVE') {
+                            groupObj.priorityList.push({ ...baseItem, _displayStart: (startId < todayDayId) ? getNowTs() : item.rangeStart, _displayEnd: item.rangeEnd });
+                        }
+
+                        if (type === 'HISTORY') {
+                            groupObj.historyList.push({ ...baseItem, _displayStart: item.rangeStart, _displayEnd: item.rangeEnd });
+                        } else if (type === 'ACTIVE' && startId < todayDayId) {
+                            const yesterdayTs = getNowTs() - 86400000;
+                            groupObj.historyList.push({ ...baseItem, _displayStart: item.rangeStart, _displayEnd: yesterdayTs });
+                        }
+                    });
+
+                    groupObj.priorityList.sort((a, b) => b.rangeStart - a.rangeStart);
+                    groupObj.historyList.sort((a, b) => b.rangeStart - a.rangeStart);
                     
-                    const baseItem = { ...item, _type: type };
+                    // 记录全局状态，用于外层卡片Header显示
+                    if (groupObj.priorityList.some(i => i._type === 'ACTIVE')) result.globalStatus.hasActive = true;
+                    if (groupObj.priorityList.some(i => i._type === 'PENDING')) result.globalStatus.hasPending = true;
+                    if (groupObj.priorityList.some(i => i._type === 'FUTURE')) result.globalStatus.hasFuture = true;
+                    if (groupObj.priorityList.some(i => i._type === 'REJECTED')) result.globalStatus.hasRejected = true;
 
-                    if (type === 'FUTURE' || type === 'PENDING' || type === 'REJECTED') {
-                        result.priorityList.push({ ...baseItem, _displayStart: item.rangeStart, _displayEnd: item.rangeEnd });
-                    } else if (type === 'ACTIVE') {
-                        result.priorityList.push({ ...baseItem, _displayStart: (startId < todayDayId) ? getNowTs() : item.rangeStart, _displayEnd: item.rangeEnd });
-                    }
-
-                    if (type === 'HISTORY') {
-                        result.historyList.push({ ...baseItem, _displayStart: item.rangeStart, _displayEnd: item.rangeEnd });
-                    } else if (type === 'ACTIVE' && startId < todayDayId) {
-                        const yesterdayTs = getNowTs() - 86400000;
-                        result.historyList.push({ ...baseItem, _displayStart: item.rangeStart, _displayEnd: yesterdayTs });
-                    }
-                });
-
-                result.priorityList.sort((a, b) => b.rangeStart - a.rangeStart);
-                result.historyList.sort((a, b) => b.rangeStart - a.rangeStart);
+                    result.approverGroups.push(groupObj);
+                }
             }
         }
     } catch (err) {
@@ -195,75 +220,86 @@ const fetchPersonData = async (id, headers, todayDayId, regPerson, acToken) => {
 // --- 4. HTML 生成逻辑 ---
 const generateCardHtml = (person) => {
     const searchKey = `${person.name} ${person.idTail}`.toUpperCase();
-    const rawJsonStr = encodeURIComponent(JSON.stringify(person.rawData, null, 2));
     const updateTimeStr = getBeijingTimeStr();
+    const rawJsonStr = encodeURIComponent(JSON.stringify(person.rawData, null, 2)); // 恢复总数据 JSON
 
     let statusBadge = '<span class="status-badge badge-gray">无记录</span>';
-    const hasActive = person.priorityList.some(i => i._type === 'ACTIVE');
-    const hasPending = person.priorityList.some(i => i._type === 'PENDING');
-    const hasFuture = person.priorityList.some(i => i._type === 'FUTURE');
-    const hasRejected = person.priorityList.some(i => i._type === 'REJECTED'); // 【改动4】
-
-    if (hasActive) statusBadge = '<span class="status-badge badge-green">生效中</span>';
-    else if (hasRejected) statusBadge = '<span class="status-badge badge-red">已拒绝</span>'; // 展示拒绝角标
-    else if (hasPending) statusBadge = '<span class="status-badge badge-yellow">审核中</span>';
-    else if (hasFuture) statusBadge = '<span class="status-badge badge-blue">已预约</span>';
+    if (person.globalStatus.hasActive) statusBadge = '<span class="status-badge badge-green">生效中</span>';
+    else if (person.globalStatus.hasRejected) statusBadge = '<span class="status-badge badge-red">已拒绝</span>';
+    else if (person.globalStatus.hasPending) statusBadge = '<span class="status-badge badge-yellow">审核中</span>';
+    else if (person.globalStatus.hasFuture) statusBadge = '<span class="status-badge badge-blue">已预约</span>';
     else if (!person.success) statusBadge = '<span class="status-badge badge-red">失败</span>';
 
-    const priorityHtml = person.priorityList.map(item => {
-        const startStr = getFormattedDate(item._displayStart);
-        const endStr = getFormattedDate(item._displayEnd);
-        let tagClass = 'tag-gray', iconClass = 'dot-gray';
-        let tagName = '记录';
-        
-        if (item._type === 'ACTIVE') { tagClass = 'tag-green'; iconClass = 'dot-green'; tagName = '今日'; }
-        if (item._type === 'FUTURE') { tagClass = 'tag-blue'; iconClass = 'dot-blue'; tagName = '预约'; }
-        if (item._type === 'PENDING') { tagClass = 'tag-yellow'; iconClass = 'dot-yellow'; tagName = '审核'; }
-        if (item._type === 'REJECTED') { tagClass = 'tag-red'; iconClass = 'dot-red'; tagName = '拒绝'; } // 红色拒绝标签
-        
-        return `
-            <div class="row-item main-row">
-                <div class="row-left">
-                    <div class="dot ${iconClass}"></div>
-                    <div class="time-range">${startStr} - ${endStr}</div>
-                    <div class="mini-tag ${tagClass}">${tagName}</div>
-                </div>
-                <div class="row-right">
-                    <div class="approver">${item.rPersonName}</div>
-                </div>
-            </div>`;
-    }).join('');
-
-    const historyHtml = person.historyList.length > 0 ? `
-        <div class="history-box">
-            <div class="history-trigger" onclick="toggleHistory(this)">
-                <span>🕒 历史记录 (${person.historyList.length})</span>
-                <span class="arrow">▼</span>
-            </div>
-            <div class="history-content">
-                ${person.historyList.map(item => {
-                    const startStr = getFormattedDate(item._displayStart);
-                    const endStr = getFormattedDate(item._displayEnd);
-                    const isPending = String(item.flowStatus) === '1';
-                    const isRejected = String(item.flowStatus) === '3';
-                    
-                    let historyDot = 'dot-gray-light';
-                    let historyTag = '';
-                    if (isPending) { historyDot = 'dot-yellow'; historyTag = '<span style="color:#f59e0b;font-size:10px;margin-left:4px">[审]</span>'; }
-                    if (isRejected) { historyDot = 'dot-red'; historyTag = '<span style="color:#ef4444;font-size:10px;margin-left:4px">[拒]</span>'; }
-
-                    return `
-                    <div class="row-item history-row">
+    // 组装内部数据块 HTML
+    let bodyHtml = '';
+    if (person.approverGroups.length === 0) {
+        bodyHtml = '<div class="empty-tip">暂无任何记录</div>';
+    } else {
+        bodyHtml = person.approverGroups.map(group => {
+            const priorityHtml = group.priorityList.map(item => {
+                const startStr = getFormattedDate(item._displayStart);
+                const endStr = getFormattedDate(item._displayEnd);
+                let tagClass = 'tag-gray', iconClass = 'dot-gray';
+                let tagName = '记录';
+                
+                if (item._type === 'ACTIVE') { tagClass = 'tag-green'; iconClass = 'dot-green'; tagName = '今日'; }
+                if (item._type === 'FUTURE') { tagClass = 'tag-blue'; iconClass = 'dot-blue'; tagName = '预约'; }
+                if (item._type === 'PENDING') { tagClass = 'tag-yellow'; iconClass = 'dot-yellow'; tagName = '审核'; }
+                if (item._type === 'REJECTED') { tagClass = 'tag-red'; iconClass = 'dot-red'; tagName = '拒绝'; } 
+                
+                return `
+                    <div class="row-item main-row">
                         <div class="row-left">
-                            <div class="dot ${historyDot}"></div>
+                            <div class="dot ${iconClass}"></div>
                             <div class="time-range">${startStr} - ${endStr}</div>
-                            ${historyTag}
+                            <div class="mini-tag ${tagClass}">${tagName}</div>
                         </div>
                     </div>`;
-                }).join('')}
-            </div>
-        </div>
-    ` : '';
+            }).join('');
+
+            const historyHtml = group.historyList.length > 0 ? `
+                <div class="history-box">
+                    <div class="history-trigger" onclick="toggleHistory(this)">
+                        <span>🕒 历史记录 (${group.historyList.length})</span>
+                        <span class="arrow">▼</span>
+                    </div>
+                    <div class="history-content">
+                        ${group.historyList.map(item => {
+                            const startStr = getFormattedDate(item._displayStart);
+                            const endStr = getFormattedDate(item._displayEnd);
+                            const isPending = String(item.flowStatus) === '1';
+                            const isRejected = String(item.flowStatus) === '3';
+                            
+                            let historyDot = 'dot-gray-light';
+                            let historyTag = '';
+                            if (isPending) { historyDot = 'dot-yellow'; historyTag = '<span style="color:#f59e0b;font-size:10px;margin-left:4px">[审]</span>'; }
+                            if (isRejected) { historyDot = 'dot-red'; historyTag = '<span style="color:#ef4444;font-size:10px;margin-left:4px">[拒]</span>'; }
+
+                            return `
+                            <div class="row-item history-row">
+                                <div class="row-left">
+                                    <div class="dot ${historyDot}"></div>
+                                    <div class="time-range">${startStr} - ${endStr}</div>
+                                    ${historyTag}
+                                </div>
+                            </div>`;
+                        }).join('')}
+                    </div>
+                </div>
+            ` : '';
+
+            return `
+                <div class="approver-block">
+                    <div class="approver-header">
+                        <span class="approver-name">接待人: ${group.approver}</span>
+                    </div>
+                    ${priorityHtml || '<div class="empty-tip" style="padding:4px 0;">无活跃记录</div>'}
+                    ${historyHtml}
+                </div>
+            `;
+        }).join('');
+    }
+
     return `
         <div class="app-card fade-in" data-key="${searchKey}">
             <div class="card-header">
@@ -278,8 +314,7 @@ const generateCardHtml = (person) => {
             </div>
             
             <div class="card-body">
-                ${priorityHtml || '<div class="empty-tip">暂无活跃记录</div>'}
-                ${historyHtml}
+                ${bodyHtml}
             </div>
 
             <div class="card-footer">
@@ -311,7 +346,7 @@ router.get('/visitor-card-data', async (req, res) => {
         const todayDayId = getBeijingDayId(new Date().getTime());
         const person = await fetchPersonData(id, headers, todayDayId, config.regPerson, config.acToken);
         const html = generateCardHtml(person);
-        res.json({ html, hasActive: person.priorityList.length > 0 });
+        res.json({ html, hasActive: person.globalStatus.hasActive });
     } catch (e) {
         res.json({ html: '<div class="app-card error">数据获取异常</div>', hasActive: false });
     }
@@ -329,19 +364,24 @@ router.get('/visitor-status-Wechat', async (req, res) => {
         const decodedIds = config.visitorIdNos.map(encoded => Buffer.from(encoded, 'base64').toString('utf-8'));
         const promises = decodedIds.map(id => fetchPersonData(id, headers, todayDayId, config.regPerson, config.acToken));
         const results = await Promise.all(promises);
-        results.sort((a, b) => (b.priorityList.length > 0 ? 1 : 0) - (a.priorityList.length > 0 ? 1 : 0));
+        
+        results.sort((a, b) => (b.globalStatus.hasActive ? 1 : 0) - (a.globalStatus.hasActive ? 1 : 0));
         
         results.forEach(p => {
             if (!p.success) { outputLines.push(`\n❌ ${p.idTail} 失败`); return; }
-            if (p.priorityList.length === 0) outputLines.push(`\n👤 ${p.name}\n⚪ 无记录`);
+            if (p.approverGroups.length === 0) outputLines.push(`\n👤 ${p.name}\n⚪ 无记录`);
             else {
                 outputLines.push(`\n👤 ${p.name}`);
-                p.priorityList.forEach(i => {
-                    let icon = '🔵';
-                    if (i._type === 'PENDING') icon = '🟡';
-                    else if (i._type === 'ACTIVE') icon = '🟢';
-                    else if (i._type === 'REJECTED') icon = '🔴';
-                    outputLines.push(`${icon} ${getFormattedDate(i._displayStart)}-${getFormattedDate(i._displayEnd)}`);
+                p.approverGroups.forEach(g => {
+                    if (g.priorityList.length > 0) {
+                        g.priorityList.forEach(i => {
+                            let icon = '🔵';
+                            if (i._type === 'PENDING') icon = '🟡';
+                            else if (i._type === 'ACTIVE') icon = '🟢';
+                            else if (i._type === 'REJECTED') icon = '🔴';
+                            outputLines.push(`${icon} [${g.approver}] ${getFormattedDate(i._displayStart)}-${getFormattedDate(i._displayEnd)}`);
+                        });
+                    }
                 });
             }
         });
@@ -456,11 +496,25 @@ router.get('/visitor-status', async (req, res) => {
         .badge-gray { background: #f1f5f9; color: #64748b; }
         .badge-red { background: #fee2e2; color: #991b1b; }
 
+        /* --- 新增：接待人分块设计 --- */
         .card-body { padding: 12px 16px; }
-        .row-item { display: flex; justify-content: space-between; align-items: center; padding: 6px 0; }
+        .approver-block {
+            background: #f8fafc;
+            border-radius: 10px;
+            padding: 10px;
+            margin-bottom: 10px;
+            border: 1px solid #e2e8f0;
+        }
+        .approver-block:last-child { margin-bottom: 0; }
+        .approver-header {
+            display: flex; justify-content: space-between; align-items: center;
+            margin-bottom: 8px; padding-bottom: 6px; border-bottom: 1px dashed #cbd5e1;
+        }
+        .approver-name { font-size: 13px; font-weight: 600; color: #334155; }
+
+        .row-item { display: flex; justify-content: space-between; align-items: center; padding: 4px 0; }
         .row-left { display: flex; align-items: center; gap: 8px; }
         
-        /* 圆点样式大全（包含红色） */
         .dot { width: 8px; height: 8px; border-radius: 50%; }
         .dot-green { background: #22c55e; box-shadow: 0 0 0 2px #dcfce7; }
         .dot-blue { background: #3b82f6; box-shadow: 0 0 0 2px #dbeafe; }
@@ -471,7 +525,6 @@ router.get('/visitor-status', async (req, res) => {
         
         .time-range { font-size: 14px; font-weight: 500; color: #334155; font-family: monospace; letter-spacing: -0.5px; }
         
-        /* 标签样式大全（包含红色） */
         .mini-tag { font-size: 10px; padding: 1px 5px; border-radius: 4px; transform: scale(0.9); }
         .tag-green { background: #22c55e; color: white; }
         .tag-blue { background: #3b82f6; color: white; }
@@ -479,14 +532,13 @@ router.get('/visitor-status', async (req, res) => {
         .tag-red { background: #ef4444; color: white; }
         .tag-gray { background: #f1f5f9; color: #64748b; }
         
-        .approver { font-size: 12px; color: #94a3b8; }
-        .empty-tip { text-align: center; color: #cbd5e1; font-size: 12px; padding: 8px 0; }
+        .empty-tip { text-align: center; color: #94a3b8; font-size: 12px; padding: 8px 0; }
 
-        .history-box { margin-top: 10px; border-top: 1px dashed #e2e8f0; padding-top: 8px; }
+        .history-box { margin-top: 8px; border-top: 1px dashed #e2e8f0; padding-top: 6px; }
         .history-trigger { font-size: 11px; color: #94a3b8; display: flex; justify-content: space-between; cursor: pointer; padding: 4px 0; }
         .history-content { display: none; margin-top: 4px; }
         .history-content.show { display: block; }
-        .history-row { opacity: 0.6; padding: 4px 0; }
+        .history-row { opacity: 0.6; padding: 2px 0; }
         .arrow { transition: transform 0.2s; }
         .history-trigger.active .arrow { transform: rotate(180deg); }
 
@@ -496,6 +548,8 @@ router.get('/visitor-status', async (req, res) => {
         }
         .footer-meta { font-size: 11px; color: #94a3b8; font-family: monospace; display: flex; align-items: center; }
         .sep { margin: 0 6px; color: #e2e8f0; }
+        
+        /* 恢复原版按钮样式 */
         .footer-btn { 
             font-size: 11px; font-weight: 600; color: var(--primary); 
             background: rgba(37, 99, 235, 0.08); padding: 4px 10px; border-radius: 6px; 
@@ -698,17 +752,26 @@ router.get('/visitor-status', async (req, res) => {
 
                     const wrapper = document.getElementById('wrapper-' + index);
                     if(wrapper && d.html) {
-                        const wasOpen = wrapper.querySelector('.history-content.show') ? true : false;
-                        wrapper.outerHTML = d.html.replace('app-card', 'app-card fade-in').replace('id="wrapper-'+index+'"', 'id="wrapper-'+index+'"');
-                        const newWrapper = document.querySelector('[data-key="'+ d.html.match(/data-key="([^"]+)"/)[1] +'"]');
+                        // 提取所有展开了的 history block
+                        const openHistoryBlocks = Array.from(wrapper.querySelectorAll('.approver-header')).map((header, i) => {
+                            const content = header.parentElement.querySelector('.history-content');
+                            return (content && content.classList.contains('show')) ? i : -1;
+                        }).filter(i => i !== -1);
+
+                        wrapper.outerHTML = d.html.replace('app-card', 'app-card fade-in').replace('data-key=', 'id="wrapper-'+index+'" data-key=');
+                        const newWrapper = document.getElementById('wrapper-' + index);
+                        
                         if(newWrapper) {
-                            newWrapper.id = 'wrapper-' + index;
                             newWrapper.setAttribute('data-has-active', d.hasActive ? '1' : '0');
-                            if(wasOpen) {
-                                const t = newWrapper.querySelector('.history-trigger');
-                                const c = newWrapper.querySelector('.history-content');
-                                if(t && c) { t.classList.add('active'); c.classList.add('show'); }
-                            }
+                            // 恢复展开状态
+                            const blocks = newWrapper.querySelectorAll('.approver-block');
+                            openHistoryBlocks.forEach(idx => {
+                                if (blocks[idx]) {
+                                    const t = blocks[idx].querySelector('.history-trigger');
+                                    const c = blocks[idx].querySelector('.history-content');
+                                    if(t && c) { t.classList.add('active'); c.classList.add('show'); }
+                                }
+                            });
                         }
                     }
                 })
