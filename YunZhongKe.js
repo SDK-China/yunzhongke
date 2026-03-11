@@ -19,7 +19,8 @@ const mm_values = [
 ];
 
 // 路由：云中客转链功能
-router.post('/convert', async (req, res) => {
+router.post('/', async (req, res) => {
+    // 接口入参保持完全不变，不影响前端
     const { temp_url, apitoken } = req.body;
 
     if (!temp_url || !apitoken) {
@@ -29,8 +30,11 @@ router.post('/convert', async (req, res) => {
     const random_mm_value = mm_values[Math.floor(Math.random() * mm_values.length)];
 
     const formData = new FormData();
+    // 🌟 新增字段：抓包发现新增了 siteinfoId
+    formData.append('siteinfoId', '');
     formData.append('type', '2');
-    formData.append('apitoken', 'ku_apitoken_39340_aef39472ad583b2fb9b8a37a53a3d592');
+    // 🌟 修复旧Bug：现在真正使用了前端传来的 apitoken，而不是写死的旧值
+    formData.append('apitoken', apitoken);
     formData.append('tpwd', temp_url);
     formData.append('no_coupon', '0');
     formData.append('coupon_force', 'Y');
@@ -40,21 +44,24 @@ router.post('/convert', async (req, res) => {
     formData.append('pid', random_mm_value);
     formData.append('rid', '');
 
+    // 🌟 更新了请求头，完美适配新版抓包环境
     const headers = {
         ...formData.getHeaders(),
         "Host": "cms.iyunzk.com",
-        "Sec-Ch-Ua": "\"Not A(Brand\";v=\"99\", \"Android WebView\";v=\"121\", \"Chromium\";v=\"121\"",
-        "Sec-Ch-Ua-Platform": "\"Android\"",
-        "Sec-Ch-Ua-Mobile": "?1",
-        "User-Agent": "Mozilla/5.0 (Linux; Android 14; 23127PN0CC Build/UKQ1.230804.001) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.6167.165 Mobile Safari/537.36",
-        "Origin": "https://ku.iyunzk.com",
-        "X-Requested-With": "com.mmbox.xbrowser",
-        "Sec-Fetch-Site": "same-site",
-        "Sec-Fetch-Mode": "cors",
-        "Sec-Fetch-Dest": "empty",
-        "Referer": "https://ku.iyunzk.com/",
-        "Accept-Encoding": "gzip, deflate, br, zstd",
-        "Accept-Language": "zh-CN,zh;q=0.9,en-US;q=0.8,en;q=0.7"
+        "sec-ch-ua-platform": "\"Android\"",
+        "user-agent": "Mozilla/5.0 (Linux; Android 16; PJZ110 Build/BP2A.250605.015) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.7444.102 Mobile Safari/537.36",
+        "sec-ch-ua": "\"Chromium\";v=\"142\", \"Android WebView\";v=\"142\", \"Not_A Brand\";v=\"99\"",
+        "sec-ch-ua-mobile": "?1",
+        "accept": "*/*",
+        "origin": "https://ku.iyunzk.com",
+        "x-requested-with": "mark.via", // 🌟 风控核心：标识已变更为 mark.via
+        "sec-fetch-site": "same-site",
+        "sec-fetch-mode": "cors",
+        "sec-fetch-dest": "empty",
+        "referer": "https://ku.iyunzk.com/",
+        "accept-encoding": "gzip, deflate, br, zstd",
+        "accept-language": "zh-CN,zh;q=0.9,en-US;q=0.8,en;q=0.7",
+        "priority": "u=1, i"
     };
 
     try {
@@ -64,10 +71,11 @@ router.post('/convert', async (req, res) => {
             const tk_short_url = response.data.data.tk_short_url;
             res.json({ tk_short_url });
         } else {
-            res.status(500).json({ message: 'Error: Invalid response from server' });
+            // 返回具体的错误细节方便调试
+            res.status(500).json({ message: 'Error: Invalid response from server', details: response.data });
         }
     } catch (error) {
-        console.error('请求错误:', error);
+        console.error('请求错误:', error.message);
         res.status(500).json({ message: 'Internal Server Error' });
     }
 });
