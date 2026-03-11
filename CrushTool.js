@@ -9,10 +9,10 @@ require('dotenv').config({ path: '.env.development.local' });
 
 router.use(bodyParser.json());
 
-// 🍓 2. 魔法初始化：手动指定 Vercel 提供的环境变量名，确保万无一失！
+// 🍓 2. 魔法初始化：强制使用 UPSTASH_REDIS_KV 前缀的最新环境变量！
 const redis = new Redis({
-  url: process.env.KV_REST_API_URL || process.env.UPSTASH_REDIS_KV_REST_API_URL,
-  token: process.env.KV_REST_API_TOKEN || process.env.UPSTASH_REDIS_KV_REST_API_TOKEN,
+  url: process.env.UPSTASH_REDIS_KV_REST_API_URL,
+  token: process.env.UPSTASH_REDIS_KV_REST_API_TOKEN,
 });
 
 // 常量
