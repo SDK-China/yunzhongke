@@ -1,17 +1,21 @@
 const express = require('express');
 const router = express.Router();
 const bodyParser = require('body-parser');
-
-// 🍓 引入刚才安装的 Upstash Redis 钥匙！
 const { Redis } = require('@upstash/redis');
 
-// 使用 body-parser 中间件解析 JSON 请求体
+// 🍓 1. 引入 dotenv，让它读取 Vercel 拉取下来的本地环境变量文件
+// 如果你拉取的文件名是 .env.local，请将下面改成 '.env.local'
+require('dotenv').config({ path: '.env.development.local' }); 
+
 router.use(bodyParser.json());
 
-// 🍓 魔法初始化！它会自动去读 Vercel 帮你配置好的环境变量，完全不用你操心密码！
-const redis = Redis.fromEnv();
+// 🍓 2. 魔法初始化：手动指定 Vercel 提供的环境变量名，确保万无一失！
+const redis = new Redis({
+  url: process.env.KV_REST_API_URL || process.env.UPSTASH_REDIS_KV_REST_API_URL,
+  token: process.env.KV_REST_API_TOKEN || process.env.UPSTASH_REDIS_KV_REST_API_TOKEN,
+});
 
-// 常量（这个不需要存数据库，直接写死就行）
+// 常量
 const k = 'SSFAdTQ65NyoVS';
 
 // ==========================================
@@ -20,10 +24,9 @@ const k = 'SSFAdTQ65NyoVS';
 router.post('/', async (req, res) => {
     const { newB, newTecache, token } = req.body;
 
-    // 检查请求体参数 (这里就不校验 token 了，因为你换 Redis 也不需要 GitHub Token 了，但我先留着防止你前端报错)
     if (newB !== undefined && newTecache !== undefined && token) {
         try {
-            // 👠 写入数据：就是这么简单粗暴！瞬间落盘永久保存！
+            // 👠 写入数据
             await redis.set('app_b_value', newB);
             await redis.set('app_tecache_value', newTecache);
             
@@ -41,14 +44,13 @@ router.post('/', async (req, res) => {
 // 🚀 处理 GET 请求：用于返回 b、tecache 和 k 的值
 // ==========================================
 router.get('/', async (req, res) => {
-    const token = req.query.token; // 虽然没用了，但为了兼容你前端的逻辑先留着
+    const token = req.query.token; 
     if (!token) {
         return res.status(400).json({ message: 'Token is required in the query string.' });
     }
     
     try {
-        // 👠 读取数据：0.01秒的极致体验！
-        // 注意：如果 Redis 里还没存过，redis.get 会返回 null，所以我们要给个默认值 1
+        // 👠 读取数据
         let b = await redis.get('app_b_value');
         if (b === null) b = 1; 
 
@@ -58,7 +60,6 @@ router.get('/', async (req, res) => {
         res.json({ b, tecache, k });
     } catch (error) {
         console.error('Redis 读取失败:', error);
-        // 如果读取报错了（比如网络问题），给个默认值保底，防止前端崩溃
         res.json({ b: 1, tecache: 1, k }); 
     }
 });
