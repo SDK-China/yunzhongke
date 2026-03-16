@@ -297,7 +297,7 @@ const LOC_CONFIGS = {
                 // "NDMyOTAxMTk4MjExMDUyMDE2",
                 // "NDEwOTIzMTk4ODA3MTkxMDFY",
                 // "MDMwNzE3Njg",
-                "MTMwNDI1MTk4OTA4MjkwMzE0", //姜
+                // "MTMwNDI1MTk4OTA4MjkwMzE0", //姜
                 "MTAyNDE5NDY=",
                 "MDczOTM0Njc=",
             ],
@@ -310,38 +310,38 @@ const LOC_CONFIGS = {
         // 【新增功能】：支持在这里配置专属的接待人信息
         customReceptionists: {
             // 康伟强
-            "MTMwMzIzMTk4NjAyMjgwODFY": {
-                receptionistId: "A2449801",
-                receptionistName: "龚旭明",
-                receptionDepartment: "QA01設備五課",
-                receptionistPhone: "17703340319",
-                visitReason: "设备维护与保养",
-                keepNormal: true,             // 🌟 核心：设为 true，系统就会为他发一份指定的包，再跟大部队发一份原始包！
-                renewThreshold: 2,            // 独立：剩2天时触发专属包
-                renewDays: 7                  // 独立：一次续7天
-            },
+            // "MTMwMzIzMTk4NjAyMjgwODFY": {
+            //     receptionistId: "A2449801",
+            //     receptionistName: "龚旭明",
+            //     receptionDepartment: "QA01設備五課",
+            //     receptionistPhone: "17703340319",
+            //     visitReason: "设备维护与保养",
+            //     keepNormal: true,             // 🌟 核心：设为 true，系统就会为他发一份指定的包，再跟大部队发一份原始包！
+            //     renewThreshold: 2,            // 独立：剩2天时触发专属包
+            //     renewDays: 2                  // 独立：一次续2天
+            // },
             // 张强
-            "MTMwMzIyMTk4ODA2MjQyMDE4": {
-                receptionistId: "A2449801",
-                receptionistName: "龚旭明",
-                receptionDepartment: "QA01設備五課",
-                receptionistPhone: "17703340319",
-                visitReason: "设备维护与保养",
-                keepNormal: true,           // 🌟 核心：设为 true，同样双开！
-                renewThreshold: 2,            // 独立：剩2天时触发专属包
-                renewDays: 7                  // 独立：一次续7天
-            },
+            // "MTMwMzIyMTk4ODA2MjQyMDE4": {
+            //     receptionistId: "A2449801",
+            //     receptionistName: "龚旭明",
+            //     receptionDepartment: "QA01設備五課",
+            //     receptionistPhone: "17703340319",
+            //     visitReason: "设备维护与保养",
+            //     keepNormal: true,           // 🌟 核心：设为 true，同样双开！
+            //     renewThreshold: 2,            // 独立：剩2天时触发专属包
+            //     renewDays: 2                  // 独立：一次续2天
+            // },
              // 姜建龙
-            "MTMwNDI1MTk4OTA4MjkwMzE0": {
-                receptionistId: "A2449801",
-                receptionistName: "龚旭明",
-                receptionDepartment: "QA01設備五課",
-                receptionistPhone: "17703340319",
-                visitReason: "设备维护与保养",
-                keepNormal: false,           // 🌟 核心：设为 true，同样双开！
-                renewThreshold: 2,            // 独立：剩2天时触发专属包
-                renewDays: 7                  // 独立：一次续7天
-            }
+            // "MTMwNDI1MTk4OTA4MjkwMzE0": {
+            //     receptionistId: "A2449801",
+            //     receptionistName: "龚旭明",
+            //     receptionDepartment: "QA01設備五課",
+            //     receptionistPhone: "17703340319",
+            //     visitReason: "设备维护与保养",
+            //     keepNormal: false,           // 🌟 核心：设为 true，同样双开！
+            //     renewThreshold: 2,            // 独立：剩2天时触发专属包
+            //     renewDays: 2                  // 独立：一次续2天
+            // }
             
         },
 
@@ -564,17 +564,25 @@ const getAllStatuses = async (queryConfig) => {
 };
 
 // 🌟 严谨铁壁熔断机制
+// 🌟 魔鬼级“一触即死”铁壁熔断机制 (宁可错杀，绝不放过)
 const checkSafeToRun = (stats) => {
-    // 1. 网络/Cookie/Token错误：只要有1个人报错，立刻阻断
-    if (stats.error > 0) return { safe: false, reason: `请求报错或Cookie失效 (失败: ${stats.error}人)` };
-    // 2. 无配置人员
-    if (stats.total === 0) return { safe: false, reason: "配置名单为空，无需运行" };
-    // 3. 终极锁死：全员无记录 (可能被系统拉黑、Token被封)
-    if (stats.total > 0 && stats.hasData === 0) return { safe: false, reason: "极其严重：全员均无记录！可能遭遇接口结构变更或彻底封禁，触发100%锁死熔断！" };
-    // 4. 防雪崩：查询人数较多时，如果超过一半突然查不到记录，高度疑似接口数据被截断
-    if (stats.total >= 4 && (stats.noData / stats.total) >= 0.5) return { safe: false, reason: `高危异常：超过半数人员 (${stats.noData}/${stats.total}) 突然查不到记录，触发防雪崩熔断！` };
+    // 1. 只要有 1 个人查询失败（网络崩溃、Token失效等），全员连坐锁死！(原有机制保留)
+    if (stats.error > 0) {
+        return { safe: false, reason: `【连坐熔断】请求报错或Cookie失效 (共失败 ${stats.error} 人)` };
+    }
     
-    return { safe: true, reason: "状态正常" };
+    // 2. 无配置人员，直接跳过
+    if (stats.total === 0) {
+        return { safe: false, reason: "配置名单为空，无需运行" };
+    }
+    
+    // 3. 🔪 新增的魔鬼限制：只要有 1 个人查不到记录（没有时间），立刻全部锁死！
+    if (stats.noData > 0) {
+        return { safe: false, reason: `【连坐熔断】发现 ${stats.noData} 人没有任何历史入厂记录/时间！已触发一票否决，全厂区停止自动续期！` };
+    }
+    
+    // 如果能活到这里，说明所有人既没有报错，又都有历史记录，安全放行！
+    return { safe: true, reason: "状态完美正常" };
 };
 
 // 👇 传入了 locConfig 以提取它对应的专属 Cookie
