@@ -286,7 +286,8 @@ const LOC_CONFIGS = {
         // 👇 A08 账号身份凭证 (原封不动)
         csrf_token: "e7daa879-7b83-40f7-8335-1a262747f2c9",
         cookie: "tianshu_corp_user=ding2b4c83bec54a29c6f2c783f7214b6d69_FREEUSER; tianshu_csrf_token=e7daa879-7b83-40f7-8335-1a262747f2c9; c_csrf=e7daa879-7b83-40f7-8335-1a262747f2c9; cookie_visitor_id=zfGITZnn; cna=QhOGIdjbQ3ABASQOBEFsQ0YG; xlly_s=1; tianshu_app_type=APP_GRVPTEOQ6D4B7FLZFYNJ; JSESSIONID=BF2C6304A367F22183E99C3E5B5181C4; tfstk=gOZxf6D0ah_YmbR2H5blSie9vWyOMa2qeSyBjfcD57F8iJ8615qgycFzMIcmSS4-67N-GjmfQ1Fun54imlewXAw__tlG3a243co1t6qOx-yqEsPFbo36NgwrKxT1rqiRmR_At6jhqZ9SXsC3nq6jmbMZNxMXlE6-VAH6fcgjG36-CAAX5jN_FThrQAOXfhG5VAkB5ci_186-QbGsfqN_FTHZNf91kGhG5b-Tu6E2PQTVe3t72x3x1HG9XDqyxFGLhbtMyWMxkt2jwht_4PdnXxc1VBhaV5nIku6MWXnrwAHYDOYE_yDTCvnBhny8G7ZKRufyjfsyqkqd5-AnU0LfeTLw7qMrh42tpxCQDiM-tTfH7FuY8YhheTLw7qMreXXrUF8Zky5..; isg=BJCQbJGPzSIDPJDoHxPbfgneatziWXSjkwUE44pgG-BuxflvPmhTMY7zmMuAWSx7",
-
+        // 🔪 新增：明确 A08 厂区大部队的常规接待人 (用于精准过滤普通组记录)
+        normalReceptionistId: "61990794", // 王晗的工号
         query: {
             visitorIdNos: [
                 "MTMwMzIzMTk4NjAyMjgwODFY",
@@ -392,6 +393,9 @@ const LOC_CONFIGS = {
         // 👇【修复点】独立账号配置，解决 API 报错
         csrf_token: "5581e41f-8c38-48d4-bea4-20d1f96af4db",
         cookie: "tianshu_corp_user=ding2b4c83bec54a29c6f2c783f7214b6d69_FREEUSER; tianshu_csrf_token=5581e41f-8c38-48d4-bea4-20d1f96af4db; c_csrf=5581e41f-8c38-48d4-bea4-20d1f96af4db; cookie_visitor_id=o5TLBWJ6; cna=KDksIgUMMBsCARuACb+fM//A; xlly_s=1; tianshu_app_type=APP_GRVPTEOQ6D4B7FLZFYNJ; JSESSIONID=5BF894CE5AFD8107A9C6124F8753BEB5; tfstk=gTlIf86UsykasoYp2M8NcrQKR6PevFR2Vaa-o4CFyWFpNgUbJ7orypYWNqngzWuJx0G7XcqKUDRHw8ijx0wk-ur8V0u-LFR2g203Z7nW0IRVHeDw8DaRwzLR6yzk7ypCdudzZ7K2bO58KINoAceYPk395zzz2un8eVCT-lU827n8XRUYuMF8w0L_6zzlJwUdwPBT8lE8w7n-WFauXyF8w0395zv_rtaGPouBPqRW4aBBtvE1w_h_5nNKRi1Lo34UdogUuOXi1i2QD2E1aHjKKrrQkjKNKrwIJjNE_HpZRlHKwWlpb_ijfxFswR7JVyHKlj2mwhsr4srb5yX5EkC75o865TXlaj5nMewO5_eLSPzw5F6rtJUg5o865TXupP4i3FT1UXf..; isg=BOzsBAulqRjsL70mvTB0y-TYtsgepZBPSDBScUYpsid4UGNbQrR-3bOndF_PIcin",
+
+        // 🔪 新增：明确Q01 厂区大部队的常规接待人 (用于精准过滤普通组记录)
+        // normalReceptionistId: "61990794", // 王晗的工号
 
         // Q01 全局通用接待人配置 (未指定专属接待人的人员将默认使用这个)
         // receptionistId: "82100751",    // 工号
@@ -652,9 +656,17 @@ const calculatePlan = (idStatusMap, locConfig) => {
             return max;
         };
 
-        // 处理普通轨迹 (排除掉挂在专属工号下的记录)
+        // 🔪 修改后的处理普通轨迹：严格只认大部队统帅的记录！
         if (trackNormal) {
-            const maxEndTs = getMaxEnd(r => !customConf || r.rPerson !== customConf.receptionistId);
+            // 如果厂区配置了 normalReceptionistId，就只筛选挂在这个工号下的记录！
+            // 如果没有配置（或者记录里的 rPerson 刚好就是这个统帅），才算有效记录。
+            const maxEndTs = getMaxEnd(r => {
+                if (locConfig.normalReceptionistId) {
+                    return r.rPerson === locConfig.normalReceptionistId;
+                }
+                // 兜底逻辑：如果没配置统帅，为了防止全部变 0，退回到原先的排除法
+                return !customConf || r.rPerson !== customConf.receptionistId; 
+            });
             virtualUsers.push({ idBase64, type: 'normal', maxEndTs, customConf: null, name });
         }
 
