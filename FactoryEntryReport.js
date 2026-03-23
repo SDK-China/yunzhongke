@@ -432,10 +432,10 @@ const LOC_CONFIGS = {
 
         query: {
             visitorIdNos: [
-                "MTMwMzIzMTk5MjEyMTY2NDM0",  //张江路
-                "MTMwMzIzMTk5ODA2MTQxMDU4", //刘宏飞
+                // "MTMwMzIzMTk5MjEyMTY2NDM0",  //张江路
+                // "MTMwMzIzMTk5ODA2MTQxMDU4", //刘宏飞
                 // "MTMwMzIzMTk5MDAzMDc2NDE2", //张江宽
-                "MTMwMzIzMTk4OTA5MDQ2NDEx", //付海超
+                // "MTMwMzIzMTk4OTA5MDQ2NDEx", //付海超
                 "MDU4NDMzNDg=", //张道玄
                 "MTIwNDUxOTI=", //张乃文
                 "SzEzOTMxMihBKQ==", //陈毅鸿
@@ -831,7 +831,8 @@ const calculatePlan = (idStatusMap, locConfig) => {
 // ==========================================
 
 router.post('/generate-payload', express.json(), (req, res) => {
-    const { loc, ids, ts } = req.body;
+    // 1. 接收前端传来的范围时间戳 (startTs, endTs)
+    const { loc, ids, startTs, endTs } = req.body;
     const locConfig = LOC_CONFIGS[loc];
     if (!locConfig) return res.json({ error: "厂区配置错误" });
     
@@ -861,39 +862,60 @@ router.post('/generate-payload', express.json(), (req, res) => {
         });
 
         const requests = [];
-        const targetDateStr = getFormattedDate(parseInt(ts));
+        let currentTs = parseInt(startTs);
+        const targetEnd = parseInt(endTs);
 
-        const pushReq = (group, isCustom) => {
-            if (group.length === 0) return;
-            const groupIds = group.map(g => g.idBase64);
-            const names = group.map(g => g.name);
-            const customConf = isCustom ? group[0].customConf : null;
+        // 2. 按天数循环生成数据包（如果开始和结束是一天，就只循环一次）
+        while (currentTs <= targetEnd) {
+            const targetDateStr = getFormattedDate(currentTs);
 
-            const { jsonStr, fullPostBody } = locConfig.buildPayload(groupIds, parseInt(ts), locConfig, customConf);
+            const pushReq = (group, isCustom) => {
+                if (group.length === 0) return;
+                const groupIds = group.map(g => g.idBase64);
+                const names = group.map(g => g.name);
+                const customConf = isCustom ? group[0].customConf : null;
 
-            let displayPeople = names.join(", ");
-            if (isCustom && customConf && customConf.receptionistName) {
-                displayPeople += ` (🚀 独立专单 -> 接待人: ${customConf.receptionistName})`;
-            } else {
-                displayPeople += ` (🏢 常规大部队拼车)`;
-            }
+                const { jsonStr, fullPostBody } = locConfig.buildPayload(groupIds, currentTs, locConfig, customConf);
 
-            requests.push({
-                targetDate: targetDateStr,
-                people: displayPeople,
-                rawJson: jsonStr,
-                encodedBody: fullPostBody
-            });
-        };
+                let displayPeople = names.join(", ");
+                if (isCustom && customConf && customConf.receptionistName) {
+                    displayPeople += ` (🚀 独立专单 -> 接待人: ${customConf.receptionistName})`;
+                } else {
+                    displayPeople += ` (🏢 常规大部队拼车)`;
+                }
 
-        // 按两路分别推入包裹 (本小姐已经把多余的重复代码删掉了！)
-        pushReq(normalGroup, false);
-        Object.values(specialGroupsMap).forEach(sg => pushReq(sg, true));
+                requests.push({
+                    targetDate: targetDateStr,
+                    people: displayPeople,
+                    rawJson: jsonStr,
+                    encodedBody: fullPostBody
+                });
+            };
 
-        // 👠 渲染 HTML 并返回
-        res.json({ 
-            html: renderRequests(requests, loc) 
-        });
+            pushReq(normalGroup, false);
+            Object.values(specialGroupsMap).forEach(sg => pushReq(sg, true));
+            
+            currentTs += 86400000; // 递增一天
+        }
+
+        // 3. 构建包含“一键发送”按钮的 UI 头部并渲染
+        let finalHtml = '';
+        if (requests.length > 0) {
+            finalHtml += `
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px; background: linear-gradient(to right, #eff6ff, #e0e7ff); padding:12px 18px; border-radius:10px; border:1px solid #bfdbfe; box-shadow: 0 2px 4px rgba(0,0,0,0.02);">
+                <div style="color:#1e40af; font-size: 0.95rem;">
+                    <strong style="font-size: 1.1rem;">✨ 报文就绪</strong><br>
+                    共生成 <b>${requests.length}</b> 个数据包，点击右侧即可自动化批量提交
+                </div>
+                <button onclick="sendAllBatch(this, '${loc}')" style="background: linear-gradient(135deg, #3b82f6, #2563eb); color: white; border: none; padding: 10px 20px; border-radius: 8px; font-size: 0.95rem; font-weight: bold; cursor: pointer; box-shadow: 0 4px 6px rgba(37,99,235,0.25); transition: all 0.2s ease;">
+                    🚀 一键发送全部
+                </button>
+            </div>
+            `;
+        }
+        finalHtml += renderRequests(requests, loc);
+
+        res.json({ html: finalHtml });
 
     } catch (e) {
         res.json({ error: "生成失败: " + e.message });
@@ -1016,9 +1038,11 @@ router.get('/debug', async (req, res) => {
                         自由选择人员和日期，生成特定组合的提交报文用于测试或手动发送。
                     </div>
                     <div style="display:flex; flex-direction:column; gap:10px; margin-bottom:15px;">
-                        <div>
-                            <strong>📅 选择日期:</strong> 
-                            <input type="date" id="customDate-${loc}" style="padding:6px; border-radius:4px; border:1px solid #ccc; margin-left:10px;">
+                        <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+                            <strong>📅 起止日期:</strong> 
+                            <input type="date" id="customStartDate-${loc}" style="padding:6px; border-radius:4px; border:1px solid #ccc; flex:1; min-width:120px;">
+                            <span style="color:#64748b; font-weight:bold;">至</span>
+                            <input type="date" id="customEndDate-${loc}" style="padding:6px; border-radius:4px; border:1px solid #ccc; flex:1; min-width:120px;">
                         </div>
                         <div>
                             <strong>👥 选择人员:</strong>
@@ -1150,9 +1174,21 @@ router.get('/debug', async (req, res) => {
                 }
 
                 async function generateCustom(loc) {
-                    const dateInput = document.getElementById('customDate-' + loc).value;
-                    if (!dateInput) return alert('请选择日期');
-                    const ts = new Date(dateInput + 'T00:00:00+08:00').getTime();
+                    const startInput = document.getElementById('customStartDate-' + loc).value;
+                    let endInput = document.getElementById('customEndDate-' + loc).value;
+                    
+                    if (!startInput) return alert('至少需要选择一个开始日期哦！');
+                    
+                    let isSingleDay = false;
+                    if (!endInput) {
+                        endInput = startInput; // 没选结束日期，默认与开始日期一致
+                        isSingleDay = true;
+                    }
+                    
+                    const startTs = new Date(startInput + 'T00:00:00+08:00').getTime();
+                    const endTs = new Date(endInput + 'T00:00:00+08:00').getTime();
+                    
+                    if (startTs > endTs) return alert('结束日期不能早于开始日期哦！');
                     
                     const cbs = document.querySelectorAll('.person-cb-' + loc + ':checked');
                     const ids = Array.from(cbs).map(cb => cb.value);
@@ -1160,13 +1196,13 @@ router.get('/debug', async (req, res) => {
                     
                     const btn = document.querySelector('#content-' + loc + ' button[onclick^="generateCustom"]');
                     const oldText = btn.innerText;
-                    btn.innerText = "少女祈祷中...";
+                    btn.innerText = "数据生成中...";
                     
                     try {
                         const res = await fetch('generate-payload', {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ loc, ids, ts })
+                            body: JSON.stringify({ loc, ids, startTs, endTs })
                         });
                         const data = await res.json();
                         
@@ -1175,6 +1211,12 @@ router.get('/debug', async (req, res) => {
                         } else {
                             const resultDiv = document.getElementById('customResult-' + loc);
                             resultDiv.innerHTML = data.html;
+                            
+                            // 👇 直接在结果区域的顶部动态插入一个“弱提示”黄色小横幅，安全且直观
+                            if (isSingleDay) {
+                                resultDiv.insertAdjacentHTML('afterbegin', '<div style="background:#fef9c3; color:#b45309; padding:8px; border-radius:6px; margin-bottom:10px; font-size:0.85rem; text-align:center; border:1px solid #fde047;">ℹ️ 未选择结束日期，已默认生成单日（1天）的报文</div>');
+                            }
+                            
                             resultDiv.querySelectorAll('details').forEach(d => d.open = true);
                             resultDiv.style.display = 'block';
                         }
@@ -1183,6 +1225,58 @@ router.get('/debug', async (req, res) => {
                     } finally {
                         btn.innerText = oldText;
                     }
+                }
+
+                // 👇 新增的一键批量发送核心逻辑
+                async function sendAllBatch(mainBtn, loc) {
+                    const container = document.getElementById('customResult-' + loc);
+                    const btns = Array.from(container.querySelectorAll('.batch-send-btn'));
+                    if(btns.length === 0) return alert('没有找到可发送的数据包');
+                    
+                    const pwd = prompt("⚠️ 批量发送确认\\n即将为您自动发送这 " + btns.length + " 个数据包。\\n为了防止触发风控，每个请求之间会强制间隔 0.6 秒。\\n\\n请输入操作密码：");
+                    if(!pwd) return;
+                    
+                    mainBtn.innerText = "🚀 队列自动发送中...";
+                    mainBtn.disabled = true;
+                    mainBtn.style.opacity = "0.7";
+                    
+                    for(let i=0; i<btns.length; i++) {
+                        const b = btns[i];
+                        b.innerText = "发送中...";
+                        b.style.background = "linear-gradient(135deg, #f59e0b, #d97706)";
+                        
+                        try {
+                            const res = await fetch('manual-send', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({
+                                    loc: b.getAttribute('data-loc'),
+                                    targetDate: b.getAttribute('data-date'),
+                                    people: b.getAttribute('data-people'),
+                                    encodedBody: decodeURIComponent(b.getAttribute('data-encoded')),
+                                    pwd: pwd
+                                })
+                            });
+                            const data = await res.json();
+                            if(data.success) {
+                                b.innerText = "✅ 成功";
+                                b.style.background = "linear-gradient(135deg, #10b981, #059669)";
+                            } else {
+                                b.innerText = "❌ 失败: " + data.msg;
+                                b.style.background = "linear-gradient(135deg, #ef4444, #dc2626)";
+                            }
+                        } catch(e) {
+                            b.innerText = "❌ 网络异常";
+                            b.style.background = "linear-gradient(135deg, #ef4444, #dc2626)";
+                        }
+                        
+                        // 强制排队等待，保证日期顺序 100% 正确且防封锁
+                        await new Promise(r => setTimeout(r, 600)); 
+                    }
+                    
+                    mainBtn.innerText = "✅ 批量发送完成";
+                    mainBtn.style.background = "linear-gradient(135deg, #10b981, #059669)";
+                    mainBtn.style.opacity = "1";
                 }
 
                 async function sendPayload(event, loc, targetDate, people, encodedBodyURI) {
@@ -1264,7 +1358,12 @@ function renderRequests(requests, loc) {
                         <button class="tab-btn active" onclick="switchTab(this, 0)">Raw JSON</button>
                         <button class="tab-btn" onclick="switchTab(this, 1)">Encoded Body</button>
                     </div>
-                    <button class="send-btn" onclick="sendPayload(event, '${loc}', '${req.targetDate}', '${req.people}', '${encodeURIComponent(req.encodedBody).replace(/'/g, "%27")}')">
+                    <button class="send-btn batch-send-btn" 
+                            data-loc="${loc}" 
+                            data-date="${req.targetDate}" 
+                            data-people="${req.people}" 
+                            data-encoded="${encodeURIComponent(req.encodedBody).replace(/'/g, "%27")}"
+                            onclick="sendPayload(event, '${loc}', '${req.targetDate}', '${req.people}', '${encodeURIComponent(req.encodedBody).replace(/'/g, "%27")}')">
                         🚀 确认发送该包
                     </button>
                 </div>
