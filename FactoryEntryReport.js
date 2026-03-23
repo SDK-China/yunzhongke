@@ -641,7 +641,7 @@ const calculatePlan = (idStatusMap, locConfig) => {
     let minEndTs = Infinity; 
     const summary = [];
 
-    // 核心改造：“影分身”双轨制，普通单和专属单完全分离开来独立计算！
+    // 1. 第一遍循环：解析所有人的历史记录，填充 virtualUsers (这里就是之前被不小心删掉的部分)
     for (const [id, records] of Object.entries(idStatusMap)) {
         const idBase64 = Buffer.from(id).toString('base64');
         const personInfo = locConfig.personDb[idBase64];
@@ -669,28 +669,42 @@ const calculatePlan = (idStatusMap, locConfig) => {
             return max;
         };
 
-        // 🔪 修改后的处理普通轨迹：严格只认大部队统帅的记录！
+        // 处理普通轨迹：严格只认大部队统帅的记录！
         if (trackNormal) {
-            // 如果厂区配置了 normalReceptionistId，就只筛选挂在这个工号下的记录！
-            // 如果没有配置（或者记录里的 rPerson 刚好就是这个统帅），才算有效记录。
             const maxEndTs = getMaxEnd(r => {
                 if (locConfig.normalReceptionistId) {
                     return r.rPerson === locConfig.normalReceptionistId;
                 }
-                // 兜底逻辑：如果没配置统帅，为了防止全部变 0，退回到原先的排除法
                 return !customConf || r.rPerson !== customConf.receptionistId; 
             });
             virtualUsers.push({ idBase64, type: 'normal', maxEndTs, customConf: null, name });
         }
 
-        // 处理专属轨迹 (只查挂在专属工号下的记录！)
+        // 处理专属轨迹 (只查挂在专属工号下的记录)
         if (trackCustom) {
             const maxEndTs = getMaxEnd(r => r.rPerson === customConf.receptionistId);
             virtualUsers.push({ idBase64, type: 'custom', maxEndTs, customConf, name: name + " ⭐" });
         }
     }
 
-    // 第二遍循环：构建界面信息，并确定每个人的个人目标边界 targetEndTs
+    // 👇 【大部队追赶机制核心算法】 👇
+    const normalUsers = virtualUsers.filter(vu => vu.type === 'normal');
+    let normalMaxCurrent = Math.max(...normalUsers.map(vu => vu.maxEndTs));
+    if (!isFinite(normalMaxCurrent) || normalMaxCurrent < todayStartTs - 86400000) {
+        normalMaxCurrent = todayStartTs - 86400000;
+    }
+    
+    const normalThreshold = locConfig.renewThreshold !== undefined ? locConfig.renewThreshold : 2;
+    const normalAddDays = locConfig.renewDays !== undefined ? locConfig.renewDays : 7;
+    const normalLeaderDiff = getBeijingDayId(normalMaxCurrent) - todayId;
+    
+    let normalGroupTarget = normalMaxCurrent;
+    if (normalMaxCurrent === 0 || normalLeaderDiff < 0 || normalLeaderDiff <= normalThreshold) {
+        normalGroupTarget = Math.max(normalMaxCurrent, todayStartTs) + (normalAddDays * 86400000);
+    }
+    // 👆 新增结束 👆
+
+    // 2. 第二遍循环：构建界面信息，并确定每个人的个人目标边界 targetEndTs
     virtualUsers.forEach(vu => {
         let currentEndTs = vu.maxEndTs;
         if (currentEndTs < todayStartTs) currentEndTs = todayStartTs - 86400000;
@@ -701,7 +715,6 @@ const calculatePlan = (idStatusMap, locConfig) => {
         const lastDayId = getBeijingDayId(currentEndTs);
         const diff = lastDayId - todayId;
         
-        // 读取个体独立的阈值和天数配置
         const threshold = vu.customConf && vu.customConf.renewThreshold !== undefined ? vu.customConf.renewThreshold : (locConfig.renewThreshold !== undefined ? locConfig.renewThreshold : 2);
         const addDays = vu.customConf && vu.customConf.renewDays !== undefined ? vu.customConf.renewDays : (locConfig.renewDays !== undefined ? locConfig.renewDays : 7);
 
@@ -740,11 +753,15 @@ const calculatePlan = (idStatusMap, locConfig) => {
             class: statusClass
         });
         
-        // 绑定最终推演用的字段
         vu.currentEndTs = currentEndTs;
-        // 个体的目标推演时间（极其核心：保证每个人的续期天数独立互不干扰）
         const baseLineTs = Math.max(currentEndTs, todayStartTs);
-        vu.targetEndTs = needRenew ? baseLineTs + (addDays * 86400000) : currentEndTs;
+        
+        // 🎯 【强制追赶对齐机制】
+        if (vu.type === 'normal') {
+            vu.targetEndTs = Math.max(currentEndTs, normalGroupTarget);
+        } else {
+            vu.targetEndTs = needRenew ? baseLineTs + (addDays * 86400000) : currentEndTs;
+        }
     });
 
     let globalTargetTs = Math.max(...virtualUsers.map(vu => vu.targetEndTs));
@@ -755,16 +772,14 @@ const calculatePlan = (idStatusMap, locConfig) => {
     if (!isFinite(cursorTs)) cursorTs = todayStartTs;
     let dayCount = 1;
 
-    // 👇 核心拆包改造：把当天需要续期的人，按指定的接待人进行全自动拼车合并！
+    // 3. 核心拆包：把当天需要续期的人，按指定的接待人进行全自动拼车合并
     while (cursorTs <= globalTargetTs) {
-        // 精准过滤出 今天确实需要开单 的虚拟角色
         const todaysVirtuals = virtualUsers.filter(vu => vu.currentEndTs < cursorTs && cursorTs <= vu.targetEndTs);
         
         if (todaysVirtuals.length > 0) {
             const normalGroup = [];
-            const specialGroupsMap = {}; // 拼车集合
+            const specialGroupsMap = {}; 
 
-            // 把人分类：普通组(全放一块) vs 特殊拼车组(按接待人ID拼车)
             todaysVirtuals.forEach(vu => {
                 if (vu.type === 'normal') {
                     normalGroup.push(vu);
@@ -775,7 +790,6 @@ const calculatePlan = (idStatusMap, locConfig) => {
                 }
             });
 
-            // 内部通用的推包函数
             const pushRequest = (vuGroup, isCustom) => {
                 if (vuGroup.length === 0) return;
                 
@@ -783,7 +797,6 @@ const calculatePlan = (idStatusMap, locConfig) => {
                 const names = vuGroup.map(v => v.name);
                 const customConf = isCustom ? vuGroup[0].customConf : null;
 
-                // 调用底层的 buildPayload 进行注入，传给它专属参数
                 const { jsonStr, fullPostBody } = locConfig.buildPayload(idsBase64, cursorTs, locConfig, customConf);
 
                 let displayPeople = names.join(", ");
@@ -801,10 +814,8 @@ const calculatePlan = (idStatusMap, locConfig) => {
                 });
             };
 
-            // 发送大部队
             pushRequest(normalGroup, false);
             
-            // 拼车发送所有的特殊单
             Object.values(specialGroupsMap).forEach(sgGroup => {
                 pushRequest(sgGroup, true);
             });

@@ -175,6 +175,18 @@ const PERSON_DB = {
         {"componentName":"AttachmentField","fieldId":"attachmentField_lxv44osj","label":"身份证照片","fieldData":{"value":[{"name":"mmexport1772248145582.jpg","previewUrl":"/o/A9D66CC1ZZL3GWKMGUKY84Q1VCSW3STYSQ5MMJ?appType=APP_GRVPTEOQ6D4B7FLZFYNJ&fileName=APP_GRVPTEOQ6D4B7FLZFYNJ_QTlENjZDQzFaWkwzR1dLTUdVS1k4NFExVkNTVzNTVFlTUTVNTUk$.jpg&instId=&type=open&process=image/resize,m_fill,w_200,h_200,limit_0/quality,q_80","downloadUrl":"/o/A9D66CC1ZZL3GWKMGUKY84Q1VCSW3STYSQ5MMJ?appType=APP_GRVPTEOQ6D4B7FLZFYNJ&fileName=APP_GRVPTEOQ6D4B7FLZFYNJ_QTlENjZDQzFaWkwzR1dLTUdVS1k4NFExVkNTVzNTVFlTUTVNTUk$.jpg&instId=&type=download","size":130388,"url":"/o/A9D66CC1ZZL3GWKMGUKY84Q1VCSW3STYSQ5MMJ?appType=APP_GRVPTEOQ6D4B7FLZFYNJ&fileName=APP_GRVPTEOQ6D4B7FLZFYNJ_QTlENjZDQzFaWkwzR1dLTUdVS1k4NFExVkNTVzNTVFlTUTVNTUk$.jpg&instId=&type=download","fileUuid":"APP_GRVPTEOQ6D4B7FLZFYNJ_QTlENjZDQzFaWkwzR1dLTUdVS1k4NFExVkNTVzNTVFlTUTVNTUk$.jpg"}]}},
         {"componentName":"AttachmentField","fieldId":"attachmentField_lxv44osk","label":"社保/在职证明","fieldData":{"value":[{"name":"mmexport1772246999991.png","previewUrl":"/o/BO966PC16653TY08NOOJL6931NEN38DBTQ5MM9F1?appType=APP_GRVPTEOQ6D4B7FLZFYNJ&fileName=APP_GRVPTEOQ6D4B7FLZFYNJ_Qk85NjZQQzE2NjUzVFkwOE5PT0pMNjkzMU5FTjM3REJUUTVNTThGMQ$$.png&instId=&type=open&process=image/resize,m_fill,w_200,h_200,limit_0/quality,q_80","downloadUrl":"/o/BO966PC16653TY08NOOJL6931NEN38DBTQ5MM9F1?appType=APP_GRVPTEOQ6D4B7FLZFYNJ&fileName=APP_GRVPTEOQ6D4B7FLZFYNJ_Qk85NjZQQzE2NjUzVFkwOE5PT0pMNjkzMU5FTjM3REJUUTVNTThGMQ$$.png&instId=&type=download","size":123882,"url":"/o/BO966PC16653TY08NOOJL6931NEN38DBTQ5MM9F1?appType=APP_GRVPTEOQ6D4B7FLZFYNJ&fileName=APP_GRVPTEOQ6D4B7FLZFYNJ_Qk85NjZQQzE2NjUzVFkwOE5PT0pMNjkzMU5FTjM3REJUUTVNTThGMQ$$.png&instId=&type=download","fileUuid":"APP_GRVPTEOQ6D4B7FLZFYNJ_Qk85NjZQQzE2NjUzVFkwOE5PT0pMNjkzMU5FTjM3REJUUTVNTThGMQ$$.png"}]}},
         {"componentName":"AttachmentField","fieldId":"attachmentField_lxv44osn","label":"其他附件","fieldData":{"value":[]}}
+    ],
+    // 窦桂阳
+    "NDIyMzI2MTk5NTA0Mjg2NDEx": [
+        {"componentName":"SelectField","fieldId":"selectField_lxv44orx","label":"有效身份证件","fieldData":{"value":"身份证","text":"身份证"},"options":[{"defaultChecked":false,"syncLabelValue":true,"__sid":"item_lxjzgsg1","text":"身份证","__sid__":"serial_lxjzgsg0","value":"身份证","sid":"serial_lxjzgsg0"}]},
+        {"componentName":"TextField","fieldId":"textField_lxv44ory","label":"证件号码","fieldData":{"value": decode("NDIyMzI2MTk5NTA0Mjg2NDEx")}},
+        {"componentName":"TextField","fieldId":"textField_lxv44orw","label":"姓名","fieldData":{"value": decode("56qm5qGC6Ziz")}},
+        {"componentName":"SelectField","fieldId":"selectField_mbyjhot6","label":"区号","fieldData":{"value":"86","text":"+86"},"options":[{"defaultChecked":true,"syncLabelValue":false,"__sid":"item_megqe4lm","text":"+86","__sid__":"serial_megqe4ll","value":"86","sid":"serial_mbyjf8gm"}]},
+        {"componentName":"TextField","fieldId":"textField_lxv44orz","label":"联系方式","fieldData":{"value": decode("MTc3MDcxNTM3MTA=") }},
+        {"componentName":"ImageField","fieldId":"imageField_ly9i5k5q","label":"免冠照片","fieldData":{"value":[{"name":"IMG_20260322_234120.png","previewUrl":"https://dingtalk.avaryholding.com:8443/dingplus/image/20260322/ffe9d2fcefe5a1804c8121b0190d7862.png","downloadUrl":"https://dingtalk.avaryholding.com:8443/dingplus/image/20260322/ffe9d2fcefe5a1804c8121b0190d7862.png","size":132385,"url":"https://dingtalk.avaryholding.com:8443/dingplus/image/20260322/ffe9d2fcefe5a1804c8121b0190d7862.png"}]}},
+        {"componentName":"AttachmentField","fieldId":"attachmentField_lxv44osj","label":"身份证照片","fieldData":{"value":[{"name":"mmexport1774193578988.jpg","previewUrl":"/o/E2E66S91LI24L1K2H2XD54ZLK87L2F7DOX1NM8C?appType=APP_GRVPTEOQ6D4B7FLZFYNJ&fileName=APP_GRVPTEOQ6D4B7FLZFYNJ_RTJFNjZTOTFMSTI0TDFLMkgyWEQ1NFpMSzg3TDJFN0RPWDFOTTdD.jpg&instId=&type=open&process=image/resize,m_fill,w_200,h_200,limit_0/quality,q_80","downloadUrl":"/o/E2E66S91LI24L1K2H2XD54ZLK87L2F7DOX1NM8C?appType=APP_GRVPTEOQ6D4B7FLZFYNJ&fileName=APP_GRVPTEOQ6D4B7FLZFYNJ_RTJFNjZTOTFMSTI0TDFLMkgyWEQ1NFpMSzg3TDJFN0RPWDFOTTdD.jpg&instId=&type=download","size":467704,"url":"/o/E2E66S91LI24L1K2H2XD54ZLK87L2F7DOX1NM8C?appType=APP_GRVPTEOQ6D4B7FLZFYNJ&fileName=APP_GRVPTEOQ6D4B7FLZFYNJ_RTJFNjZTOTFMSTI0TDFLMkgyWEQ1NFpMSzg3TDJFN0RPWDFOTTdD.jpg&instId=&type=download","fileUuid":"APP_GRVPTEOQ6D4B7FLZFYNJ_RTJFNjZTOTFMSTI0TDFLMkgyWEQ1NFpMSzg3TDJFN0RPWDFOTTdD.jpg"}]}},
+        {"componentName":"AttachmentField","fieldId":"attachmentField_lxv44osk","label":"社保/在职证明","fieldData":{"value":[{"name":"在职证明 - 蔻.pdf","previewUrl":"/dingtalk/mobile/APP_GRVPTEOQ6D4B7FLZFYNJ/inst/preview?appType=APP_GRVPTEOQ6D4B7FLZFYNJ&fileName=APP_GRVPTEOQ6D4B7FLZFYNJ_TTBCNjZPQzFWUDE0TjNEQk9MNlMxNzdaT1FUMTJTMU9PWDFOTUtO.pdf&fileSize=41267&downloadUrl=APP_GRVPTEOQ6D4B7FLZFYNJ_TTBCNjZPQzFWUDE0TjNEQk9MNlMxNzdaT1FUMTJTMU9PWDFOTUtO.pdf","downloadUrl":"/o/M0B66OC1VP14N3DBOL6S177ZOQT12S1OOX1NMLN?appType=APP_GRVPTEOQ6D4B7FLZFYNJ&fileName=APP_GRVPTEOQ6D4B7FLZFYNJ_TTBCNjZPQzFWUDE0TjNEQk9MNlMxNzdaT1FUMTJTMU9PWDFOTUtO.pdf&instId=&type=download","size":41267,"url":"/o/M0B66OC1VP14N3DBOL6S177ZOQT12S1OOX1NMLN?appType=APP_GRVPTEOQ6D4B7FLZFYNJ&fileName=APP_GRVPTEOQ6D4B7FLZFYNJ_TTBCNjZPQzFWUDE0TjNEQk9MNlMxNzdaT1FUMTJTMU9PWDFOTUtO.pdf&instId=&type=download","fileUuid":"APP_GRVPTEOQ6D4B7FLZFYNJ_TTBCNjZPQzFWUDE0TjNEQk9MNlMxNzdaT1FUMTJTMU9PWDFOTUtO.pdf"}]}},
+        {"componentName":"AttachmentField","fieldId":"attachmentField_lxv44osn","label":"其他附件","fieldData":{"value":[]}}
     ]
 };
 
@@ -286,7 +298,8 @@ const LOC_CONFIGS = {
         // 👇 A08 账号身份凭证 (原封不动)
         csrf_token: "e7daa879-7b83-40f7-8335-1a262747f2c9",
         cookie: "tianshu_corp_user=ding2b4c83bec54a29c6f2c783f7214b6d69_FREEUSER; tianshu_csrf_token=e7daa879-7b83-40f7-8335-1a262747f2c9; c_csrf=e7daa879-7b83-40f7-8335-1a262747f2c9; cookie_visitor_id=zfGITZnn; cna=QhOGIdjbQ3ABASQOBEFsQ0YG; xlly_s=1; tianshu_app_type=APP_GRVPTEOQ6D4B7FLZFYNJ; JSESSIONID=BF2C6304A367F22183E99C3E5B5181C4; tfstk=gOZxf6D0ah_YmbR2H5blSie9vWyOMa2qeSyBjfcD57F8iJ8615qgycFzMIcmSS4-67N-GjmfQ1Fun54imlewXAw__tlG3a243co1t6qOx-yqEsPFbo36NgwrKxT1rqiRmR_At6jhqZ9SXsC3nq6jmbMZNxMXlE6-VAH6fcgjG36-CAAX5jN_FThrQAOXfhG5VAkB5ci_186-QbGsfqN_FTHZNf91kGhG5b-Tu6E2PQTVe3t72x3x1HG9XDqyxFGLhbtMyWMxkt2jwht_4PdnXxc1VBhaV5nIku6MWXnrwAHYDOYE_yDTCvnBhny8G7ZKRufyjfsyqkqd5-AnU0LfeTLw7qMrh42tpxCQDiM-tTfH7FuY8YhheTLw7qMreXXrUF8Zky5..; isg=BJCQbJGPzSIDPJDoHxPbfgneatziWXSjkwUE44pgG-BuxflvPmhTMY7zmMuAWSx7",
-
+        // 🔪 新增：明确 A08 厂区大部队的常规接待人 (用于精准过滤普通组记录)
+        normalReceptionistId: "61990794", // 王晗的工号
         query: {
             visitorIdNos: [
                 "MTMwMzIzMTk4NjAyMjgwODFY",
@@ -297,9 +310,10 @@ const LOC_CONFIGS = {
                 // "NDMyOTAxMTk4MjExMDUyMDE2",
                 // "NDEwOTIzMTk4ODA3MTkxMDFY",
                 // "MDMwNzE3Njg",
-                "MTMwNDI1MTk4OTA4MjkwMzE0", //姜
+                // "MTMwNDI1MTk4OTA4MjkwMzE0", //姜
                 "MTAyNDE5NDY=",
                 "MDczOTM0Njc=",
+                "NDIyMzI2MTk5NTA0Mjg2NDEx" // 窦
             ],
             regPerson: "17614625112",
             acToken: "E5EF067A42A792436902EB275DCCA379812FF4A4A8A756BE0A1659704557309F",
@@ -310,38 +324,38 @@ const LOC_CONFIGS = {
         // 【新增功能】：支持在这里配置专属的接待人信息
         customReceptionists: {
             // 康伟强
-            "MTMwMzIzMTk4NjAyMjgwODFY": {
-                receptionistId: "A2449801",
-                receptionistName: "龚旭明",
-                receptionDepartment: "QA01設備五課",
-                receptionistPhone: "17703340319",
-                visitReason: "设备维护与保养",
-                keepNormal: true,             // 🌟 核心：设为 true，系统就会为他发一份指定的包，再跟大部队发一份原始包！
-                renewThreshold: 2,            // 独立：剩2天时触发专属包
-                renewDays: 7                  // 独立：一次续7天
-            },
+            // "MTMwMzIzMTk4NjAyMjgwODFY": {
+            //     receptionistId: "A2449801",
+            //     receptionistName: "龚旭明",
+            //     receptionDepartment: "QA01設備五課",
+            //     receptionistPhone: "17703340319",
+            //     visitReason: "设备维护与保养",
+            //     keepNormal: true,             // 🌟 核心：设为 true，系统就会为他发一份指定的包，再跟大部队发一份原始包！
+            //     renewThreshold: 2,            // 独立：剩2天时触发专属包
+            //     renewDays: 2                  // 独立：一次续2天
+            // },
             // 张强
-            "MTMwMzIyMTk4ODA2MjQyMDE4": {
-                receptionistId: "A2449801",
-                receptionistName: "龚旭明",
-                receptionDepartment: "QA01設備五課",
-                receptionistPhone: "17703340319",
-                visitReason: "设备维护与保养",
-                keepNormal: true,           // 🌟 核心：设为 true，同样双开！
-                renewThreshold: 2,            // 独立：剩2天时触发专属包
-                renewDays: 7                  // 独立：一次续7天
-            },
+            // "MTMwMzIyMTk4ODA2MjQyMDE4": {
+            //     receptionistId: "A2449801",
+            //     receptionistName: "龚旭明",
+            //     receptionDepartment: "QA01設備五課",
+            //     receptionistPhone: "17703340319",
+            //     visitReason: "设备维护与保养",
+            //     keepNormal: true,           // 🌟 核心：设为 true，同样双开！
+            //     renewThreshold: 2,            // 独立：剩2天时触发专属包
+            //     renewDays: 2                  // 独立：一次续2天
+            // },
              // 姜建龙
-            "MTMwNDI1MTk4OTA4MjkwMzE0": {
-                receptionistId: "A2449801",
-                receptionistName: "龚旭明",
-                receptionDepartment: "QA01設備五課",
-                receptionistPhone: "17703340319",
-                visitReason: "设备维护与保养",
-                keepNormal: false,           // 🌟 核心：设为 true，同样双开！
-                renewThreshold: 2,            // 独立：剩2天时触发专属包
-                renewDays: 7                  // 独立：一次续7天
-            }
+            // "MTMwNDI1MTk4OTA4MjkwMzE0": {
+            //     receptionistId: "A2449801",
+            //     receptionistName: "龚旭明",
+            //     receptionDepartment: "QA01設備五課",
+            //     receptionistPhone: "17703340319",
+            //     visitReason: "设备维护与保养",
+            //     keepNormal: false,           // 🌟 核心：设为 true，同样双开！
+            //     renewThreshold: 2,            // 独立：剩2天时触发专属包
+            //     renewDays: 2                  // 独立：一次续2天
+            // }
             
         },
 
@@ -393,6 +407,9 @@ const LOC_CONFIGS = {
         csrf_token: "5581e41f-8c38-48d4-bea4-20d1f96af4db",
         cookie: "tianshu_corp_user=ding2b4c83bec54a29c6f2c783f7214b6d69_FREEUSER; tianshu_csrf_token=5581e41f-8c38-48d4-bea4-20d1f96af4db; c_csrf=5581e41f-8c38-48d4-bea4-20d1f96af4db; cookie_visitor_id=o5TLBWJ6; cna=KDksIgUMMBsCARuACb+fM//A; xlly_s=1; tianshu_app_type=APP_GRVPTEOQ6D4B7FLZFYNJ; JSESSIONID=5BF894CE5AFD8107A9C6124F8753BEB5; tfstk=gTlIf86UsykasoYp2M8NcrQKR6PevFR2Vaa-o4CFyWFpNgUbJ7orypYWNqngzWuJx0G7XcqKUDRHw8ijx0wk-ur8V0u-LFR2g203Z7nW0IRVHeDw8DaRwzLR6yzk7ypCdudzZ7K2bO58KINoAceYPk395zzz2un8eVCT-lU827n8XRUYuMF8w0L_6zzlJwUdwPBT8lE8w7n-WFauXyF8w0395zv_rtaGPouBPqRW4aBBtvE1w_h_5nNKRi1Lo34UdogUuOXi1i2QD2E1aHjKKrrQkjKNKrwIJjNE_HpZRlHKwWlpb_ijfxFswR7JVyHKlj2mwhsr4srb5yX5EkC75o865TXlaj5nMewO5_eLSPzw5F6rtJUg5o865TXupP4i3FT1UXf..; isg=BOzsBAulqRjsL70mvTB0y-TYtsgepZBPSDBScUYpsid4UGNbQrR-3bOndF_PIcin",
 
+        // 🔪 新增：明确Q01 厂区大部队的常规接待人 (用于精准过滤普通组记录)
+        // normalReceptionistId: "61990794", // 王晗的工号
+
         // Q01 全局通用接待人配置 (未指定专属接待人的人员将默认使用这个)
         // receptionistId: "82100751",    // 工号
         // receptionistName: "张宏敏",       // 姓名
@@ -417,17 +434,17 @@ const LOC_CONFIGS = {
             visitorIdNos: [
                 "MTMwMzIzMTk5MjEyMTY2NDM0",  //张江路
                 "MTMwMzIzMTk5ODA2MTQxMDU4", //刘宏飞
-                "MTMwMzIzMTk5MDAzMDc2NDE2", //张江宽
+                // "MTMwMzIzMTk5MDAzMDc2NDE2", //张江宽
                 "MTMwMzIzMTk4OTA5MDQ2NDEx", //付海超
                 "MDU4NDMzNDg=", //张道玄
                 "MTIwNDUxOTI=", //张乃文
                 "SzEzOTMxMihBKQ==", //陈毅鸿
-                "NDMxMjIyMTk5NzEyMDUzMzEz", //向林  
+                // "NDMxMjIyMTk5NzEyMDUzMzEz", //向林  
                 "NTIyNzMxMjAwMDAxMTAzNjEx", //王煊廷
                 "MTMwMzIxMjAwMjA0MTY2MjE4", //邵相辉 
-                "NDUwMjIxMTk4OTA0MDUyNDNY", //曾静 
+                // "NDUwMjIxMTk4OTA0MDUyNDNY", //曾静 
                 "NDIxMTgxMTk5MDAxMTc2MzFY", //余新旺 
-                "NDQwOTgyMTk5NzEwMDgyNTk3", //周勇驰 
+                // "NDQwOTgyMTk5NzEwMDgyNTk3", //周勇驰 
                 "NDExNTI0MjAwNTEyMTA3NjU2", //杨瑞 
                 // "MDg5NjQ3MzI=", //赖彦翔 
                 // "MDYyNDg5MDE=", //马可为
@@ -564,17 +581,25 @@ const getAllStatuses = async (queryConfig) => {
 };
 
 // 🌟 严谨铁壁熔断机制
+// 🌟 魔鬼级“一触即死”铁壁熔断机制 (宁可错杀，绝不放过)
 const checkSafeToRun = (stats) => {
-    // 1. 网络/Cookie/Token错误：只要有1个人报错，立刻阻断
-    if (stats.error > 0) return { safe: false, reason: `请求报错或Cookie失效 (失败: ${stats.error}人)` };
-    // 2. 无配置人员
-    if (stats.total === 0) return { safe: false, reason: "配置名单为空，无需运行" };
-    // 3. 终极锁死：全员无记录 (可能被系统拉黑、Token被封)
-    if (stats.total > 0 && stats.hasData === 0) return { safe: false, reason: "极其严重：全员均无记录！可能遭遇接口结构变更或彻底封禁，触发100%锁死熔断！" };
-    // 4. 防雪崩：查询人数较多时，如果超过一半突然查不到记录，高度疑似接口数据被截断
-    if (stats.total >= 4 && (stats.noData / stats.total) >= 0.5) return { safe: false, reason: `高危异常：超过半数人员 (${stats.noData}/${stats.total}) 突然查不到记录，触发防雪崩熔断！` };
+    // 1. 只要有 1 个人查询失败（网络崩溃、Token失效等），全员连坐锁死！(原有机制保留)
+    if (stats.error > 0) {
+        return { safe: false, reason: `【连坐熔断】请求报错或Cookie失效 (共失败 ${stats.error} 人)` };
+    }
     
-    return { safe: true, reason: "状态正常" };
+    // 2. 无配置人员，直接跳过
+    if (stats.total === 0) {
+        return { safe: false, reason: "配置名单为空，无需运行" };
+    }
+    
+    // 3. 🔪 新增的魔鬼限制：只要有 1 个人查不到记录（没有时间），立刻全部锁死！
+    if (stats.noData > 0) {
+        return { safe: false, reason: `【连坐熔断】发现 ${stats.noData} 人没有任何历史入厂记录/时间！已触发一票否决，全厂区停止自动续期！` };
+    }
+    
+    // 如果能活到这里，说明所有人既没有报错，又都有历史记录，安全放行！
+    return { safe: true, reason: "状态完美正常" };
 };
 
 // 👇 传入了 locConfig 以提取它对应的专属 Cookie
@@ -644,9 +669,17 @@ const calculatePlan = (idStatusMap, locConfig) => {
             return max;
         };
 
-        // 处理普通轨迹 (排除掉挂在专属工号下的记录)
+        // 🔪 修改后的处理普通轨迹：严格只认大部队统帅的记录！
         if (trackNormal) {
-            const maxEndTs = getMaxEnd(r => !customConf || r.rPerson !== customConf.receptionistId);
+            // 如果厂区配置了 normalReceptionistId，就只筛选挂在这个工号下的记录！
+            // 如果没有配置（或者记录里的 rPerson 刚好就是这个统帅），才算有效记录。
+            const maxEndTs = getMaxEnd(r => {
+                if (locConfig.normalReceptionistId) {
+                    return r.rPerson === locConfig.normalReceptionistId;
+                }
+                // 兜底逻辑：如果没配置统帅，为了防止全部变 0，退回到原先的排除法
+                return !customConf || r.rPerson !== customConf.receptionistId; 
+            });
             virtualUsers.push({ idBase64, type: 'normal', maxEndTs, customConf: null, name });
         }
 
@@ -792,36 +825,88 @@ router.post('/generate-payload', express.json(), (req, res) => {
     if (!locConfig) return res.json({ error: "厂区配置错误" });
     
     try {
-        const names = ids.map(b64 => {
-            const pInfo = locConfig.personDb[b64];
-            const n = pInfo.find(f => f.label === '姓名');
-            return n ? n.fieldData.value : b64;
-        });
+        const normalGroup = [];
+        const specialGroupsMap = {};
 
-        // Debug 面板中若生成多个人，如果他们中某个人有特殊属性，在手工生成时为了方便测试，将直接取第一个匹配到的特殊属性进行强行覆盖。
-        let activeCustomConfig = null;
-        for (const id of ids) {
-            if (locConfig.customReceptionists && locConfig.customReceptionists[id]) {
-                activeCustomConfig = locConfig.customReceptionists[id];
-                break;
+        ids.forEach(idBase64 => {
+            const personInfo = locConfig.personDb[idBase64];
+            if (!personInfo) return;
+            
+            const nameField = personInfo.find(f => f.label === '姓名');
+            const name = nameField && nameField.fieldData ? nameField.fieldData.value : idBase64;
+            
+            const customConf = locConfig.customReceptionists && locConfig.customReceptionists[idBase64];
+            const trackNormal = !customConf || customConf.keepNormal; 
+            const trackCustom = !!customConf;                         
+
+            if (trackNormal) {
+                normalGroup.push({ idBase64, name, customConf: null });
             }
-        }
-
-        const { jsonStr, fullPostBody } = locConfig.buildPayload(ids, parseInt(ts), locConfig, activeCustomConfig);
-
-        let finalNameStr = names.join(", ");
-        if (activeCustomConfig && activeCustomConfig.receptionistName) {
-            finalNameStr += ` (调试模拟: 已触发强制接待人覆写 -> ${activeCustomConfig.receptionistName})`;
-        }
-
-        res.json({
-            targetDate: getFormattedDate(parseInt(ts)),
-            people: finalNameStr,
-            rawJson: jsonStr,
-            encodedBody: fullPostBody
+            if (trackCustom) {
+                const recId = customConf.receptionistId || 'unknown';
+                if (!specialGroupsMap[recId]) specialGroupsMap[recId] = [];
+                specialGroupsMap[recId].push({ idBase64, name: name + " ⭐", customConf });
+            }
         });
+
+        const requests = [];
+        const targetDateStr = getFormattedDate(parseInt(ts));
+
+        const pushReq = (group, isCustom) => {
+            if (group.length === 0) return;
+            const groupIds = group.map(g => g.idBase64);
+            const names = group.map(g => g.name);
+            const customConf = isCustom ? group[0].customConf : null;
+
+            const { jsonStr, fullPostBody } = locConfig.buildPayload(groupIds, parseInt(ts), locConfig, customConf);
+
+            let displayPeople = names.join(", ");
+            if (isCustom && customConf && customConf.receptionistName) {
+                displayPeople += ` (🚀 独立专单 -> 接待人: ${customConf.receptionistName})`;
+            } else {
+                displayPeople += ` (🏢 常规大部队拼车)`;
+            }
+
+            requests.push({
+                targetDate: targetDateStr,
+                people: displayPeople,
+                rawJson: jsonStr,
+                encodedBody: fullPostBody
+            });
+        };
+
+        // 按两路分别推入包裹 (本小姐已经把多余的重复代码删掉了！)
+        pushReq(normalGroup, false);
+        Object.values(specialGroupsMap).forEach(sg => pushReq(sg, true));
+
+        // 👠 渲染 HTML 并返回
+        res.json({ 
+            html: renderRequests(requests, loc) 
+        });
+
     } catch (e) {
         res.json({ error: "生成失败: " + e.message });
+    }
+});
+
+// --- [新增] 安全手动发送接口 (后端硬核校验密码，前端无法绕过) ---
+router.post('/manual-send', express.json(), async (req, res) => {
+    const { loc, targetDate, people, encodedBody, pwd } = req.body;
+    
+    // 哼！密码写死在后端，就算愚蠢的人类把前端翻个底朝天也拿不到！
+    if (pwd !== '123123') {
+        return res.json({ success: false, msg: "密码错误！！！" });
+    }
+
+    const locConfig = LOC_CONFIGS[loc];
+    if (!locConfig) return res.json({ success: false, msg: "厂区配置不存在！" });
+
+    try {
+        const reqTask = { targetDate, people, encodedBody };
+        const result = await submitApplication(reqTask, locConfig);
+        res.json(result);
+    } catch (e) {
+        res.json({ success: false, msg: "后端执行异常: " + e.message });
     }
 });
 
@@ -866,7 +951,7 @@ router.get('/debug', async (req, res) => {
             if (safetyCheck.safe) {
                 realQueueHTML = `
                     <h3 style="font-size:0.9rem; margin-bottom:10px; color:#374151;">🚀 待发送队列 (${realPlan.requests.length})</h3>
-                    ${renderRequests(realPlan.requests)}
+                    ${renderRequests(realPlan.requests, loc)}
                 `;
             } else {
                 realQueueHTML = `
@@ -949,7 +1034,7 @@ router.get('/debug', async (req, res) => {
                 <div class="card" style="border-top: 4px solid #9333ea;">
                     <h2>🔮 全员无记录模拟 (Force Sync)</h2>
                     <p style="font-size:0.8rem; color:#666; margin-bottom:10px;">假设数据库清空，系统将从“今天”开始生成完整对齐计划。（此区域仅为逻辑验证，不受熔断影响）</p>
-                    ${renderRequests(simulatedPlan.requests)}
+                    ${renderRequests(simulatedPlan.requests, loc)}
                 </div>
             </div>
             `;
@@ -963,62 +1048,74 @@ router.get('/debug', async (req, res) => {
             <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0">
             <title>申请插件调试面板</title>
             <style>
-                body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background: #f3f4f6; padding: 10px; color: #1f2937; margin:0; }
-                .container { max-width: 1000px; margin: 0 auto; }
-                .card { background: #fff; padding: 15px; border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); margin-bottom: 20px; }
-                
-                h1 { margin: 10px 0 20px 0; color: #111827; font-size: 1.2rem; border-left: 4px solid #3b82f6; padding-left: 10px; display: flex; align-items: center; justify-content: space-between; }
-                h2 { margin-top: 0; color: #4b5563; font-size: 1rem; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; }
-                
-                .tabs { display: flex; gap: 8px; margin-bottom: 20px; position: sticky; top: 0; z-index: 100; background: #f3f4f6; padding: 10px 0; }
-                .tab { flex: 1; text-align: center; padding: 12px 0; background: #e5e7eb; border-radius: 8px; color: #374151; font-weight: bold; cursor: pointer; transition: 0.2s; border: none;}
-                .tab.active { background: #3b82f6; color: white; box-shadow: 0 2px 4px rgba(59,130,246,0.3); }
-                .loc-content { display: none; }
-                .loc-content.active { display: block; animation: fadeIn 0.3s ease; }
-                
-                @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
-                
-                .table-wrapper { overflow-x: auto; margin-bottom: 15px; border-radius: 8px; border: 1px solid #e5e7eb; }
-                table { width: 100%; border-collapse: collapse; min-width: 500px; }
-                th, td { text-align: left; padding: 10px; border-bottom: 1px solid #e5e7eb; font-size: 0.9rem; }
-                th { background: #f9fafb; font-weight: 600; color: #6b7280; }
-                tr:last-child td { border-bottom: none; }
-                
-                .status-badge { padding: 2px 8px; border-radius: 99px; font-size: 0.75rem; font-weight: 600; white-space: nowrap; }
-                .expired { background: #fee2e2; color: #991b1b; }
-                .warning { background: #fef3c7; color: #92400e; }
-                .success { background: #d1fae5; color: #065f46; }
-                
-                .request-item { background: #fff; border: 1px solid #e5e7eb; border-radius: 8px; margin-bottom: 10px; overflow: hidden; }
-                .req-header { padding: 12px; background: #f9fafb; display: flex; flex-direction: column; cursor: pointer; user-select: none; }
-                .req-header-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px; }
-                .req-header-people { font-size: 0.85rem; color: #6b7280; }
-                
-                .code-section { border-top: 1px solid #e5e7eb; }
-                .code-tabs { display: flex; background: #f3f4f6; border-bottom: 1px solid #e5e7eb; }
-                .tab-btn { padding: 8px 15px; font-size: 0.8rem; cursor: pointer; color: #6b7280; border-right: 1px solid #e5e7eb; background: #f3f4f6; border: none; }
-                .tab-btn.active { background: #fff; color: #3b82f6; font-weight: 600; border-bottom: 2px solid #3b82f6; }
-                .code-content { padding: 0; position: relative; display: none; }
-                .code-content.active { display: block; }
-                
-                pre { margin: 0; padding: 15px; overflow-x: auto; font-family: Consolas, monospace; font-size: 0.75rem; line-height: 1.4; color: #d4d4d4; background: #1e1e1e; max-height: 300px; }
-                .copy-btn { position: absolute; top: 10px; right: 10px; background: rgba(255,255,255,0.2); color: #fff; border: 1px solid rgba(255,255,255,0.3); padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 0.7rem; }
-                
-                details > summary { list-style: none; }
-                details > summary::marker { display: none; }
-                .error-banner { background: #fee2e2; border: 1px solid #fca5a5; color: #b91c1c; padding: 15px; border-radius: 8px; margin-bottom: 15px; font-weight: bold; font-size: 0.9rem; }
-                .stat-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 15px; font-size: 0.8rem; color: #666; background: #f9fafb; padding: 10px; border-radius: 8px; }
-                .stat-item { text-align: center; }
-                .stat-val { font-weight: bold; font-size: 1rem; color: #111827; }
-                .blocked-overlay { background: #f3f4f6; border: 2px dashed #d1d5db; border-radius: 8px; padding: 30px; text-align: center; color: #4b5563; }
-                
-                @media (min-width: 600px) {
-                    .req-header { flex-direction: row; justify-content: space-between; align-items: center; }
-                    .req-header-top { margin-bottom: 0; min-width: 150px; }
-                }
-            </style>
-            <script>
-                // SPA 无缝切换核心逻辑
+                    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background: #f3f4f6; padding: 10px; color: #1f2937; margin:0; }
+                    .container { max-width: 1000px; margin: 0 auto; }
+                    .card { background: #fff; padding: 15px; border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); margin-bottom: 20px; }
+                    
+                    h1 { margin: 10px 0 20px 0; color: #111827; font-size: 1.2rem; border-left: 4px solid #3b82f6; padding-left: 10px; display: flex; align-items: center; justify-content: space-between; }
+                    h2 { margin-top: 0; color: #4b5563; font-size: 1rem; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; }
+                    
+                    .tabs { display: flex; gap: 8px; margin-bottom: 20px; position: sticky; top: 0; z-index: 100; background: #f3f4f6; padding: 10px 0; }
+                    .tab { flex: 1; text-align: center; padding: 12px 0; background: #e5e7eb; border-radius: 8px; color: #374151; font-weight: bold; cursor: pointer; transition: 0.2s; border: none;}
+                    .tab.active { background: #3b82f6; color: white; box-shadow: 0 2px 4px rgba(59,130,246,0.3); }
+                    .loc-content { display: none; }
+                    .loc-content.active { display: block; animation: fadeIn 0.3s ease; }
+                    
+                    @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+                    
+                    .table-wrapper { overflow-x: auto; margin-bottom: 15px; border-radius: 8px; border: 1px solid #e5e7eb; }
+                    table { width: 100%; border-collapse: collapse; min-width: 500px; }
+                    th, td { text-align: left; padding: 10px; border-bottom: 1px solid #e5e7eb; font-size: 0.9rem; }
+                    th { background: #f9fafb; font-weight: 600; color: #6b7280; }
+                    tr:last-child td { border-bottom: none; }
+                    
+                    .status-badge { padding: 2px 8px; border-radius: 99px; font-size: 0.75rem; font-weight: 600; white-space: nowrap; }
+                    .expired { background: #fee2e2; color: #991b1b; }
+                    .warning { background: #fef3c7; color: #92400e; }
+                    .success { background: #d1fae5; color: #065f46; }
+                    
+                    .request-item { background: #fff; border: 1px solid #e5e7eb; border-radius: 8px; margin-bottom: 10px; overflow: hidden; }
+                    .req-header { padding: 12px; background: #f9fafb; display: flex; flex-direction: column; cursor: pointer; user-select: none; transition: background 0.2s; }
+                    .req-header:hover { background: #f3f4f6; }
+                    .req-header-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px; }
+                    .req-header-people { font-size: 0.85rem; color: #6b7280; }
+                    
+                    .code-section { border-top: 1px solid #e5e7eb; }
+                    
+                    /* 华丽的动作条和按钮样式 (全新紧凑排版) */
+                    .code-toolbar { display: flex; justify-content: space-between; align-items: center; background: #f3f4f6; border-bottom: 1px solid #e5e7eb; padding-right: 12px; }
+                    .code-tabs { display: flex; }
+                    .tab-btn { padding: 10px 15px; font-size: 0.8rem; cursor: pointer; color: #6b7280; border-right: 1px solid #e5e7eb; background: transparent; border-top: none; border-bottom: none; border-left: none; outline: none; }
+                    .tab-btn.active { background: #fff; color: #3b82f6; font-weight: 600; border-bottom: 2px solid #3b82f6; margin-bottom: -1px; }
+                    
+                    .send-btn { background: linear-gradient(135deg, #ef4444, #dc2626); color: white; border: none; padding: 6px 14px; border-radius: 6px; font-size: 0.85rem; font-weight: bold; cursor: pointer; transition: all 0.2s ease; box-shadow: 0 2px 4px rgba(239, 68, 68, 0.2); }
+                    .send-btn:hover { transform: translateY(-1px); box-shadow: 0 4px 8px rgba(239, 68, 68, 0.3); }
+                    .send-btn:active { transform: translateY(0); box-shadow: none; }
+                    .send-btn:disabled { background: #9ca3af; cursor: not-allowed; box-shadow: none; transform: none; }
+                    
+                    .code-tabs { display: flex; background: #f3f4f6; border-bottom: 1px solid #e5e7eb; }
+                    .tab-btn { padding: 8px 15px; font-size: 0.8rem; cursor: pointer; color: #6b7280; border-right: 1px solid #e5e7eb; background: #f3f4f6; border: none; }
+                    .tab-btn.active { background: #fff; color: #3b82f6; font-weight: 600; border-bottom: 2px solid #3b82f6; }
+                    .code-content { padding: 0; position: relative; display: none; }
+                    .code-content.active { display: block; }
+                    
+                    pre { margin: 0; padding: 15px; overflow-x: auto; font-family: Consolas, monospace; font-size: 0.75rem; line-height: 1.4; color: #d4d4d4; background: #1e1e1e; max-height: 300px; }
+                    .copy-btn { position: absolute; top: 10px; right: 10px; background: rgba(255,255,255,0.2); color: #fff; border: 1px solid rgba(255,255,255,0.3); padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 0.7rem; }
+                    
+                    details > summary { list-style: none; }
+                    details > summary::marker { display: none; }
+                    .error-banner { background: #fee2e2; border: 1px solid #fca5a5; color: #b91c1c; padding: 15px; border-radius: 8px; margin-bottom: 15px; font-weight: bold; font-size: 0.9rem; }
+                    .stat-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 15px; font-size: 0.8rem; color: #666; background: #f9fafb; padding: 10px; border-radius: 8px; }
+                    .stat-item { text-align: center; }
+                    .stat-val { font-weight: bold; font-size: 1rem; color: #111827; }
+                    .blocked-overlay { background: #f3f4f6; border: 2px dashed #d1d5db; border-radius: 8px; padding: 30px; text-align: center; color: #4b5563; }
+                    
+                    @media (min-width: 600px) {
+                        .req-header { flex-direction: row; justify-content: space-between; align-items: center; }
+                        .req-header-top { margin-bottom: 0; min-width: 150px; }
+                    }
+                </style>
+                <script>
                 function switchLoc(loc, btn) {
                     document.querySelectorAll('.loc-content').forEach(el => el.classList.remove('active'));
                     document.querySelectorAll('.loc-tab').forEach(el => el.classList.remove('active'));
@@ -1050,42 +1147,79 @@ router.get('/debug', async (req, res) => {
                     const ids = Array.from(cbs).map(cb => cb.value);
                     if (ids.length === 0) return alert('请至少选择一个人');
                     
-                    const res = await fetch('generate-payload', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ loc, ids, ts })
-                    });
-                    const data = await res.json();
-                    if (data.error) return alert(data.error);
+                    const btn = document.querySelector('#content-' + loc + ' button[onclick^="generateCustom"]');
+                    const oldText = btn.innerText;
+                    btn.innerText = "少女祈祷中...";
                     
-                    const resultDiv = document.getElementById('customResult-' + loc);
-                    resultDiv.innerHTML = \`
-                        <div class="request-item">
-                            <details open>
-                                <summary class="req-header">
-                                    <div class="req-header-top"><strong>📅 \${data.targetDate}</strong></div>
-                                    <div class="req-header-people">👥 \${data.people}</div>
-                                </summary>
-                                <div class="code-section">
-                                    <div class="code-tabs">
-                                        <button class="tab-btn active" onclick="switchTab(this, 0)">Raw JSON</button>
-                                        <button class="tab-btn" onclick="switchTab(this, 1)">Encoded Body</button>
-                                    </div>
-                                    <div class="code-content active">
-                                        <button class="copy-btn" onclick="copyText(this, '\${encodeURIComponent(data.rawJson)}')">Copy</button>
-                                        <pre style="color:#a5d6ff;">\${data.rawJson}</pre>
-                                    </div>
-                                    <div class="code-content">
-                                        <button class="copy-btn" onclick="copyText(this, '\${encodeURIComponent(data.encodedBody)}')">Copy</button>
-                                        <pre style="color:#ffae57; white-space:pre-wrap; word-break:break-all;">\${data.encodedBody}</pre>
-                                    </div>
-                                </div>
-                            </details>
-                        </div>
-                    \`;
-                    resultDiv.style.display = 'block';
+                    try {
+                        const res = await fetch('generate-payload', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ loc, ids, ts })
+                        });
+                        const data = await res.json();
+                        
+                        if (data.error) {
+                            alert(data.error);
+                        } else {
+                            const resultDiv = document.getElementById('customResult-' + loc);
+                            resultDiv.innerHTML = data.html;
+                            resultDiv.querySelectorAll('details').forEach(d => d.open = true);
+                            resultDiv.style.display = 'block';
+                        }
+                    } catch (err) {
+                        alert("网络错误：" + err.message);
+                    } finally {
+                        btn.innerText = oldText;
+                    }
                 }
-            </script>
+
+                async function sendPayload(event, loc, targetDate, people, encodedBodyURI) {
+                    event.preventDefault(); 
+                    event.stopPropagation();
+                    
+                    // 👠 看好了！本小姐全换成了双引号拼接，不会再有波浪线了！
+                    const pwd = prompt("⚠️ 危险操作确认\\n即将为 [" + loc + "] 的 [" + people + "] 提交 [" + targetDate + "] 的入厂申请。\\n\\n请输入操作密码：");
+                    if (!pwd) return; 
+
+                    const btn = event.target;
+                    const originalText = btn.innerText;
+                    btn.innerText = "正在发送中...";
+                    btn.style.background = "linear-gradient(135deg, #f59e0b, #d97706)";
+                    btn.disabled = true;
+
+                    try {
+                        const res = await fetch('manual-send', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                loc: loc,
+                                targetDate: targetDate,
+                                people: people,
+                                encodedBody: decodeURIComponent(encodedBodyURI),
+                                pwd: pwd
+                            })
+                        });
+                        const data = await res.json();
+                        
+                        if (data.success) {
+                            alert("✅ 发送成功！\\n实例ID: " + data.id);
+                            btn.innerText = "已发送成功";
+                            btn.style.background = "linear-gradient(135deg, #10b981, #059669)";
+                        } else {
+                            alert("❌ 发送失败！\\n原因: " + data.msg);
+                            btn.innerText = originalText;
+                            btn.style.background = "linear-gradient(135deg, #ef4444, #dc2626)";
+                            btn.disabled = false;
+                        }
+                    } catch (e) {
+                        alert("❌ 网络异常: " + e.message);
+                        btn.innerText = originalText;
+                        btn.style.background = "linear-gradient(135deg, #ef4444, #dc2626)";
+                        btn.disabled = false;
+                    }
+                }
+                </script>
         </head>
         <body>
             <div class="container">
@@ -1104,7 +1238,7 @@ router.get('/debug', async (req, res) => {
     }
 });
 
-function renderRequests(requests) {
+function renderRequests(requests, loc) {
     if (requests.length === 0) return '<div style="padding:15px; text-align:center; color:#999; border:1px dashed #ddd; border-radius:8px; font-size:0.8rem;">无需发送数据包</div>';
     return requests.map((req, i) => `
     <div class="request-item">
@@ -1114,16 +1248,21 @@ function renderRequests(requests) {
                 <div class="req-header-people">👥 ${req.people}</div>
             </summary>
             <div class="code-section">
-                <div class="code-tabs">
-                    <button class="tab-btn active" onclick="switchTab(this, 0)">Raw JSON</button>
-                    <button class="tab-btn" onclick="switchTab(this, 1)">Encoded Body</button>
+                <div class="code-toolbar">
+                    <div class="code-tabs">
+                        <button class="tab-btn active" onclick="switchTab(this, 0)">Raw JSON</button>
+                        <button class="tab-btn" onclick="switchTab(this, 1)">Encoded Body</button>
+                    </div>
+                    <button class="send-btn" onclick="sendPayload(event, '${loc}', '${req.targetDate}', '${req.people}', '${encodeURIComponent(req.encodedBody).replace(/'/g, "%27")}')">
+                        🚀 确认发送该包
+                    </button>
                 </div>
                 <div class="code-content active">
-                    <button class="copy-btn" onclick="copyText(this, '${encodeURIComponent(req.rawJson)}')">Copy</button>
+                    <button class="copy-btn" onclick="copyText(this, '${encodeURIComponent(req.rawJson).replace(/'/g, "%27")}')">Copy</button>
                     <pre style="color:#a5d6ff;">${req.rawJson}</pre>
                 </div>
                 <div class="code-content">
-                    <button class="copy-btn" onclick="copyText(this, '${encodeURIComponent(req.encodedBody)}')">Copy</button>
+                    <button class="copy-btn" onclick="copyText(this, '${encodeURIComponent(req.encodedBody).replace(/'/g, "%27")}')">Copy</button>
                     <pre style="color:#ffae57; white-space:pre-wrap; word-break:break-all;">${req.encodedBody}</pre>
                 </div>
             </div>
@@ -1181,7 +1320,7 @@ router.get('/auto-renew', async (req, res) => {
                         }
                     } 
                 }));
-                await delay(80); 
+                await delay(200); 
             }
             
             await Promise.all(submitPromises);
