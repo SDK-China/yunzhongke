@@ -84,7 +84,7 @@ const fetchPersonData = async (id, headers, todayDayId, regPerson, acToken) => {
     const startTime = Date.now();
     const targetUrl = 'https://dingtalk.avaryholding.com:8443/dingplus/visitorConnector/visitorStatus';
     const idTail = id.length > 4 ? id.slice(-4) : id;
-    
+
     const result = {
         name: '未知',
         idTail: idTail,
@@ -100,12 +100,12 @@ const fetchPersonData = async (id, headers, todayDayId, regPerson, acToken) => {
     try {
         const response = await axios.post(targetUrl, body, { headers, timeout: 8000 });
         const resData = response.data;
-        result.cost = Date.now() - startTime; 
+        result.cost = Date.now() - startTime;
 
         if (resData.code === 200 && Array.isArray(resData.data)) {
             result.success = true;
             result.rawData = resData.data; // 保持原始总数据
-            
+
             if (resData.data.length > 0) {
                 result.name = resData.data[0].visitorName || '未知';
 
@@ -131,8 +131,8 @@ const fetchPersonData = async (id, headers, todayDayId, regPerson, acToken) => {
                         // 【改动1】增加拒绝状态的判断
                         let statusType = 'APPROVED';
                         if (String(item.flowStatus) === '1') statusType = 'PENDING';
-                        if (String(item.flowStatus) === '3') statusType = 'REJECTED'; 
-                        
+                        if (String(item.flowStatus) === '3') statusType = 'REJECTED';
+
                         const key = statusType;
                         if (!groups[key]) groups[key] = [];
                         groups[key].push(item);
@@ -177,12 +177,12 @@ const fetchPersonData = async (id, headers, todayDayId, regPerson, acToken) => {
                         let type = 'ACTIVE';
 
                         // 【改动3】优先判断是否为拒绝
-                        if (endId < todayDayId) type = 'HISTORY'; 
-                        else if (String(item.flowStatus) === '3') type = 'REJECTED'; 
+                        if (endId < todayDayId) type = 'HISTORY';
+                        else if (String(item.flowStatus) === '3') type = 'REJECTED';
                         else if (String(item.flowStatus) === '1') type = 'PENDING';
                         else if (startId > todayDayId) type = 'FUTURE';
                         else type = 'ACTIVE';
-                        
+
                         const baseItem = { ...item, _type: type };
 
                         if (type === 'FUTURE' || type === 'PENDING' || type === 'REJECTED') {
@@ -199,9 +199,25 @@ const fetchPersonData = async (id, headers, todayDayId, regPerson, acToken) => {
                         }
                     });
 
-                    groupObj.priorityList.sort((a, b) => b.rangeStart - a.rangeStart);
+                    // 给内部记录定义权重
+                    const typeWeight = {
+                        'ACTIVE': 4,
+                        'PENDING': 3,
+                        'FUTURE': 2,
+                        'REJECTED': 1
+                    };
+
+                    groupObj.priorityList.sort((a, b) => {
+                        // 优先按状态权重排，状态越重要越靠前
+                        const weightDiff = typeWeight[b._type] - typeWeight[a._type];
+                        if (weightDiff !== 0) return weightDiff;
+
+                        // 如果状态一样（比如都是预约的），按时间最近的排在前面
+                        return b.rangeStart - a.rangeStart;
+                    });
+
                     groupObj.historyList.sort((a, b) => b.rangeStart - a.rangeStart);
-                    
+
                     // 记录全局状态，用于外层卡片Header显示
                     if (groupObj.priorityList.some(i => i._type === 'ACTIVE')) result.globalStatus.hasActive = true;
                     if (groupObj.priorityList.some(i => i._type === 'PENDING')) result.globalStatus.hasPending = true;
@@ -242,12 +258,12 @@ const generateCardHtml = (person) => {
                 const endStr = getFormattedDate(item._displayEnd);
                 let tagClass = 'tag-gray', iconClass = 'dot-gray';
                 let tagName = '记录';
-                
+
                 if (item._type === 'ACTIVE') { tagClass = 'tag-green'; iconClass = 'dot-green'; tagName = '今日'; }
                 if (item._type === 'FUTURE') { tagClass = 'tag-blue'; iconClass = 'dot-blue'; tagName = '预约'; }
                 if (item._type === 'PENDING') { tagClass = 'tag-yellow'; iconClass = 'dot-yellow'; tagName = '审核'; }
-                if (item._type === 'REJECTED') { tagClass = 'tag-red'; iconClass = 'dot-red'; tagName = '拒绝'; } 
-                
+                if (item._type === 'REJECTED') { tagClass = 'tag-red'; iconClass = 'dot-red'; tagName = '拒绝'; }
+
                 return `
                     <div class="row-item main-row">
                         <div class="row-left">
@@ -266,17 +282,17 @@ const generateCardHtml = (person) => {
                     </div>
                     <div class="history-content">
                         ${group.historyList.map(item => {
-                            const startStr = getFormattedDate(item._displayStart);
-                            const endStr = getFormattedDate(item._displayEnd);
-                            const isPending = String(item.flowStatus) === '1';
-                            const isRejected = String(item.flowStatus) === '3';
-                            
-                            let historyDot = 'dot-gray-light';
-                            let historyTag = '';
-                            if (isPending) { historyDot = 'dot-yellow'; historyTag = '<span style="color:#f59e0b;font-size:10px;margin-left:4px">[审]</span>'; }
-                            if (isRejected) { historyDot = 'dot-red'; historyTag = '<span style="color:#ef4444;font-size:10px;margin-left:4px">[拒]</span>'; }
+                const startStr = getFormattedDate(item._displayStart);
+                const endStr = getFormattedDate(item._displayEnd);
+                const isPending = String(item.flowStatus) === '1';
+                const isRejected = String(item.flowStatus) === '3';
 
-                            return `
+                let historyDot = 'dot-gray-light';
+                let historyTag = '';
+                if (isPending) { historyDot = 'dot-yellow'; historyTag = '<span style="color:#f59e0b;font-size:10px;margin-left:4px">[审]</span>'; }
+                if (isRejected) { historyDot = 'dot-red'; historyTag = '<span style="color:#ef4444;font-size:10px;margin-left:4px">[拒]</span>'; }
+
+                return `
                             <div class="row-item history-row">
                                 <div class="row-left">
                                     <div class="dot ${historyDot}"></div>
@@ -284,7 +300,7 @@ const generateCardHtml = (person) => {
                                     ${historyTag}
                                 </div>
                             </div>`;
-                        }).join('')}
+            }).join('')}
                     </div>
                 </div>
             ` : '';
@@ -347,7 +363,12 @@ router.get('/visitor-card-data', async (req, res) => {
         const todayDayId = getBeijingDayId(new Date().getTime());
         const person = await fetchPersonData(id, headers, todayDayId, config.regPerson, config.acToken);
         const html = generateCardHtml(person);
-        res.json({ html, hasActive: person.globalStatus.hasActive });
+        res.json({
+            html,
+            hasActive: person.globalStatus.hasActive,
+            hasPending: person.globalStatus.hasPending,
+            hasFuture: person.globalStatus.hasFuture
+        });
     } catch (e) {
         res.json({ html: '<div class="app-card error">数据获取异常</div>', hasActive: false });
     }
@@ -360,14 +381,14 @@ router.get('/visitor-status-Wechat', async (req, res) => {
     const headers = getHeaders();
     const todayDayId = getBeijingDayId(new Date().getTime());
     let outputLines = [`[${loc}] 🕒 ${getBeijingTimeStr()}`];
-    
+
     try {
         const decodedIds = config.visitorIdNos.map(encoded => Buffer.from(encoded, 'base64').toString('utf-8'));
         const promises = decodedIds.map(id => fetchPersonData(id, headers, todayDayId, config.regPerson, config.acToken));
         const results = await Promise.all(promises);
-        
+
         results.sort((a, b) => (b.globalStatus.hasActive ? 1 : 0) - (a.globalStatus.hasActive ? 1 : 0));
-        
+
         results.forEach(p => {
             if (!p.success) { outputLines.push(`\n❌ ${p.idTail} 失败`); return; }
             if (p.approverGroups.length === 0) outputLines.push(`\n👤 ${p.name}\n⚪ 无记录`);
@@ -763,7 +784,10 @@ router.get('/visitor-status', async (req, res) => {
                         const newWrapper = document.getElementById('wrapper-' + index);
                         
                         if(newWrapper) {
+                            // 把后端传过来的状态都存到 DOM 属性上
                             newWrapper.setAttribute('data-has-active', d.hasActive ? '1' : '0');
+                            newWrapper.setAttribute('data-has-pending', d.hasPending ? '1' : '0');
+                            newWrapper.setAttribute('data-has-future', d.hasFuture ? '1' : '0');
                             // 恢复展开状态
                             const blocks = newWrapper.querySelectorAll('.approver-block');
                             openHistoryBlocks.forEach(idx => {
@@ -807,11 +831,19 @@ router.get('/visitor-status', async (req, res) => {
     function sortAndFilter() {
         const container = document.getElementById('cardList');
         const cards = Array.from(container.children);
+        
+        // 计算权重的辅助函数
+        const getWeight = (card) => {
+            if (card.getAttribute('data-has-active') === '1') return 3;
+            if (card.getAttribute('data-has-pending') === '1') return 2;
+            if (card.getAttribute('data-has-future') === '1') return 1;
+            return 0; // 无记录、失败或已拒绝
+        };
+
         cards.sort((a, b) => {
-            const vA = parseInt(a.getAttribute('data-has-active') || '0');
-            const vB = parseInt(b.getAttribute('data-has-active') || '0');
-            return vB - vA;
+            return getWeight(b) - getWeight(a); // 权重高的在上面
         });
+        
         cards.forEach(c => container.appendChild(c));
         filterList();
     }
