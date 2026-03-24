@@ -355,7 +355,18 @@ const LOC_CONFIGS = {
             //     keepNormal: false,           // 🌟 核心：设为 true，同样双开！
             //     renewThreshold: 2,            // 独立：剩2天时触发专属包
             //     renewDays: 2                  // 独立：一次续2天
-            // }
+            // },
+            // 王菁
+            // "MTMxMTIxMTk4OTAxMDU1MDEx": {
+            //     receptionistId: "A2449801",
+            //     receptionistName: "龚旭明",
+            //     receptionDepartment: "QA01設備五課",
+            //     receptionistPhone: "17703340319",
+            //     visitReason: "设备维护与保养",
+            //     keepNormal: true,           // 🌟 核心：设为 true，同样双开！
+            //     renewThreshold: 2,            // 独立：剩2天时触发专属包
+            //     renewDays: 2                  // 独立：一次续2天
+            // },
             
         },
 
