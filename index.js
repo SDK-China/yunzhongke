@@ -41,7 +41,26 @@ app.use('/visitorApprovalQuery', visitorApprovalQueryRouter);
 
 // --- 根路由测试 (可选) ---
 app.get('/', (req, res) => {
-    res.send('🚀🚀🚀YunZhongKe Server is running.🚀🚀🚀');
+    // 主人，这里我们改用发送一段简单的 HTML 代码，并把图片放进去
+    res.send(`
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <meta charset="utf-8">
+            <title>首页</title>
+        </head>
+        <body>
+            <p>🚀🚀🚀YunZhongKe Server is running.🚀🚀🚀</p>
+            <img src="/sy.jpg" alt="sy" style="max-width: 100%;" />
+        </body>
+        </html>
+    `);
+});
+
+// [新增] 处理首页图片的静态路由
+app.get('/sy.jpg', (req, res) => {
+    // 准确读取您项目根目录下的 sy.jpg 文件
+    res.sendFile(path.join(__dirname, 'sy.jpg'));
 });
 
 // --- 静态文件处理 ---
