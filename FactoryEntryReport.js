@@ -454,7 +454,7 @@ const LOC_CONFIGS = {
                 "NTIyNzMxMjAwMDAxMTAzNjEx", //王煊廷
                 "MTMwMzIxMjAwMjA0MTY2MjE4", //邵相辉 
                 // "NDUwMjIxMTk4OTA0MDUyNDNY", //曾静 
-                "NDIxMTgxMTk5MDAxMTc2MzFY", //余新旺 
+                // "NDIxMTgxMTk5MDAxMTc2MzFY", //余新旺 
                 // "NDQwOTgyMTk5NzEwMDgyNTk3", //周勇驰 
                 "NDExNTI0MjAwNTEyMTA3NjU2", //杨瑞 
                 // "MDg5NjQ3MzI=", //赖彦翔 
