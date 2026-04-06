@@ -17,7 +17,6 @@ const CONFIGS = {
             "NDEwOTIzMTk4ODA3MTkxMDFY",
             "MDMwNzE3Njg=",
             "NDMyOTAxMTk4MjExMDUyMDE2",
-            "MDMwNzE3Njg=",
             "MTAyNDE5NDY=",
             "MDczOTM0Njc=",
             "NDIyMzI2MTk5NTA0Mjg2NDEx" // 窦
