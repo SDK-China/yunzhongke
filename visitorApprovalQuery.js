@@ -44,7 +44,8 @@ const CONFIGS = {
             "MDg5NjQ3MzI=",
             "MDYyNDg5MDE=",
             "SDAzODMzNTcy",
-            "NTMyNDY5ODc0"
+            "NTMyNDY5ODc0",
+            "NDIyMzI2MTk5NTA0Mjg2NDEx" //竇桂陽
         ],
         regPerson: "15032325162",
         acToken: "53F44A99C6D8AADE22942CD9E1D803E8812FF4A4A8A756BE0A1659704557309F"
