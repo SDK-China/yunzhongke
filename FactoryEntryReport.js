@@ -310,7 +310,7 @@ const LOC_CONFIGS = {
                 // "NDMyOTAxMTk4MjExMDUyMDE2", //兰（凌嘉）
                 // "NDEwOTIzMTk4ODA3MTkxMDFY", //卞（凌嘉）
                 // "MDMwNzE3Njg", //贾
-                // "MTMwNDI1MTk4OTA4MjkwMzE0", //姜
+                "MTMwNDI1MTk4OTA4MjkwMzE0", //姜
                 // "MTAyNDE5NDY=", //林
                 // "MDczOTM0Njc=", //陈
                 "NDIyMzI2MTk5NTA0Mjg2NDEx" // 窦
@@ -345,17 +345,17 @@ const LOC_CONFIGS = {
             //     renewThreshold: 2,            // 独立：剩2天时触发专属包
             //     renewDays: 2                  // 独立：一次续2天
             // },
-             // 姜建龙
-            // "MTMwNDI1MTk4OTA4MjkwMzE0": {
-            //     receptionistId: "A2449801",
-            //     receptionistName: "龚旭明",
-            //     receptionDepartment: "QA01設備五課",
-            //     receptionistPhone: "17703340319",
-            //     visitReason: "设备维护与保养",
-            //     keepNormal: false,           // 🌟 核心：设为 true，同样双开！
-            //     renewThreshold: 2,            // 独立：剩2天时触发专属包
-            //     renewDays: 2                  // 独立：一次续2天
-            // },
+            //  姜建龙
+            "MTMwNDI1MTk4OTA4MjkwMzE0": {
+                receptionistId: "A2449801",
+                receptionistName: "龚旭明",
+                receptionDepartment: "QA01設備五課",
+                receptionistPhone: "17703340319",
+                visitReason: "设备维护与保养",
+                keepNormal: false,           // 🌟 核心：设为 true，同样双开！
+                renewThreshold: 2,            // 独立：剩2天时触发专属包
+                renewDays: 2                  // 独立：一次续2天
+            },
             // 王菁
             // "MTMxMTIxMTk4OTAxMDU1MDEx": {
             //     receptionistId: "A2449801",
