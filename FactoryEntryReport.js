@@ -342,7 +342,7 @@ const LOC_CONFIGS = {
                 receptionistPhone: "17703340319",
                 visitReason: "设备维护与保养",
                 keepNormal: true,           // 🌟 核心：设为 true，同样双开！
-                renewThreshold: 2,            // 独立：剩2天时触发专属包
+                renewThreshold: 1,            // 独立：剩2天时触发专属包
                 renewDays: 7               // 独立：一次续2天
             },
             //  姜建龙
@@ -353,7 +353,7 @@ const LOC_CONFIGS = {
                 receptionistPhone: "17703340319",
                 visitReason: "设备维护与保养",
                 keepNormal: false,           // 🌟 核心：设为 true，同样双开！
-                renewThreshold: 2,            // 独立：剩2天时触发专属包
+                renewThreshold: 1,            // 独立：剩2天时触发专属包
                 renewDays: 7                  // 独立：一次续2天
             },
             // 王菁
