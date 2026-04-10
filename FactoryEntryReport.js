@@ -324,27 +324,27 @@ const LOC_CONFIGS = {
         // 【新增功能】：支持在这里配置专属的接待人信息
         customReceptionists: {
             // 康伟强
-            // "MTMwMzIzMTk4NjAyMjgwODFY": {
-            //     receptionistId: "A2449801",
-            //     receptionistName: "龚旭明",
-            //     receptionDepartment: "QA01設備五課",
-            //     receptionistPhone: "17703340319",
-            //     visitReason: "设备维护与保养",
-            //     keepNormal: true,             // 🌟 核心：设为 true，系统就会为他发一份指定的包，再跟大部队发一份原始包！
-            //     renewThreshold: 2,            // 独立：剩2天时触发专属包
-            //     renewDays: 2                  // 独立：一次续2天
-            // },
+            "MTMwMzIzMTk4NjAyMjgwODFY": {
+                receptionistId: "A2449801",
+                receptionistName: "龚旭明",
+                receptionDepartment: "QA01設備五課",
+                receptionistPhone: "17703340319",
+                visitReason: "设备维护与保养",
+                keepNormal: true,             // 🌟 核心：设为 true，系统就会为他发一份指定的包，再跟大部队发一份原始包！
+                renewThreshold: 2,            // 独立：剩2天时触发专属包
+                renewDays: 7                  // 独立：一次续2天
+            },
             // 张强
-            // "MTMwMzIyMTk4ODA2MjQyMDE4": {
-            //     receptionistId: "A2449801",
-            //     receptionistName: "龚旭明",
-            //     receptionDepartment: "QA01設備五課",
-            //     receptionistPhone: "17703340319",
-            //     visitReason: "设备维护与保养",
-            //     keepNormal: true,           // 🌟 核心：设为 true，同样双开！
-            //     renewThreshold: 2,            // 独立：剩2天时触发专属包
-            //     renewDays: 2                  // 独立：一次续2天
-            // },
+            "MTMwMzIyMTk4ODA2MjQyMDE4": {
+                receptionistId: "A2449801",
+                receptionistName: "龚旭明",
+                receptionDepartment: "QA01設備五課",
+                receptionistPhone: "17703340319",
+                visitReason: "设备维护与保养",
+                keepNormal: true,           // 🌟 核心：设为 true，同样双开！
+                renewThreshold: 2,            // 独立：剩2天时触发专属包
+                renewDays: 7               // 独立：一次续2天
+            },
             //  姜建龙
             "MTMwNDI1MTk4OTA4MjkwMzE0": {
                 receptionistId: "A2449801",
