@@ -686,7 +686,8 @@ const calculatePlan = (idStatusMap, locConfig) => {
         const getMaxEnd = (filterFn) => {
             let max = 0;
             records.forEach(r => {
-                if (filterFn(r)) {
+                // 🌟 新增判断：如果 flowStatus 是 '3' (代表已拒绝)，则直接跳过，绝对不纳入有效时间计算！
+                if (String(r.flowStatus) !== '3' && filterFn(r)) {
                     const end = parseInt(r.dateEnd || r.rangeEnd);
                     if (end > max) max = end;
                 }
