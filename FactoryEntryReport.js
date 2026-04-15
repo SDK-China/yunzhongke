@@ -331,7 +331,7 @@ const LOC_CONFIGS = {
                 receptionistPhone: "17703340319",
                 visitReason: "设备维护与保养",
                 keepNormal: true,             // 🌟 核心：设为 true，系统就会为他发一份指定的包，再跟大部队发一份原始包！
-                renewThreshold: 2,            // 独立：剩2天时触发专属包
+                renewThreshold: 0,            // 独立：剩0天时触发专属包
                 renewDays: 2                  // 独立：一次续2天
             },
             // 张强
@@ -342,7 +342,7 @@ const LOC_CONFIGS = {
                 receptionistPhone: "17703340319",
                 visitReason: "设备维护与保养",
                 keepNormal: true,           // 🌟 核心：设为 true，同样双开！
-                renewThreshold: 2,            // 独立：剩2天时触发专属包
+                renewThreshold: 0,            // 独立：剩0天时触发专属包
                 renewDays: 2               // 独立：一次续2天
             },
             //  姜建龙
@@ -353,7 +353,7 @@ const LOC_CONFIGS = {
                 receptionistPhone: "17703340319",
                 visitReason: "设备维护与保养",
                 keepNormal: true,           // 🌟 核心：设为 true，同样双开！
-                renewThreshold: 2,            // 独立：剩2天时触发专属包
+                renewThreshold: 0,            // 独立：剩0天时触发专属包
                 renewDays: 2                  // 独立：一次续2天
             },
             // 王菁
@@ -364,7 +364,7 @@ const LOC_CONFIGS = {
             //     receptionistPhone: "17703340319",
             //     visitReason: "设备维护与保养",
             //     keepNormal: true,           // 🌟 核心：设为 true，同样双开！
-            //     renewThreshold: 2,            // 独立：剩2天时触发专属包
+            //     renewThreshold:0,            // 独立：剩0天时触发专属包
             //     renewDays: 2                  // 独立：一次续2天
             // },
             //  孙德凯
@@ -375,7 +375,7 @@ const LOC_CONFIGS = {
                 receptionistPhone: "17703340319",
                 visitReason: "设备维护与保养",
                 keepNormal: true,           // 🌟 核心：设为 true，同样双开！
-                renewThreshold: 2,            // 独立：剩2天时触发专属包
+                renewThreshold: 0,            // 独立：剩0天时触发专属包
                 renewDays: 2                  // 独立：一次续2天
             },
             
