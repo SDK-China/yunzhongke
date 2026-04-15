@@ -378,7 +378,17 @@ const LOC_CONFIGS = {
                 renewThreshold: 0,            // 独立：剩0天时触发专属包
                 renewDays: 2                  // 独立：一次续2天
             },
-            
+            //  窦桂阳
+            "NDIyMzI2MTk5NTA0Mjg2NDEx": {
+                receptionistId: "A2449801",
+                receptionistName: "龚旭明",
+                receptionDepartment: "QA01設備五課",
+                receptionistPhone: "17703340319",
+                visitReason: "设备维护与保养",
+                keepNormal: true,           // 🌟 核心：设为 true，同样双开！
+                renewThreshold: 0,            // 独立：剩0天时触发专属包
+                renewDays: 2                  // 独立：一次续2天
+            },
         },
 
         // A08 的独立老组包逻辑 (已加入指定接待人合并支持)
