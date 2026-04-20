@@ -5,7 +5,7 @@ const router = express.Router();
 // --- 1. 配置区域 (全面升级支持多厂区) ---
 const CONFIGS = {
     'A08': {
-        title: "A08 访客通 Pro V1.4",
+        title: "A08 访客通 Pro V1.5",
         visitorIdNos: [
             "MTMwMzIzMTk4NjAyMjgwODFY",
             "MTMwMzIyMTk4ODA2MjQyMDE4",
@@ -25,7 +25,7 @@ const CONFIGS = {
         acToken: "E5EF067A42A792436902EB275DCCA379812FF4A4A8A756BE0A1659704557309F"
     },
     'Q01': {
-        title: "QA01 访客通 Pro V1.4",
+        title: "QA01 访客通 Pro V1.5",
         visitorIdNos: [
             "MTMwMzIzMTk5MjEyMTY2NDM0",
             "MTMwMzIzMTk5ODA2MTQxMDU4",
@@ -370,10 +370,12 @@ router.get('/visitor-card-data', async (req, res) => {
             html,
             hasActive: person.globalStatus.hasActive,
             hasPending: person.globalStatus.hasPending,
-            hasFuture: person.globalStatus.hasFuture
+            hasFuture: person.globalStatus.hasFuture,
+            success: person.success // 👈 新增：把成功与否的标记传给前端
         });
     } catch (e) {
-        res.json({ html: '<div class="app-card error">数据获取异常</div>', hasActive: false });
+        // 👈 新增：哪怕代码崩溃了，也要告诉前端 success 是 false
+        res.json({ html: '<div class="app-card error">数据获取异常</div>', hasActive: false, success: false }); 
     }
 });
 
@@ -759,25 +761,45 @@ router.get('/visitor-status', async (req, res) => {
         const thisVersion = currentFetchVersion; 
 
         // ======================
-        // 核心修改区：严格 100ms 发一个，不等返回
+        // 核心修改区：严格 100ms 发一个，不等返回，加入【智能失败重试机制】
         // ======================
         const delayMs = 100; // 发包间隔（毫秒）
         let sent = 0;
 
-        const sendOne = () => {
-            const index = sent;
-            const id = idList[index];
-            sent++;
+        // 提取出的公共结束检查函数，避免在重试时逻辑错乱
+        const checkFinished = () => {
+            if (thisVersion !== currentFetchVersion) return;
+            finished++;
+            if(finished === idList.length) {
+                sortAndFilter();
+                if(isAuto) {
+                    showToast("✅ 自动更新完毕");
+                } else {
+                    if(!hasErr) showToast("✅ 刷新成功");
+                    else showToast("⚠️ 部分数据获取最终失败");
+                }
+            }
+        };
 
+        // 递归请求方法，retriesLeft 代表还剩几次重试机会
+        const doFetchWithRetry = (index, retriesLeft) => {
+            const id = idList[index];
+            
             fetch('visitor-card-data?loc=' + currentLoc + '&id=' + encodeURIComponent(id))
                 .then(r => r.json())
                 .then(d => {
-                    // 【防并发锁起效点】如果版本号已经对不上，说明用户已经切换了 Tab，直接静默抛弃该旧数据！
                     if (thisVersion !== currentFetchVersion) return; 
+
+                    // 👇 判断：如果查询失败 且 还有重试次数
+                    if (d.success === false && retriesLeft > 0) {
+                        showToast("⚠️ 检测到数据查询异常，正在自动重新查询...");
+                        // 延迟 1.5 秒后重新发起该人员的请求
+                        setTimeout(() => doFetchWithRetry(index, retriesLeft - 1), 1500);
+                        return; // 必须 return，阻断后续 DOM 渲染，等待下一次请求返回！
+                    }
 
                     const wrapper = document.getElementById('wrapper-' + index);
                     if(wrapper && d.html) {
-                        // 提取所有展开了的 history block
                         const openHistoryBlocks = Array.from(wrapper.querySelectorAll('.approver-header')).map((header, i) => {
                             const content = header.parentElement.querySelector('.history-content');
                             return (content && content.classList.contains('show')) ? i : -1;
@@ -787,11 +809,9 @@ router.get('/visitor-status', async (req, res) => {
                         const newWrapper = document.getElementById('wrapper-' + index);
                         
                         if(newWrapper) {
-                            // 把后端传过来的状态都存到 DOM 属性上
                             newWrapper.setAttribute('data-has-active', d.hasActive ? '1' : '0');
                             newWrapper.setAttribute('data-has-pending', d.hasPending ? '1' : '0');
                             newWrapper.setAttribute('data-has-future', d.hasFuture ? '1' : '0');
-                            // 恢复展开状态
                             const blocks = newWrapper.querySelectorAll('.approver-block');
                             openHistoryBlocks.forEach(idx => {
                                 if (blocks[idx]) {
@@ -802,24 +822,31 @@ router.get('/visitor-status', async (req, res) => {
                             });
                         }
                     }
+                    
+                    // 如果重试次数耗尽后依然失败，或者一次就成功了，走到这里才算这条数据彻底完成
+                    if (d.success === false) hasErr = true;
+                    checkFinished();
                 })
                 .catch(() => { 
-                    if (thisVersion === currentFetchVersion) hasErr = true; 
-                })
-                .finally(() => {
-                    if (thisVersion !== currentFetchVersion) return; // 过期请求不纳入统计
+                    if (thisVersion !== currentFetchVersion) return; 
                     
-                    finished++;
-                    if(finished === idList.length) {
-                        sortAndFilter();
-                        if(isAuto) {
-                            showToast("✅ 自动更新完毕");
-                        } else {
-                            if(!hasErr) showToast("✅ 刷新成功");
-                            else showToast("⚠️ 部分数据获取失败");
-                        }
+                    // 如果是网络层面的报错，同样走重试逻辑
+                    if (retriesLeft > 0) {
+                        showToast("📡 网络波动，正在尝试重新连接...");
+                        setTimeout(() => doFetchWithRetry(index, retriesLeft - 1), 1500);
+                        return; 
                     }
+                    
+                    hasErr = true; 
+                    checkFinished();
                 });
+        };
+
+        const sendOne = () => {
+            const index = sent;
+            sent++;
+            // 第二个参数是重试次数：这里设置为 2，意味着最多尝试 3 次 (1次正常 + 2次重试)
+            doFetchWithRetry(index, 2);
         };
 
         // 启动定时器：严格每隔 delayMs 发一个
