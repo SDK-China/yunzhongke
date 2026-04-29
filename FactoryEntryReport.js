@@ -478,7 +478,7 @@ const LOC_CONFIGS = {
                 // "NDIxMTgxMTk5MDAxMTc2MzFY", //余新旺 
                 // "NDQwOTgyMTk5NzEwMDgyNTk3", //周勇驰 
                 "NDExNTI0MjAwNTEyMTA3NjU2", //杨瑞 
-                // "MDg5NjQ3MzI=", //赖彦翔 
+                "MDg5NjQ3MzI=", //赖彦翔 
                 // "MDYyNDg5MDE=", //马可为
                 "WjkwOTQwMSg3KQ==", //冼延浩 (新)
                 "NDQxNDgxMTk4ODAzMTYwODky", //张远彬 (新)
