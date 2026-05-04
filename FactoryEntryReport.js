@@ -325,10 +325,14 @@ const LOC_CONFIGS = {
         customReceptionists: {
             // 康伟强
             "MTMwMzIzMTk4NjAyMjgwODFY": {
-                receptionistId: "A2449801",
-                receptionistName: "龚旭明",
+                // receptionistId: "A2449801",
+                // receptionistName: "龚旭明",
+                // receptionDepartment: "QA01設備五課",
+                // receptionistPhone: "17703340319",
+                receptionistId: "A2319601",
+                receptionistName: "赵海富",
                 receptionDepartment: "QA01設備五課",
-                receptionistPhone: "17703340319",
+                receptionistPhone: "17643042011",
                 visitReason: "设备维护与保养",
                 keepNormal: true,             // 🌟 核心：设为 true，系统就会为他发一份指定的包，再跟大部队发一份原始包！
                 renewThreshold: 0,            // 独立：剩0天时触发专属包
@@ -336,10 +340,14 @@ const LOC_CONFIGS = {
             },
             // 张强
             "MTMwMzIyMTk4ODA2MjQyMDE4": {
-                receptionistId: "A2449801",
-                receptionistName: "龚旭明",
+                // receptionistId: "A2449801",
+                // receptionistName: "龚旭明",
+                // receptionDepartment: "QA01設備五課",
+                // receptionistPhone: "17703340319",
+                receptionistId: "A2319601",
+                receptionistName: "赵海富",
                 receptionDepartment: "QA01設備五課",
-                receptionistPhone: "17703340319",
+                receptionistPhone: "17643042011",
                 visitReason: "设备维护与保养",
                 keepNormal: true,           // 🌟 核心：设为 true，同样双开！
                 renewThreshold: 0,            // 独立：剩0天时触发专属包
@@ -347,10 +355,14 @@ const LOC_CONFIGS = {
             },
             //  姜建龙
             "MTMwNDI1MTk4OTA4MjkwMzE0": {
-                receptionistId: "A2449801",
-                receptionistName: "龚旭明",
+                // receptionistId: "A2449801",
+                // receptionistName: "龚旭明",
+                // receptionDepartment: "QA01設備五課",
+                // receptionistPhone: "17703340319",
+                receptionistId: "A2319601",
+                receptionistName: "赵海富",
                 receptionDepartment: "QA01設備五課",
-                receptionistPhone: "17703340319",
+                receptionistPhone: "17643042011",
                 visitReason: "设备维护与保养",
                 keepNormal: true,           // 🌟 核心：设为 true，同样双开！
                 renewThreshold: 0,            // 独立：剩0天时触发专属包
@@ -369,10 +381,14 @@ const LOC_CONFIGS = {
             // },
             //  孙德凯
             "MjMwMjMwMjAwMzAxMDEyMTM1": {
-                receptionistId: "A2449801",
-                receptionistName: "龚旭明",
+                // receptionistId: "A2449801",
+                // receptionistName: "龚旭明",
+                // receptionDepartment: "QA01設備五課",
+                // receptionistPhone: "17703340319",
+                receptionistId: "A2319601",
+                receptionistName: "赵海富",
                 receptionDepartment: "QA01設備五課",
-                receptionistPhone: "17703340319",
+                receptionistPhone: "17643042011",
                 visitReason: "设备维护与保养",
                 keepNormal: true,           // 🌟 核心：设为 true，同样双开！
                 renewThreshold: 0,            // 独立：剩0天时触发专属包
@@ -380,10 +396,14 @@ const LOC_CONFIGS = {
             },
             //  窦桂阳
             "NDIyMzI2MTk5NTA0Mjg2NDEx": {
-                receptionistId: "A2449801",
-                receptionistName: "龚旭明",
+                // receptionistId: "A2449801",
+                // receptionistName: "龚旭明",
+                // receptionDepartment: "QA01設備五課",
+                // receptionistPhone: "17703340319",
+                receptionistId: "A2319601",
+                receptionistName: "赵海富",
                 receptionDepartment: "QA01設備五課",
-                receptionistPhone: "17703340319",
+                receptionistPhone: "17643042011",
                 visitReason: "设备维护与保养",
                 keepNormal: true,           // 🌟 核心：设为 true，同样双开！
                 renewThreshold: 0,            // 独立：剩0天时触发专属包
@@ -1467,7 +1487,7 @@ router.get('/auto-renew', async (req, res) => {
                         }
                     } 
                 }));
-                await delay(200); 
+                await delay(500); 
             }
             
             await Promise.all(submitPromises);
