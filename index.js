@@ -5,6 +5,7 @@ const bodyParser = require('body-parser');
 const path = require('path');
 
 // --- 引入各功能模块 ---
+const logViewerRouter = require('./LogViewer');           // 引入日志查看器路由
 const crushToolRouter = require('./CrushTool');             // 原有新功能
 const weChatAutoReqRouter = require('./WeChatAutoReq');     // 微信自动请求
 const factoryEntryReportRouter = require('./FactoryEntryReport'); // 入厂报备(访客状态)
@@ -35,6 +36,10 @@ app.use('/WeChatAutoReq', weChatAutoReqRouter);
 // 4. 入厂报备功能 (包含 visitor-status 和 test-cron)
 // 访问地址: /FactoryEntryReport/...
 app.use('/FactoryEntryReport', factoryEntryReportRouter);
+
+// 5. 日志控制台
+// 访问地址: /LogViewer
+app.use('/LogViewer', logViewerRouter);
 
 // 引入访客查询功能路由
 app.use('/visitorApprovalQuery', visitorApprovalQueryRouter);

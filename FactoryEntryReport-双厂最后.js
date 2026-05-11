@@ -3,12 +3,11 @@
  * 自动续期入厂申请脚本 (多厂区支持 + 完美克隆解析 + 严格顺位保持 + SPA极速界面 + 独立账号身份校验)
  * =========================================================================
  * 🛠️ 【更新说明】
- * - 修复了多账号下 Token 与 Cookie 不匹配导致的“API返回失败”问题。
- * - 将 csrf_token 和 cookie 彻底配置化，A08 和 Q01 身份完全隔离。
- * - 极大地增强了发包失败时的日志输出（直接将后端的 JSON 报错打印到面板上）。
- * - QA01 的发包逻辑已完全重写：深度克隆 QA01_request_body.bin 的原始 JSON。
- * - QA01 人员勾选后，系统会自动根据他们在 bin 文件中的原生顺序进行重新排列。
- * - 绝对未修改或删除任何人物数据注释。
+ * - 🌟 新增“影分身”双轨独立检测：配置了专属接待人并开启 keepNormal 的人，系统会分别独立计算两者的到期时间！
+ * - 🌟 新增“智能拼车”：如果多人指定了同一个专属接待人，系统会自动把他们合并到同一个包里发出！
+ * - 🌟 新增“独立规则”：专属分身可以配置自己独有的 renewThreshold(阈值) 和 renewDays(天数)！
+ * - 升级严谨熔断机制：只要有一人报错 或 >50%无记录，直接触发终极锁死，彻底杜绝异常环境疯狂发包。
+ * - 绝对未修改或删除任何人物数据及注释。
  * =========================================================================
  */
 
@@ -69,16 +68,16 @@ const PERSON_DB = {
         {"componentName":"AttachmentField","fieldId":"attachmentField_lxv44osk","label":"社保/在职证明","fieldData":{"value":[{"name":"mmexport1759201655801.jpg","previewUrl":"/o/LLF66FD1VJ8ZU56HEFRI4BPWPUBG22DMDF6GMO4?appType=APP_GRVPTEOQ6D4B7FLZFYNJ&fileName=APP_GRVPTEOQ6D4B7FLZFYNJ_TExGNjZGRDFWSjhaVTU2SEVGUkk0QlBXUFVCRzIyRE1ERjZHTU40.jpg&instId=&type=open&process=image/resize,m_fill,w_200,h_200,limit_0/quality,q_80","downloadUrl":"/o/LLF66FD1VJ8ZU56HEFRI4BPWPUBG22DMDF6GMO4?appType=APP_GRVPTEOQ6D4B7FLZFYNJ&fileName=APP_GRVPTEOQ6D4B7FLZFYNJ_TExGNjZGRDFWSjhaVTU2SEVGUkk0QlBXUFVCRzIyRE1ERjZHTU40.jpg&instId=&type=download","size":304370,"url":"/o/LLF66FD1VJ8ZU56HEFRI4BPWPUBG22DMDF6GMO4?appType=APP_GRVPTEOQ6D4B7FLZFYNJ&fileName=APP_GRVPTEOQ6D4B7FLZFYNJ_TExGNjZGRDFWSjhaVTU2SEVGUkk0QlBXUFVCRzIyRE1ERjZHTU40.jpg&instId=&type=download","fileUuid":"APP_GRVPTEOQ6D4B7FLZFYNJ_TExGNjZGRDFWSjhaVTU2SEVGUkk0QlBXUFVCRzIyRE1ERjZHTU40.jpg"}]}},
         {"componentName":"AttachmentField","fieldId":"attachmentField_lxv44osn","label":"其他附件","fieldData":{"value":[]}}
     ],
-    // 姜
+   // 姜 (已同步 2026-03-04 最新抓包数据)
     "MTMwNDI1MTk4OTA4MjkwMzE0": [
         {"componentName":"SelectField","fieldId":"selectField_lxv44orx","label":"有效身份证件","fieldData":{"value":"身份证","text":"身份证"},"options":[{"defaultChecked":false,"syncLabelValue":true,"__sid":"item_lxjzgsg1","text":"身份证","__sid__":"serial_lxjzgsg0","value":"身份证","sid":"serial_lxjzgsg0"}]},
         {"componentName":"TextField","fieldId":"textField_lxv44ory","label":"证件号码","fieldData":{"value": decode("MTMwNDI1MTk4OTA4MjkwMzE0")}},
         {"componentName":"TextField","fieldId":"textField_lxv44orw","label":"姓名","fieldData":{"value": decode("5aec5bu66b6Z")}},
         {"componentName":"SelectField","fieldId":"selectField_mbyjhot6","label":"区号","fieldData":{"value":"86","text":"+86"},"options":[{"defaultChecked":true,"syncLabelValue":false,"__sid":"item_megqe4lm","text":"+86","__sid__":"serial_megqe4ll","value":"86","sid":"serial_mbyjf8gm"}]},
-        {"componentName":"TextField","fieldId":"textField_lxv44orz","label":"联系方式","fieldData":{"value": decode("MTM2MjU0MjIzNDY=") }},
-        {"componentName":"ImageField","fieldId":"imageField_ly9i5k5q","label":"免冠照片","fieldData":{"value":[{"name":"mmexport1759201658197.jpg","previewUrl":"https://dingtalk.avaryholding.com:8443/dingplus/image/20250930/ec928e3f5759064c4e2e1bf9cfc30f14.jpg","downloadUrl":"https://dingtalk.avaryholding.com:8443/dingplus/image/20250930/ec928e3f5759064c4e2e1bf9cfc30f14.jpg","size":58436,"url":"https://dingtalk.avaryholding.com:8443/dingplus/image/20250930/ec928e3f5759064c4e2e1bf9cfc30f14.jpg"}]}},
-        {"componentName":"AttachmentField","fieldId":"attachmentField_lxv44osj","label":"身份证照片","fieldData":{"value":[{"name":"mmexport1759201657241.jpg","previewUrl":"/o/U1B66W914K8ZZWUFFNE4PBZVZH2G28D8FF6GMV4?appType=APP_GRVPTEOQ6D4B7FLZFYNJ&fileName=APP_GRVPTEOQ6D4B7FLZFYNJ_VTFCNjZXOTE0SzhaWldVRkZORTRQQlpWWkgyRzI3RDhGRjZHTVU0.jpg&instId=&type=open&process=image/resize,m_fill,w_200,h_200,limit_0/quality,q_80","downloadUrl":"/o/U1B66W914K8ZZWUFFNE4PBZVZH2G28D8FF6GMV4?appType=APP_GRVPTEOQ6D4B7FLZFYNJ&fileName=APP_GRVPTEOQ6D4B7FLZFYNJ_VTFCNjZXOTE0SzhaWldVRkZORTRQQlpWWkgyRzI3RDhGRjZHTVU0.jpg&instId=&type=download","size":37638,"url":"/o/U1B66W914K8ZZWUFFNE4PBZVZH2G28D8FF6GMV4?appType=APP_GRVPTEOQ6D4B7FLZFYNJ&fileName=APP_GRVPTEOQ6D4B7FLZFYNJ_VTFCNjZXOTE0SzhaWldVRkZORTRQQlpWWkgyRzI3RDhGRjZHTVU0.jpg&instId=&type=download","fileUuid":"APP_GRVPTEOQ6D4B7FLZFYNJ_VTFCNjZXOTE0SzhaWldVRkZORTRQQlpWWkgyRzI3RDhGRjZHTVU0.jpg"}]}},
-        {"componentName":"AttachmentField","fieldId":"attachmentField_lxv44osk","label":"社保/在职证明","fieldData":{"value":[{"name":"mmexport1759201655801.jpg","previewUrl":"/o/6AG66W814L8ZPWYU9EOKXB6NTR892OPBFF6GMQ5?appType=APP_GRVPTEOQ6D4B7FLZFYNJ&fileName=APP_GRVPTEOQ6D4B7FLZFYNJ_NkFHNjZXODE0TDhaUFdZVTlFT0tYQjZOVFI4OTJPUEJGRjZHTVA1.jpg&instId=&type=open&process=image/resize,m_fill,w_200,h_200,limit_0/quality,q_80","downloadUrl":"/o/6AG66W814L8ZPWYU9EOKXB6NTR892OPBFF6GMQ5?appType=APP_GRVPTEOQ6D4B7FLZFYNJ&fileName=APP_GRVPTEOQ6D4B7FLZFYNJ_NkFHNjZXODE0TDhaUFdZVTlFT0tYQjZOVFI4OTJPUEJGRjZHTVA1.jpg&instId=&type=download","size":304370,"url":"/o/6AG66W814L8ZPWYU9EOKXB6NTR892OPBFF6GMQ5?appType=APP_GRVPTEOQ6D4B7FLZFYNJ&fileName=APP_GRVPTEOQ6D4B7FLZFYNJ_NkFHNjZXODE0TDhaUFdZVTlFT0tYQjZOVFI4OTJPUEJGRjZHTVA1.jpg&instId=&type=download","fileUuid":"APP_GRVPTEOQ6D4B7FLZFYNJ_NkFHNjZXODE0TDhaUFdZVTlFT0tYQjZOVFI4OTJPUEJGRjZHTVA1.jpg"}]}},
+        {"componentName":"TextField","fieldId":"textField_lxv44orz","label":"联系方式","fieldData":{"value": decode("MTMzMTUzOTY2MDc=") }}, // 已更新为 13315396607 的 Base64
+        {"componentName":"ImageField","fieldId":"imageField_ly9i5k5q","label":"免冠照片","fieldData":{"value":[{"name":"mmexport1772611546795.jpg","previewUrl":"https://dingtalk.avaryholding.com:8443/dingplus/image/20260304/4a240b9a1d92ad988ee252d3eb83f583.jpg","downloadUrl":"https://dingtalk.avaryholding.com:8443/dingplus/image/20260304/4a240b9a1d92ad988ee252d3eb83f583.jpg","size":173548,"url":"https://dingtalk.avaryholding.com:8443/dingplus/image/20260304/4a240b9a1d92ad988ee252d3eb83f583.jpg"}]}},
+        {"componentName":"AttachmentField","fieldId":"attachmentField_lxv44osj","label":"身份证照片","fieldData":{"value":[{"name":"mmexport1772611479286.jpg","previewUrl":"/o/W6D66371ZXN37V9ZHQY155MBLB4T2STL4RBMM88?appType=APP_GRVPTEOQ6D4B7FLZFYNJ&fileName=APP_GRVPTEOQ6D4B7FLZFYNJ_VzZENjYzNzFaWE4zN1Y5WkhRWTE1NU1CTEI0VDJTVEw0UkJNTTc4.jpg&instId=&type=open&process=image/resize,m_fill,w_200,h_200,limit_0/quality,q_80","downloadUrl":"/o/W6D66371ZXN37V9ZHQY155MBLB4T2STL4RBMM88?appType=APP_GRVPTEOQ6D4B7FLZFYNJ&fileName=APP_GRVPTEOQ6D4B7FLZFYNJ_VzZENjYzNzFaWE4zN1Y5WkhRWTE1NU1CTEI0VDJTVEw0UkJNTTc4.jpg&instId=&type=download","size":437235,"url":"/o/W6D66371ZXN37V9ZHQY155MBLB4T2STL4RBMM88?appType=APP_GRVPTEOQ6D4B7FLZFYNJ&fileName=APP_GRVPTEOQ6D4B7FLZFYNJ_VzZENjYzNzFaWE4zN1Y5WkhRWTE1NU1CTEI0VDJTVEw0UkJNTTc4.jpg&instId=&type=download","fileUuid":"APP_GRVPTEOQ6D4B7FLZFYNJ_VzZENjYzNzFaWE4zN1Y5WkhRWTE1NU1CTEI0VDJTVEw0UkJNTTc4.jpg"}]}},
+        {"componentName":"AttachmentField","fieldId":"attachmentField_lxv44osk","label":"社保/在职证明","fieldData":{"value":[{"name":"2_在职证明.pdf","previewUrl":"/dingtalk/mobile/APP_GRVPTEOQ6D4B7FLZFYNJ/inst/preview?appType=APP_GRVPTEOQ6D4B7FLZFYNJ&fileName=APP_GRVPTEOQ6D4B7FLZFYNJ_UlpFNjY4NzFFOU8zSElNSU5ETEJDNFdXVkwzUTJZR1NBUkJNTTI1.pdf&fileSize=75650&downloadUrl=APP_GRVPTEOQ6D4B7FLZFYNJ_UlpFNjY4NzFFOU8zSElNSU5ETEJDNFdXVkwzUTJZR1NBUkJNTTI1.pdf","downloadUrl":"/o/RZE66871E9O3HIMINDLBC4WWVL3Q2YGSARBMM35?appType=APP_GRVPTEOQ6D4B7FLZFYNJ&fileName=APP_GRVPTEOQ6D4B7FLZFYNJ_UlpFNjY4NzFFOU8zSElNSU5ETEJDNFdXVkwzUTJZR1NBUkJNTTI1.pdf&instId=&type=download","size":75650,"url":"/o/RZE66871E9O3HIMINDLBC4WWVL3Q2YGSARBMM35?appType=APP_GRVPTEOQ6D4B7FLZFYNJ&fileName=APP_GRVPTEOQ6D4B7FLZFYNJ_UlpFNjY4NzFFOU8zSElNSU5ETEJDNFdXVkwzUTJZR1NBUkJNTTI1.pdf&instId=&type=download","fileUuid":"APP_GRVPTEOQ6D4B7FLZFYNJ_UlpFNjY4NzFFOU8zSElNSU5ETEJDNFdXVkwzUTJZR1NBUkJNTTI1.pdf"}]}},
         {"componentName":"AttachmentField","fieldId":"attachmentField_lxv44osn","label":"其他附件","fieldData":{"value":[]}}
     ],
     // 孙
@@ -123,7 +122,7 @@ const PERSON_DB = {
         {"componentName":"TextField","fieldId":"textField_lxv44ory","label":"证件号码","fieldData":{"value": decode("NDMyOTAxMTk4MjExMDUyMDE2")}},
         {"componentName":"TextField","fieldId":"textField_lxv44orw","label":"姓名","fieldData":{"value": decode("5YWw5paM")}},
         {"componentName":"SelectField","fieldId":"selectField_mbyjhot6","label":"区号","fieldData":{"value":"86","text":"+86"},"options":[{"defaultChecked":true,"syncLabelValue":false,"__sid":"item_megqe4lm","text":"+86","__sid__":"serial_megqe4ll","value":"86","sid":"serial_mbyjf8gm"}]},
-        {"componentName":"TextField","fieldId":"textField_lxv44orz","label":"联系方式","fieldData":{"value": decode("MTM4MTI5NTM1MzA=") }},
+        {"componentName":"TextField","fieldId":"textField_lxv44orz","label":"联系方式","fieldData":{"value": decode("MTM0MTI5NTM1MzA=") }},
         {"componentName":"ImageField","fieldId":"imageField_ly9i5k5q","label":"免冠照片","fieldData":{"value":[{"name":"1000010214.jpg","previewUrl":"https://dingtalk.avaryholding.com:8443/dingplus/image/20251212/fd7e8c2de382ff60fa06a0b133726925.jpg","downloadUrl":"https://dingtalk.avaryholding.com:8443/dingplus/image/20251212/fd7e8c2de382ff60fa06a0b133726925.jpg","size":36681,"url":"https://dingtalk.avaryholding.com:8443/dingplus/image/20251212/fd7e8c2de382ff60fa06a0b133726925.jpg"}]}},
         {"componentName":"AttachmentField","fieldId":"attachmentField_lxv44osj","label":"身份证照片","fieldData":{"value":[{"name":"mmexport1765527972471.jpg","previewUrl":"/o/KPE66S71GVE1CFXGNA63M4ESVXGL3DBR4M2JMH?appType=APP_GRVPTEOQ6D4B7FLZFYNJ&fileName=APP_GRVPTEOQ6D4B7FLZFYNJ_S1BFNjZTNzFHVkUxQ0ZYR05BNjNNNEVTVlhHTDNEQlI0TTJKTUc$.jpg&instId=&type=open&process=image/resize,m_fill,w_200,h_200,limit_0/quality,q_80","downloadUrl":"/o/KPE66S71GVE1CFXGNA63M4ESVXGL3DBR4M2JMH?appType=APP_GRVPTEOQ6D4B7FLZFYNJ&fileName=APP_GRVPTEOQ6D4B7FLZFYNJ_S1BFNjZTNzFHVkUxQ0ZYR05BNjNNNEVTVlhHTDNEQlI0TTJKTUc$.jpg&instId=&type=download","size":214657,"url":"/o/KPE66S71GVE1CFXGNA63M4ESVXGL3DBR4M2JMH?appType=APP_GRVPTEOQ6D4B7FLZFYNJ&fileName=APP_GRVPTEOQ6D4B7FLZFYNJ_S1BFNjZTNzFHVkUxQ0ZYR05BNjNNNEVTVlhHTDNEQlI0TTJKTUc$.jpg&instId=&type=download","fileUuid":"APP_GRVPTEOQ6D4B7FLZFYNJ_S1BFNjZTNzFHVkUxQ0ZYR05BNjNNNEVTVlhHTDNEQlI0TTJKTUc$.jpg"}]}},
         {"componentName":"AttachmentField","fieldId":"attachmentField_lxv44osk","label":"社保/在职证明","fieldData":{"value":[{"name":"1_在职证明.pdf","previewUrl":"/dingtalk/mobile/APP_GRVPTEOQ6D4B7FLZFYNJ/inst/preview?appType=APP_GRVPTEOQ6D4B7FLZFYNJ&fileName=APP_GRVPTEOQ6D4B7FLZFYNJ_TUo5NjZBOTEwV0UxVlpBWUdKOTg0Q09GVTlBMjNVQlo0TTJKTUI%24.pdf&fileSize=71755&downloadUrl=APP_GRVPTEOQ6D4B7FLZFYNJ_TUo5NjZBOTEwV0UxVlpBWUdKOTg0Q09GVTlBMjNVQlo0TTJKTUI$.pdf","downloadUrl":"/o/MJ966A910WE1VZAYGJ984COFU9A23UBZ4M2JMC?appType=APP_GRVPTEOQ6D4B7FLZFYNJ&fileName=APP_GRVPTEOQ6D4B7FLZFYNJ_TUo5NjZBOTEwV0UxVlpBWUdKOTg0Q09GVTlBMjNVQlo0TTJKTUI$.pdf&instId=&type=download","size":71755,"url":"/o/MJ966A910WE1VZAYGJ984COFU9A23UBZ4M2JMC?appType=APP_GRVPTEOQ6D4B7FLZFYNJ&fileName=APP_GRVPTEOQ6D4B7FLZFYNJ_TUo5NjZBOTEwV0UxVlpBWUdKOTg0Q09GVTlBMjNVQlo0TTJKTUI$.pdf&instId=&type=download","fileUuid":"APP_GRVPTEOQ6D4B7FLZFYNJ_TUo5NjZBOTEwV0UxVlpBWUdKOTg0Q09GVTlBMjNVQlo0TTJKTUI$.pdf"}]}},
@@ -175,6 +174,18 @@ const PERSON_DB = {
         {"componentName":"ImageField","fieldId":"imageField_ly9i5k5q","label":"免冠照片","fieldData":{"value":[{"name":"1000059194.jpg","previewUrl":"https://dingtalk.avaryholding.com:8443/dingplus/image/20260228/a0d9fc25135b0d479b278702c8c39cba.jpg","downloadUrl":"https://dingtalk.avaryholding.com:8443/dingplus/image/20260228/a0d9fc25135b0d479b278702c8c39cba.jpg","size":72773,"url":"https://dingtalk.avaryholding.com:8443/dingplus/image/20260228/a0d9fc25135b0d479b278702c8c39cba.jpg"}]}},
         {"componentName":"AttachmentField","fieldId":"attachmentField_lxv44osj","label":"身份证照片","fieldData":{"value":[{"name":"mmexport1772248145582.jpg","previewUrl":"/o/A9D66CC1ZZL3GWKMGUKY84Q1VCSW3STYSQ5MMJ?appType=APP_GRVPTEOQ6D4B7FLZFYNJ&fileName=APP_GRVPTEOQ6D4B7FLZFYNJ_QTlENjZDQzFaWkwzR1dLTUdVS1k4NFExVkNTVzNTVFlTUTVNTUk$.jpg&instId=&type=open&process=image/resize,m_fill,w_200,h_200,limit_0/quality,q_80","downloadUrl":"/o/A9D66CC1ZZL3GWKMGUKY84Q1VCSW3STYSQ5MMJ?appType=APP_GRVPTEOQ6D4B7FLZFYNJ&fileName=APP_GRVPTEOQ6D4B7FLZFYNJ_QTlENjZDQzFaWkwzR1dLTUdVS1k4NFExVkNTVzNTVFlTUTVNTUk$.jpg&instId=&type=download","size":130388,"url":"/o/A9D66CC1ZZL3GWKMGUKY84Q1VCSW3STYSQ5MMJ?appType=APP_GRVPTEOQ6D4B7FLZFYNJ&fileName=APP_GRVPTEOQ6D4B7FLZFYNJ_QTlENjZDQzFaWkwzR1dLTUdVS1k4NFExVkNTVzNTVFlTUTVNTUk$.jpg&instId=&type=download","fileUuid":"APP_GRVPTEOQ6D4B7FLZFYNJ_QTlENjZDQzFaWkwzR1dLTUdVS1k4NFExVkNTVzNTVFlTUTVNTUk$.jpg"}]}},
         {"componentName":"AttachmentField","fieldId":"attachmentField_lxv44osk","label":"社保/在职证明","fieldData":{"value":[{"name":"mmexport1772246999991.png","previewUrl":"/o/BO966PC16653TY08NOOJL6931NEN38DBTQ5MM9F1?appType=APP_GRVPTEOQ6D4B7FLZFYNJ&fileName=APP_GRVPTEOQ6D4B7FLZFYNJ_Qk85NjZQQzE2NjUzVFkwOE5PT0pMNjkzMU5FTjM3REJUUTVNTThGMQ$$.png&instId=&type=open&process=image/resize,m_fill,w_200,h_200,limit_0/quality,q_80","downloadUrl":"/o/BO966PC16653TY08NOOJL6931NEN38DBTQ5MM9F1?appType=APP_GRVPTEOQ6D4B7FLZFYNJ&fileName=APP_GRVPTEOQ6D4B7FLZFYNJ_Qk85NjZQQzE2NjUzVFkwOE5PT0pMNjkzMU5FTjM3REJUUTVNTThGMQ$$.png&instId=&type=download","size":123882,"url":"/o/BO966PC16653TY08NOOJL6931NEN38DBTQ5MM9F1?appType=APP_GRVPTEOQ6D4B7FLZFYNJ&fileName=APP_GRVPTEOQ6D4B7FLZFYNJ_Qk85NjZQQzE2NjUzVFkwOE5PT0pMNjkzMU5FTjM3REJUUTVNTThGMQ$$.png&instId=&type=download","fileUuid":"APP_GRVPTEOQ6D4B7FLZFYNJ_Qk85NjZQQzE2NjUzVFkwOE5PT0pMNjkzMU5FTjM3REJUUTVNTThGMQ$$.png"}]}},
+        {"componentName":"AttachmentField","fieldId":"attachmentField_lxv44osn","label":"其他附件","fieldData":{"value":[]}}
+    ],
+    // 窦桂阳
+    "NDIyMzI2MTk5NTA0Mjg2NDEx": [
+        {"componentName":"SelectField","fieldId":"selectField_lxv44orx","label":"有效身份证件","fieldData":{"value":"身份证","text":"身份证"},"options":[{"defaultChecked":false,"syncLabelValue":true,"__sid":"item_lxjzgsg1","text":"身份证","__sid__":"serial_lxjzgsg0","value":"身份证","sid":"serial_lxjzgsg0"}]},
+        {"componentName":"TextField","fieldId":"textField_lxv44ory","label":"证件号码","fieldData":{"value": decode("NDIyMzI2MTk5NTA0Mjg2NDEx")}},
+        {"componentName":"TextField","fieldId":"textField_lxv44orw","label":"姓名","fieldData":{"value": decode("56qm5qGC6Ziz")}},
+        {"componentName":"SelectField","fieldId":"selectField_mbyjhot6","label":"区号","fieldData":{"value":"86","text":"+86"},"options":[{"defaultChecked":true,"syncLabelValue":false,"__sid":"item_megqe4lm","text":"+86","__sid__":"serial_megqe4ll","value":"86","sid":"serial_mbyjf8gm"}]},
+        {"componentName":"TextField","fieldId":"textField_lxv44orz","label":"联系方式","fieldData":{"value": decode("MTc3MDcxNTM3MTA=") }},
+        {"componentName":"ImageField","fieldId":"imageField_ly9i5k5q","label":"免冠照片","fieldData":{"value":[{"name":"IMG_20260322_234120.png","previewUrl":"https://dingtalk.avaryholding.com:8443/dingplus/image/20260322/ffe9d2fcefe5a1804c8121b0190d7862.png","downloadUrl":"https://dingtalk.avaryholding.com:8443/dingplus/image/20260322/ffe9d2fcefe5a1804c8121b0190d7862.png","size":132385,"url":"https://dingtalk.avaryholding.com:8443/dingplus/image/20260322/ffe9d2fcefe5a1804c8121b0190d7862.png"}]}},
+        {"componentName":"AttachmentField","fieldId":"attachmentField_lxv44osj","label":"身份证照片","fieldData":{"value":[{"name":"mmexport1774193578988.jpg","previewUrl":"/o/E2E66S91LI24L1K2H2XD54ZLK87L2F7DOX1NM8C?appType=APP_GRVPTEOQ6D4B7FLZFYNJ&fileName=APP_GRVPTEOQ6D4B7FLZFYNJ_RTJFNjZTOTFMSTI0TDFLMkgyWEQ1NFpMSzg3TDJFN0RPWDFOTTdD.jpg&instId=&type=open&process=image/resize,m_fill,w_200,h_200,limit_0/quality,q_80","downloadUrl":"/o/E2E66S91LI24L1K2H2XD54ZLK87L2F7DOX1NM8C?appType=APP_GRVPTEOQ6D4B7FLZFYNJ&fileName=APP_GRVPTEOQ6D4B7FLZFYNJ_RTJFNjZTOTFMSTI0TDFLMkgyWEQ1NFpMSzg3TDJFN0RPWDFOTTdD.jpg&instId=&type=download","size":467704,"url":"/o/E2E66S91LI24L1K2H2XD54ZLK87L2F7DOX1NM8C?appType=APP_GRVPTEOQ6D4B7FLZFYNJ&fileName=APP_GRVPTEOQ6D4B7FLZFYNJ_RTJFNjZTOTFMSTI0TDFLMkgyWEQ1NFpMSzg3TDJFN0RPWDFOTTdD.jpg&instId=&type=download","fileUuid":"APP_GRVPTEOQ6D4B7FLZFYNJ_RTJFNjZTOTFMSTI0TDFLMkgyWEQ1NFpMSzg3TDJFN0RPWDFOTTdD.jpg"}]}},
+        {"componentName":"AttachmentField","fieldId":"attachmentField_lxv44osk","label":"社保/在职证明","fieldData":{"value":[{"name":"在职证明 - 蔻.pdf","previewUrl":"/dingtalk/mobile/APP_GRVPTEOQ6D4B7FLZFYNJ/inst/preview?appType=APP_GRVPTEOQ6D4B7FLZFYNJ&fileName=APP_GRVPTEOQ6D4B7FLZFYNJ_TTBCNjZPQzFWUDE0TjNEQk9MNlMxNzdaT1FUMTJTMU9PWDFOTUtO.pdf&fileSize=41267&downloadUrl=APP_GRVPTEOQ6D4B7FLZFYNJ_TTBCNjZPQzFWUDE0TjNEQk9MNlMxNzdaT1FUMTJTMU9PWDFOTUtO.pdf","downloadUrl":"/o/M0B66OC1VP14N3DBOL6S177ZOQT12S1OOX1NMLN?appType=APP_GRVPTEOQ6D4B7FLZFYNJ&fileName=APP_GRVPTEOQ6D4B7FLZFYNJ_TTBCNjZPQzFWUDE0TjNEQk9MNlMxNzdaT1FUMTJTMU9PWDFOTUtO.pdf&instId=&type=download","size":41267,"url":"/o/M0B66OC1VP14N3DBOL6S177ZOQT12S1OOX1NMLN?appType=APP_GRVPTEOQ6D4B7FLZFYNJ&fileName=APP_GRVPTEOQ6D4B7FLZFYNJ_TTBCNjZPQzFWUDE0TjNEQk9MNlMxNzdaT1FUMTJTMU9PWDFOTUtO.pdf&instId=&type=download","fileUuid":"APP_GRVPTEOQ6D4B7FLZFYNJ_TTBCNjZPQzFWUDE0TjNEQk9MNlMxNzdaT1FUMTJTMU9PWDFOTUtO.pdf"}]}},
         {"componentName":"AttachmentField","fieldId":"attachmentField_lxv44osn","label":"其他附件","fieldData":{"value":[]}}
     ]
 };
@@ -287,34 +298,128 @@ const LOC_CONFIGS = {
         // 👇 A08 账号身份凭证 (原封不动)
         csrf_token: "e7daa879-7b83-40f7-8335-1a262747f2c9",
         cookie: "tianshu_corp_user=ding2b4c83bec54a29c6f2c783f7214b6d69_FREEUSER; tianshu_csrf_token=e7daa879-7b83-40f7-8335-1a262747f2c9; c_csrf=e7daa879-7b83-40f7-8335-1a262747f2c9; cookie_visitor_id=zfGITZnn; cna=QhOGIdjbQ3ABASQOBEFsQ0YG; xlly_s=1; tianshu_app_type=APP_GRVPTEOQ6D4B7FLZFYNJ; JSESSIONID=BF2C6304A367F22183E99C3E5B5181C4; tfstk=gOZxf6D0ah_YmbR2H5blSie9vWyOMa2qeSyBjfcD57F8iJ8615qgycFzMIcmSS4-67N-GjmfQ1Fun54imlewXAw__tlG3a243co1t6qOx-yqEsPFbo36NgwrKxT1rqiRmR_At6jhqZ9SXsC3nq6jmbMZNxMXlE6-VAH6fcgjG36-CAAX5jN_FThrQAOXfhG5VAkB5ci_186-QbGsfqN_FTHZNf91kGhG5b-Tu6E2PQTVe3t72x3x1HG9XDqyxFGLhbtMyWMxkt2jwht_4PdnXxc1VBhaV5nIku6MWXnrwAHYDOYE_yDTCvnBhny8G7ZKRufyjfsyqkqd5-AnU0LfeTLw7qMrh42tpxCQDiM-tTfH7FuY8YhheTLw7qMreXXrUF8Zky5..; isg=BJCQbJGPzSIDPJDoHxPbfgneatziWXSjkwUE44pgG-BuxflvPmhTMY7zmMuAWSx7",
-
+        // 🔪 新增：明确 A08 厂区大部队的常规接待人 (用于精准过滤普通组记录)
+        normalReceptionistId: "61990794", // 王晗的工号
         query: {
             visitorIdNos: [
-                "MTMwMzIzMTk4NjAyMjgwODFY",
-                "MTMwMzIyMTk4ODA2MjQyMDE4",
-                "MjMwMjMwMjAwMzAxMDEyMTM1",
-                "MTMxMTIxMTk4OTAxMDU1MDEx",
-                "NDEwNDIzMTk4OTA3MjIxNTMw",
-                // "NDMyOTAxMTk4MjExMDUyMDE2",
-                // "NDEwOTIzMTk4ODA3MTkxMDFY",
-                // "MDMwNzE3Njg",
-                // "MTMwNDI1MTk4OTA4MjkwMzE0",
-                "MTAyNDE5NDY=",
-                "MDczOTM0Njc=",
+                "MTMwMzIzMTk4NjAyMjgwODFY",  //康
+                "MTMwMzIyMTk4ODA2MjQyMDE4", //张
+                "MjMwMjMwMjAwMzAxMDEyMTM1", //孙
+                "MTMxMTIxMTk4OTAxMDU1MDEx",  //王
+                // "NDEwNDIzMTk4OTA3MjIxNTMw", //田
+                // "NDMyOTAxMTk4MjExMDUyMDE2", //兰（凌嘉）
+                // "NDEwOTIzMTk4ODA3MTkxMDFY", //卞（凌嘉）
+                // "MDMwNzE3Njg", //贾
+                "MTMwNDI1MTk4OTA4MjkwMzE0", //姜
+                // "MTAyNDE5NDY=", //林
+                // "MDczOTM0Njc=", //陈
+                "NDIyMzI2MTk5NTA0Mjg2NDEx" // 窦
             ],
             regPerson: "17614625112",
             acToken: "E5EF067A42A792436902EB275DCCA379812FF4A4A8A756BE0A1659704557309F",
             queryUrl: "https://dingtalk.avaryholding.com:8443/dingplus/visitorConnector/visitorStatus"
         },
         personDb: PERSON_DB,
-        // A08 的独立老组包逻辑
-        buildPayload: (idsBase64, targetTs, locConfig) => {
+        
+        // 【新增功能】：支持在这里配置专属的接待人信息
+        customReceptionists: {
+            // 康伟强
+            "MTMwMzIzMTk4NjAyMjgwODFY": {
+                // receptionistId: "A2449801",
+                // receptionistName: "龚旭明",
+                // receptionDepartment: "QA01設備五課",
+                // receptionistPhone: "17703340319",
+                receptionistId: "A2319601",
+                receptionistName: "赵海富",
+                receptionDepartment: "QA01設備五課",
+                receptionistPhone: "17643042011",
+                visitReason: "设备维护与保养",
+                keepNormal: true,             // 🌟 核心：设为 true，系统就会为他发一份指定的包，再跟大部队发一份原始包！
+                renewThreshold: 0,            // 独立：剩0天时触发专属包
+                renewDays: 2                  // 独立：一次续2天
+            },
+            // 张强
+            "MTMwMzIyMTk4ODA2MjQyMDE4": {
+                // receptionistId: "A2449801",
+                // receptionistName: "龚旭明",
+                // receptionDepartment: "QA01設備五課",
+                // receptionistPhone: "17703340319",
+                receptionistId: "A2319601",
+                receptionistName: "赵海富",
+                receptionDepartment: "QA01設備五課",
+                receptionistPhone: "17643042011",
+                visitReason: "设备维护与保养",
+                keepNormal: true,           // 🌟 核心：设为 true，同样双开！
+                renewThreshold: 0,            // 独立：剩0天时触发专属包
+                renewDays: 2               // 独立：一次续2天
+            },
+            //  姜建龙
+            "MTMwNDI1MTk4OTA4MjkwMzE0": {
+                // receptionistId: "A2449801",
+                // receptionistName: "龚旭明",
+                // receptionDepartment: "QA01設備五課",
+                // receptionistPhone: "17703340319",
+                receptionistId: "A2319601",
+                receptionistName: "赵海富",
+                receptionDepartment: "QA01設備五課",
+                receptionistPhone: "17643042011",
+                visitReason: "设备维护与保养",
+                keepNormal: true,           // 🌟 核心：设为 true，同样双开！
+                renewThreshold: 0,            // 独立：剩0天时触发专属包
+                renewDays: 2                  // 独立：一次续2天
+            },
+            // 王菁
+            // "MTMxMTIxMTk4OTAxMDU1MDEx": {
+            //     receptionistId: "A2449801",
+            //     receptionistName: "龚旭明",
+            //     receptionDepartment: "QA01設備五課",
+            //     receptionistPhone: "17703340319",
+            //     visitReason: "设备维护与保养",
+            //     keepNormal: true,           // 🌟 核心：设为 true，同样双开！
+            //     renewThreshold:0,            // 独立：剩0天时触发专属包
+            //     renewDays: 2                  // 独立：一次续2天
+            // },
+            //  孙德凯
+            "MjMwMjMwMjAwMzAxMDEyMTM1": {
+                // receptionistId: "A2449801",
+                // receptionistName: "龚旭明",
+                // receptionDepartment: "QA01設備五課",
+                // receptionistPhone: "17703340319",
+                receptionistId: "A2319601",
+                receptionistName: "赵海富",
+                receptionDepartment: "QA01設備五課",
+                receptionistPhone: "17643042011",
+                visitReason: "设备维护与保养",
+                keepNormal: true,           // 🌟 核心：设为 true，同样双开！
+                renewThreshold: 0,            // 独立：剩0天时触发专属包
+                renewDays: 2                  // 独立：一次续2天
+            },
+            //  窦桂阳
+            "NDIyMzI2MTk5NTA0Mjg2NDEx": {
+                // receptionistId: "A2449801",
+                // receptionistName: "龚旭明",
+                // receptionDepartment: "QA01設備五課",
+                // receptionistPhone: "17703340319",
+                receptionistId: "A2319601",
+                receptionistName: "赵海富",
+                receptionDepartment: "QA01設備五課",
+                receptionistPhone: "17643042011",
+                visitReason: "设备维护与保养",
+                keepNormal: true,           // 🌟 核心：设为 true，同样双开！
+                renewThreshold: 0,            // 独立：剩0天时触发专属包
+                renewDays: 2                  // 独立：一次续2天
+            },
+        },
+
+        // A08 的独立老组包逻辑 (已加入指定接待人合并支持)
+        buildPayload: (idsBase64, targetTs, locConfig, customConfig = null) => {
             const tableRows = idsBase64.map(id => locConfig.personDb[id]).filter(Boolean);
             const finalForm = [];
             
             A08_TEMPLATE.forEach(block => {
                 if (block.type === 'STATIC') {
-                    finalForm.push(block.item);
+                    // 修复：必须进行深拷贝，否则会污染内存里的全局模板
+                    finalForm.push(JSON.parse(JSON.stringify(block.item)));
                 } else if (block.type === 'INJECT_TABLE') {
                     finalForm.push({
                         "componentName": "TableField", "fieldId": "tableField_lxv44os5",
@@ -324,6 +429,18 @@ const LOC_CONFIGS = {
                     finalForm.push({ ...block.template, fieldData: { value: targetTs } });
                 }
             });
+
+            // 👇 【新增】如果传入了指定接待人配置，拦截并覆写 A08 的外层表单参数
+            if (customConfig) {
+                finalForm.forEach(item => {
+                    if (item.label && String(item.label).includes('接待人工号') && customConfig.receptionistId) item.fieldData.value = customConfig.receptionistId;
+                    else if (item.label && String(item.label).includes('接待人员') && customConfig.receptionistName) item.fieldData.value = customConfig.receptionistName;
+                    else if (item.label && String(item.label).includes('接待部门') && customConfig.receptionDepartment) item.fieldData.value = customConfig.receptionDepartment;
+                    else if (item.label && String(item.label).includes('接待人联系方式') && customConfig.receptionistPhone) item.fieldData.value = customConfig.receptionistPhone;
+                    else if (item.label && String(item.label).includes('服务/事由描述') && customConfig.visitReason) item.fieldData.value = customConfig.visitReason;
+                });
+            }
+
             const jsonStr = JSON.stringify(finalForm, null, 2);
             // 👇 强制绑定该账号独有的 Token
             const _token = locConfig.csrf_token || 'e7daa879-7b83-40f7-8335-1a262747f2c9';
@@ -342,41 +459,62 @@ const LOC_CONFIGS = {
         csrf_token: "5581e41f-8c38-48d4-bea4-20d1f96af4db",
         cookie: "tianshu_corp_user=ding2b4c83bec54a29c6f2c783f7214b6d69_FREEUSER; tianshu_csrf_token=5581e41f-8c38-48d4-bea4-20d1f96af4db; c_csrf=5581e41f-8c38-48d4-bea4-20d1f96af4db; cookie_visitor_id=o5TLBWJ6; cna=KDksIgUMMBsCARuACb+fM//A; xlly_s=1; tianshu_app_type=APP_GRVPTEOQ6D4B7FLZFYNJ; JSESSIONID=5BF894CE5AFD8107A9C6124F8753BEB5; tfstk=gTlIf86UsykasoYp2M8NcrQKR6PevFR2Vaa-o4CFyWFpNgUbJ7orypYWNqngzWuJx0G7XcqKUDRHw8ijx0wk-ur8V0u-LFR2g203Z7nW0IRVHeDw8DaRwzLR6yzk7ypCdudzZ7K2bO58KINoAceYPk395zzz2un8eVCT-lU827n8XRUYuMF8w0L_6zzlJwUdwPBT8lE8w7n-WFauXyF8w0395zv_rtaGPouBPqRW4aBBtvE1w_h_5nNKRi1Lo34UdogUuOXi1i2QD2E1aHjKKrrQkjKNKrwIJjNE_HpZRlHKwWlpb_ijfxFswR7JVyHKlj2mwhsr4srb5yX5EkC75o865TXlaj5nMewO5_eLSPzw5F6rtJUg5o865TXupP4i3FT1UXf..; isg=BOzsBAulqRjsL70mvTB0y-TYtsgepZBPSDBScUYpsid4UGNbQrR-3bOndF_PIcin",
 
-        // 自定义接待人配置
+        // 🔪 新增：明确Q01 厂区大部队的常规接待人 (用于精准过滤普通组记录)
+        // normalReceptionistId: "61990794", // 王晗的工号
+
+        // Q01 全局通用接待人配置 (未指定专属接待人的人员将默认使用这个)
         // receptionistId: "82100751",    // 工号
         // receptionistName: "张宏敏",       // 姓名
         // receptionDepartment:"P2電測檢驗組",  //接待部门
         // receptionistPhone:"18733454885",  //接待人联系方式
         // visitReason: "治具调试",     // 事由描述
 
+        // 【新增功能】：支持在这里配置专属的接待人信息
+        customReceptionists: {
+            // 示例：给某个身份证指定一个专用的接待人：
+            // "MTMwMzIzMTk5MjEyMTY2NDM0": {
+            //     receptionistId: "12345678",
+            //     receptionistName: "专属张宏敏",
+            //     receptionDepartment: "P2特殊测试组",
+            //     receptionistPhone: "13888888888",
+            //     visitReason: "特殊机台维护",
+            //     keepNormal: true
+            // }
+        },
+
         query: {
             visitorIdNos: [
-                "MTMwMzIzMTk5MjEyMTY2NDM0",  //张江路
-                "MTMwMzIzMTk5ODA2MTQxMDU4", //刘宏飞
-                "MTMwMzIzMTk5MDAzMDc2NDE2", //张江宽
-                "MTMwMzIzMTk4OTA5MDQ2NDEx", //付海超
+                // "MTMwMzIzMTk5MjEyMTY2NDM0",  //张江路
+                // "MTMwMzIzMTk5ODA2MTQxMDU4", //刘宏飞
+                // "MTMwMzIzMTk5MDAzMDc2NDE2", //张江宽
+                // "MTMwMzIzMTk4OTA5MDQ2NDEx", //付海超
                 "MDU4NDMzNDg=", //张道玄
                 "MTIwNDUxOTI=", //张乃文
                 "SzEzOTMxMihBKQ==", //陈毅鸿
-                "NDMxMjIyMTk5NzEyMDUzMzEz", //向林  
+                // "NDMxMjIyMTk5NzEyMDUzMzEz", //向林  
                 "NTIyNzMxMjAwMDAxMTAzNjEx", //王煊廷
                 "MTMwMzIxMjAwMjA0MTY2MjE4", //邵相辉 
-                "NDUwMjIxMTk4OTA0MDUyNDNY", //曾静 
-                "NDIxMTgxMTk5MDAxMTc2MzFY", //余新旺 
-                "NDQwOTgyMTk5NzEwMDgyNTk3", //周勇驰 
+                // "NDUwMjIxMTk4OTA0MDUyNDNY", //曾静 
+                // "NDIxMTgxMTk5MDAxMTc2MzFY", //余新旺 
+                // "NDQwOTgyMTk5NzEwMDgyNTk3", //周勇驰 
                 "NDExNTI0MjAwNTEyMTA3NjU2", //杨瑞 
-                // "MDg5NjQ3MzI=", //赖彦翔 
+                "MDg5NjQ3MzI=", //赖彦翔 
                 // "MDYyNDg5MDE=", //马可为
-                // "SDAzODMzNTcy", //冼延浩
+                "WjkwOTQwMSg3KQ==", //冼延浩 (新)
+                "NDQxNDgxMTk4ODAzMTYwODky", //张远彬 (新)
+                "MDcyMjg1Nzc=", //朱会民 (新)
                 // "NTMyNDY5ODc0" //Denis Gerassimenko
+                "NDIyMzI2MTk5NTA0Mjg2NDEx", //竇桂陽
+                "MTMwMzIzMjAwMzEyMDc1NjE1"  //周家豪
             ],
             regPerson: "15032325162",
             acToken: "53F44A99C6D8AADE22942CD9E1D803E8812FF4A4A8A756BE0A1659704557309F",
             queryUrl: "https://dingtalk.avaryholding.com:8443/dingplus/visitorConnector/visitorStatus"
         },
         personDb: Q01_PERSON_DB,
-        // Q01 专有完美克隆组包逻辑
-        buildPayload: (idsBase64, targetTs, locConfig) => {
+        
+        // Q01 专有完美克隆组包逻辑 (加入了独立接待人支持)
+        buildPayload: (idsBase64, targetTs, locConfig, customConfig = null) => {
             if (!Q01_TEMPLATE_JSON || !Q01_URL_PARAMS) throw new Error("QA01 模板未成功加载，无法生成合法报文！");
 
             const dateStr = getFormattedDate(targetTs);
@@ -392,6 +530,13 @@ const LOC_CONFIGS = {
             // 2. 深度克隆抓包来的原生 JSON 树
             const finalForm = JSON.parse(JSON.stringify(Q01_TEMPLATE_JSON));
 
+            // 获取要注入的接待人信息：优先使用传入的指定配置(customConfig)，若无则降级使用全厂区通用配置
+            const recId = customConfig ? customConfig.receptionistId : locConfig.receptionistId;
+            const recName = customConfig ? customConfig.receptionistName : locConfig.receptionistName;
+            const recDept = customConfig ? customConfig.receptionDepartment : locConfig.receptionDepartment;
+            const recPhone = customConfig ? customConfig.receptionistPhone : locConfig.receptionistPhone;
+            const vReason = customConfig ? customConfig.visitReason : locConfig.visitReason;
+
             // 3. 精准注入更新的数据
             finalForm.forEach(item => {
                 if (item.componentName === 'TableField' && item.label && item.label.includes('人员')) {
@@ -402,16 +547,16 @@ const LOC_CONFIGS = {
                     item.fieldData.value = dateStr;
                 }
                 // 拦截并替换 QA01 的接待人信息
-                else if (item.label && String(item.label).includes('接待人工号') && locConfig.receptionistId) {
-                    item.fieldData.value = locConfig.receptionistId;
-                } else if (item.label && String(item.label).includes('接待人员') && locConfig.receptionistName) {
-                    item.fieldData.value = locConfig.receptionistName;
-                } else if (item.label && String(item.label).includes('服务/事由描述') && locConfig.visitReason) {
-                    item.fieldData.value = locConfig.visitReason;
-                } else if (item.label && String(item.label).includes('接待部门') && locConfig.receptionDepartment) {
-                    item.fieldData.value = locConfig.receptionDepartment;
-                }else if (item.label && String(item.label).includes('接待人联系方式') && locConfig.receptionistPhone) {
-                    item.fieldData.value = locConfig.receptionistPhone;
+                else if (item.label && String(item.label).includes('接待人工号') && recId) {
+                    item.fieldData.value = recId;
+                } else if (item.label && String(item.label).includes('接待人员') && recName) {
+                    item.fieldData.value = recName;
+                } else if (item.label && String(item.label).includes('服务/事由描述') && vReason) {
+                    item.fieldData.value = vReason;
+                } else if (item.label && String(item.label).includes('接待部门') && recDept) {
+                    item.fieldData.value = recDept;
+                }else if (item.label && String(item.label).includes('接待人联系方式') && recPhone) {
+                    item.fieldData.value = recPhone;
                 }
             });
 
@@ -440,8 +585,7 @@ const LOC_CONFIGS = {
 
 const checkSingleStatus = async (id, queryConfig) => {
     const idMask = id.substring(0, 4) + "****" + id.substring(id.length - 4);
-    let maxEnd = 0;
-    let result = { id, success: false, hasData: false, maxEnd: 0 };
+    let result = { id, success: false, hasData: false, records: [] };
 
     try {
         const res = await axios.post(queryConfig.queryUrl, {
@@ -450,18 +594,15 @@ const checkSingleStatus = async (id, queryConfig) => {
             acToken: queryConfig.acToken
         });
         
-        if (res.data.code === 200) {
+        if (res.data && res.data.code === 200) {
             result.success = true;
-            if (res.data.data && res.data.data.length > 0) {
-                result.hasData = true;
-                res.data.data.forEach(record => {
-                    const end = parseInt(record.dateEnd || record.rangeEnd);
-                    if (end > maxEnd) maxEnd = end;
-                });
+            if (res.data.data && Array.isArray(res.data.data)) {
+                result.records = res.data.data;
+                if (result.records.length > 0) result.hasData = true;
             }
-            result.maxEnd = maxEnd;
         } else {
-            console.error(`   [${idMask}] API错误: Code ${res.data.code}`);
+            const errCode = res.data ? res.data.code : 'UNKNOWN';
+            console.error(`   [${idMask}] API错误: Code ${errCode}`);
         }
     } catch (e) {
         console.error(`   [${idMask}] 网络/请求出错: ${e.message}`);
@@ -483,7 +624,7 @@ const getAllStatuses = async (queryConfig) => {
     const stats = { total: decodedIds.length, success: 0, error: 0, hasData: 0, noData: 0 };
 
     results.forEach(r => {
-        statusMap[r.id] = r.maxEnd;
+        statusMap[r.id] = r.records || [];
         if (r.success) {
             stats.success++;
             if (r.hasData) stats.hasData++;
@@ -495,11 +636,26 @@ const getAllStatuses = async (queryConfig) => {
     return { statusMap, stats };
 };
 
+// 🌟 严谨铁壁熔断机制
+// 🌟 魔鬼级“一触即死”铁壁熔断机制 (宁可错杀，绝不放过)
 const checkSafeToRun = (stats) => {
-    if (stats.error > 0) return { safe: false, reason: `查询接口报错 (Error Count: ${stats.error})` };
-    if (stats.total > 0 && stats.hasData === 0) return { safe: false, reason: "严重警告：所有人员均无记录！" };
-    if (stats.noData > 0) return { safe: false, reason: `异常警告：有人员无记录 (${stats.noData}/${stats.total})` };
-    return { safe: true, reason: "状态正常" };
+    // 1. 只要有 1 个人查询失败（网络崩溃、Token失效等），全员连坐锁死！(原有机制保留)
+    if (stats.error > 0) {
+        return { safe: false, reason: `【连坐熔断】请求报错或Cookie失效 (共失败 ${stats.error} 人)` };
+    }
+    
+    // 2. 无配置人员，直接跳过
+    if (stats.total === 0) {
+        return { safe: false, reason: "配置名单为空，无需运行" };
+    }
+    
+    // 3. 🔪 新增的魔鬼限制：只要有 1 个人查不到记录（没有时间），立刻全部锁死！
+    if (stats.noData > 0) {
+        return { safe: false, reason: `【连坐熔断】发现 ${stats.noData} 人没有任何历史入厂记录/时间！已触发一票否决，全厂区停止自动续期！` };
+    }
+    
+    // 如果能活到这里，说明所有人既没有报错，又都有历史记录，安全放行！
+    return { safe: true, reason: "状态完美正常" };
 };
 
 // 👇 传入了 locConfig 以提取它对应的专属 Cookie
@@ -536,12 +692,13 @@ const calculatePlan = (idStatusMap, locConfig) => {
     const todayStartTs = todayObj.getTime() - 28800000;
     const todayId = getBeijingDayId(nowMs);
 
-    const userData = [];
+    const virtualUsers = [];
     let globalMaxEndTs = 0; 
     let minEndTs = Infinity; 
     const summary = [];
 
-    for (const [id, lastDateTs] of Object.entries(idStatusMap)) {
+    // 1. 第一遍循环：解析所有人的历史记录，填充 virtualUsers (这里就是之前被不小心删掉的部分)
+    for (const [id, records] of Object.entries(idStatusMap)) {
         const idBase64 = Buffer.from(id).toString('base64');
         const personInfo = locConfig.personDb[idBase64];
         
@@ -553,7 +710,60 @@ const calculatePlan = (idStatusMap, locConfig) => {
         const nameField = personInfo.find(f => f.label === '姓名');
         const name = nameField && nameField.fieldData ? nameField.fieldData.value : "未知";
         
-        let currentEndTs = lastDateTs;
+        const customConf = locConfig.customReceptionists && locConfig.customReceptionists[idBase64];
+        const trackNormal = !customConf || customConf.keepNormal; // 是否需要发普通单
+        const trackCustom = !!customConf;                         // 是否需要发专属单
+
+        const getMaxEnd = (filterFn) => {
+            let max = 0;
+            records.forEach(r => {
+                // 🌟 新增判断：如果 flowStatus 是 '3' (代表已拒绝)，则直接跳过，绝对不纳入有效时间计算！
+                if (String(r.flowStatus) !== '3' && filterFn(r)) {
+                    const end = parseInt(r.dateEnd || r.rangeEnd);
+                    if (end > max) max = end;
+                }
+            });
+            return max;
+        };
+
+        // 处理普通轨迹：严格只认大部队统帅的记录！
+        if (trackNormal) {
+            const maxEndTs = getMaxEnd(r => {
+                if (locConfig.normalReceptionistId) {
+                    return r.rPerson === locConfig.normalReceptionistId;
+                }
+                return !customConf || r.rPerson !== customConf.receptionistId; 
+            });
+            virtualUsers.push({ idBase64, type: 'normal', maxEndTs, customConf: null, name });
+        }
+
+        // 处理专属轨迹 (只查挂在专属工号下的记录)
+        if (trackCustom) {
+            const maxEndTs = getMaxEnd(r => r.rPerson === customConf.receptionistId);
+            virtualUsers.push({ idBase64, type: 'custom', maxEndTs, customConf, name: name + " ⭐" });
+        }
+    }
+
+    // 👇 【大部队追赶机制核心算法】 👇
+    const normalUsers = virtualUsers.filter(vu => vu.type === 'normal');
+    let normalMaxCurrent = Math.max(...normalUsers.map(vu => vu.maxEndTs));
+    if (!isFinite(normalMaxCurrent) || normalMaxCurrent < todayStartTs - 86400000) {
+        normalMaxCurrent = todayStartTs - 86400000;
+    }
+    
+    const normalThreshold = locConfig.renewThreshold !== undefined ? locConfig.renewThreshold : 2;
+    const normalAddDays = locConfig.renewDays !== undefined ? locConfig.renewDays : 7;
+    const normalLeaderDiff = getBeijingDayId(normalMaxCurrent) - todayId;
+    
+    let normalGroupTarget = normalMaxCurrent;
+    if (normalMaxCurrent === 0 || normalLeaderDiff < 0 || normalLeaderDiff <= normalThreshold) {
+        normalGroupTarget = Math.max(normalMaxCurrent, todayStartTs) + (normalAddDays * 86400000);
+    }
+    // 👆 新增结束 👆
+
+    // 2. 第二遍循环：构建界面信息，并确定每个人的个人目标边界 targetEndTs
+    virtualUsers.forEach(vu => {
+        let currentEndTs = vu.maxEndTs;
         if (currentEndTs < todayStartTs) currentEndTs = todayStartTs - 86400000;
 
         if (currentEndTs > globalMaxEndTs) globalMaxEndTs = currentEndTs;
@@ -562,66 +772,115 @@ const calculatePlan = (idStatusMap, locConfig) => {
         const lastDayId = getBeijingDayId(currentEndTs);
         const diff = lastDayId - todayId;
         
-        const threshold = locConfig.renewThreshold !== undefined ? locConfig.renewThreshold : 2;
-        const addDays = locConfig.renewDays !== undefined ? locConfig.renewDays : 7;
+        const threshold = vu.customConf && vu.customConf.renewThreshold !== undefined ? vu.customConf.renewThreshold : (locConfig.renewThreshold !== undefined ? locConfig.renewThreshold : 2);
+        const addDays = vu.customConf && vu.customConf.renewDays !== undefined ? vu.customConf.renewDays : (locConfig.renewDays !== undefined ? locConfig.renewDays : 7);
 
         let statusText = `正常 (剩 ${diff} 天)`;
         let statusClass = "success";
+        let needRenew = false;
 
-        if (lastDateTs === 0) { statusText = "无记录 (需补齐)"; statusClass = "expired"; } 
-        else if (diff < 0) { statusText = `已过期 ${Math.abs(diff)} 天`; statusClass = "expired"; } 
-        else if (diff <= threshold) { statusText = `即将过期 (剩 ${diff} 天)`; statusClass = "warning"; }
+        if (vu.maxEndTs === 0) { 
+            statusText = "无记录 (需补齐)"; 
+            statusClass = "expired"; 
+            needRenew = true;
+        } 
+        else if (diff < 0) { 
+            statusText = `已过期 ${Math.abs(diff)} 天`; 
+            statusClass = "expired"; 
+            needRenew = true;
+        } 
+        else if (diff <= threshold) { 
+            statusText = `即将过期 (剩 ${diff} 天)`; 
+            statusClass = "warning"; 
+            needRenew = true;
+        }
+
+        if (vu.type === 'custom') {
+            statusText += ` [专属接待: ${vu.customConf.receptionistName}${vu.customConf.keepNormal ? ' ➕ 双开大单' : ''}] (规则: <=${threshold}天续${addDays}天)`;
+        }
+
+        const rawId = decode(vu.idBase64);
+        const idMask = rawId.substring(0, 4) + "****" + rawId.substring(rawId.length - 4);
 
         summary.push({
-            name,
-            idMask: id.substring(0, 4) + "***" + id.substring(id.length - 4),
-            lastDate: lastDateTs === 0 ? "无记录" : getFormattedDate(lastDateTs),
+            name: vu.name,
+            idMask: idMask,
+            lastDate: vu.maxEndTs === 0 ? "无记录" : getFormattedDate(vu.maxEndTs),
             status: statusText,
             class: statusClass
         });
-        userData.push({ idBase64, currentEndTs });
-    }
+        
+        vu.currentEndTs = currentEndTs;
+        const baseLineTs = Math.max(currentEndTs, todayStartTs);
+        
+        // 🎯 【强制追赶对齐机制】
+        if (vu.type === 'normal') {
+            vu.targetEndTs = Math.max(currentEndTs, normalGroupTarget);
+        } else {
+            vu.targetEndTs = needRenew ? baseLineTs + (addDays * 86400000) : currentEndTs;
+        }
+    });
 
-    const maxEndDayId = getBeijingDayId(globalMaxEndTs);
-    const diffMax = maxEndDayId - todayId;
-    let targetTs = globalMaxEndTs;
-    const baseLineTs = Math.max(globalMaxEndTs, todayStartTs);
-    
-    const threshold = locConfig.renewThreshold !== undefined ? locConfig.renewThreshold : 2;
-    const addDays = locConfig.renewDays !== undefined ? locConfig.renewDays : 7;
-    
-    if (diffMax <= threshold) targetTs = baseLineTs + (addDays * 86400000); 
-    else targetTs = globalMaxEndTs;
+    let globalTargetTs = Math.max(...virtualUsers.map(vu => vu.targetEndTs));
+    if (globalTargetTs < todayStartTs || !isFinite(globalTargetTs)) globalTargetTs = todayStartTs;
 
     const requests = [];
     let cursorTs = Math.max(minEndTs + 86400000, todayStartTs);
+    if (!isFinite(cursorTs)) cursorTs = todayStartTs;
     let dayCount = 1;
 
-    while (cursorTs <= targetTs) {
-        const todaysGroupBase64 = userData.filter(u => u.currentEndTs < cursorTs).map(u => u.idBase64);
+    // 3. 核心拆包：把当天需要续期的人，按指定的接待人进行全自动拼车合并
+    while (cursorTs <= globalTargetTs) {
+        const todaysVirtuals = virtualUsers.filter(vu => vu.currentEndTs < cursorTs && cursorTs <= vu.targetEndTs);
         
-        if (todaysGroupBase64.length > 0) {
-            const names = todaysGroupBase64.map(b64 => {
-                const pInfo = locConfig.personDb[b64];
-                const n = pInfo.find(f => f.label === '姓名');
-                return n ? n.fieldData.value : b64;
+        if (todaysVirtuals.length > 0) {
+            const normalGroup = [];
+            const specialGroupsMap = {}; 
+
+            todaysVirtuals.forEach(vu => {
+                if (vu.type === 'normal') {
+                    normalGroup.push(vu);
+                } else {
+                    const recId = vu.customConf.receptionistId || 'unknown';
+                    if (!specialGroupsMap[recId]) specialGroupsMap[recId] = [];
+                    specialGroupsMap[recId].push(vu);
+                }
             });
 
-            const { jsonStr, fullPostBody } = locConfig.buildPayload(todaysGroupBase64, cursorTs, locConfig);
+            const pushRequest = (vuGroup, isCustom) => {
+                if (vuGroup.length === 0) return;
+                
+                const idsBase64 = vuGroup.map(v => v.idBase64);
+                const names = vuGroup.map(v => v.name);
+                const customConf = isCustom ? vuGroup[0].customConf : null;
 
-            requests.push({
-                ts: cursorTs,
-                dayIndex: dayCount++,
-                targetDate: getFormattedDate(cursorTs),
-                people: names.join(", "),
-                rawJson: jsonStr,
-                encodedBody: fullPostBody
+                const { jsonStr, fullPostBody } = locConfig.buildPayload(idsBase64, cursorTs, locConfig, customConf);
+
+                let displayPeople = names.join(", ");
+                if (isCustom && customConf && customConf.receptionistName) {
+                    displayPeople += ` (🚀 独立专单 -> 接待人: ${customConf.receptionistName})`;
+                }
+
+                requests.push({
+                    ts: cursorTs,
+                    dayIndex: dayCount++,
+                    targetDate: getFormattedDate(cursorTs),
+                    people: displayPeople,
+                    rawJson: jsonStr,
+                    encodedBody: fullPostBody
+                });
+            };
+
+            pushRequest(normalGroup, false);
+            
+            Object.values(specialGroupsMap).forEach(sgGroup => {
+                pushRequest(sgGroup, true);
             });
         }
         cursorTs += 86400000;
     }
 
-    return { summary, requests, targetDate: getFormattedDate(targetTs) };
+    return { summary, requests, targetDate: getFormattedDate(globalTargetTs) };
 };
 
 // ==========================================
@@ -629,27 +888,115 @@ const calculatePlan = (idStatusMap, locConfig) => {
 // ==========================================
 
 router.post('/generate-payload', express.json(), (req, res) => {
-    const { loc, ids, ts } = req.body;
+    // 1. 接收前端传来的范围时间戳 (startTs, endTs)
+    const { loc, ids, startTs, endTs } = req.body;
     const locConfig = LOC_CONFIGS[loc];
     if (!locConfig) return res.json({ error: "厂区配置错误" });
     
     try {
-        const names = ids.map(b64 => {
-            const pInfo = locConfig.personDb[b64];
-            const n = pInfo.find(f => f.label === '姓名');
-            return n ? n.fieldData.value : b64;
+        const normalGroup = [];
+        const specialGroupsMap = {};
+
+        ids.forEach(idBase64 => {
+            const personInfo = locConfig.personDb[idBase64];
+            if (!personInfo) return;
+            
+            const nameField = personInfo.find(f => f.label === '姓名');
+            const name = nameField && nameField.fieldData ? nameField.fieldData.value : idBase64;
+            
+            const customConf = locConfig.customReceptionists && locConfig.customReceptionists[idBase64];
+            const trackNormal = !customConf || customConf.keepNormal; 
+            const trackCustom = !!customConf;                         
+
+            if (trackNormal) {
+                normalGroup.push({ idBase64, name, customConf: null });
+            }
+            if (trackCustom) {
+                const recId = customConf.receptionistId || 'unknown';
+                if (!specialGroupsMap[recId]) specialGroupsMap[recId] = [];
+                specialGroupsMap[recId].push({ idBase64, name: name + " ⭐", customConf });
+            }
         });
 
-        const { jsonStr, fullPostBody } = locConfig.buildPayload(ids, parseInt(ts), locConfig);
+        const requests = [];
+        let currentTs = parseInt(startTs);
+        const targetEnd = parseInt(endTs);
 
-        res.json({
-            targetDate: getFormattedDate(parseInt(ts)),
-            people: names.join(", "),
-            rawJson: jsonStr,
-            encodedBody: fullPostBody
-        });
+        // 2. 按天数循环生成数据包（如果开始和结束是一天，就只循环一次）
+        while (currentTs <= targetEnd) {
+            const targetDateStr = getFormattedDate(currentTs);
+
+            const pushReq = (group, isCustom) => {
+                if (group.length === 0) return;
+                const groupIds = group.map(g => g.idBase64);
+                const names = group.map(g => g.name);
+                const customConf = isCustom ? group[0].customConf : null;
+
+                const { jsonStr, fullPostBody } = locConfig.buildPayload(groupIds, currentTs, locConfig, customConf);
+
+                let displayPeople = names.join(", ");
+                if (isCustom && customConf && customConf.receptionistName) {
+                    displayPeople += ` (🚀 独立专单 -> 接待人: ${customConf.receptionistName})`;
+                } else {
+                    displayPeople += ` (🏢 常规大部队拼车)`;
+                }
+
+                requests.push({
+                    targetDate: targetDateStr,
+                    people: displayPeople,
+                    rawJson: jsonStr,
+                    encodedBody: fullPostBody
+                });
+            };
+
+            pushReq(normalGroup, false);
+            Object.values(specialGroupsMap).forEach(sg => pushReq(sg, true));
+            
+            currentTs += 86400000; // 递增一天
+        }
+
+        // 3. 构建包含“一键发送”按钮的 UI 头部并渲染
+        let finalHtml = '';
+        if (requests.length > 0) {
+            finalHtml += `
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px; background: linear-gradient(to right, #eff6ff, #e0e7ff); padding:12px 18px; border-radius:10px; border:1px solid #bfdbfe; box-shadow: 0 2px 4px rgba(0,0,0,0.02);">
+                <div style="color:#1e40af; font-size: 0.95rem;">
+                    <strong style="font-size: 1.1rem;">✨ 报文就绪</strong><br>
+                    共生成 <b>${requests.length}</b> 个数据包，点击右侧即可自动化批量提交
+                </div>
+                <button onclick="sendAllBatch(this, '${loc}')" style="background: linear-gradient(135deg, #3b82f6, #2563eb); color: white; border: none; padding: 10px 20px; border-radius: 8px; font-size: 0.95rem; font-weight: bold; cursor: pointer; box-shadow: 0 4px 6px rgba(37,99,235,0.25); transition: all 0.2s ease;">
+                    🚀 一键发送全部
+                </button>
+            </div>
+            `;
+        }
+        finalHtml += renderRequests(requests, loc);
+
+        res.json({ html: finalHtml });
+
     } catch (e) {
         res.json({ error: "生成失败: " + e.message });
+    }
+});
+
+// --- [新增] 安全手动发送接口 (后端硬核校验密码，前端无法绕过) ---
+router.post('/manual-send', express.json(), async (req, res) => {
+    const { loc, targetDate, people, encodedBody, pwd } = req.body;
+    
+    // 哼！密码写死在后端，就算愚蠢的人类把前端翻个底朝天也拿不到！
+    if (pwd !== '123123') {
+        return res.json({ success: false, msg: "密码错误！！！" });
+    }
+
+    const locConfig = LOC_CONFIGS[loc];
+    if (!locConfig) return res.json({ success: false, msg: "厂区配置不存在！" });
+
+    try {
+        const reqTask = { targetDate, people, encodedBody };
+        const result = await submitApplication(reqTask, locConfig);
+        res.json(result);
+    } catch (e) {
+        res.json({ success: false, msg: "后端执行异常: " + e.message });
     }
 });
 
@@ -669,7 +1016,7 @@ router.get('/debug', async (req, res) => {
 
             const simulatedStatusMap = {};
             locConfig.query.visitorIdNos.forEach(idBase64 => {
-                 simulatedStatusMap[decode(idBase64)] = 0;
+                 simulatedStatusMap[decode(idBase64)] = []; // 模拟0记录直接传空数组
             });
             const simulatedPlan = calculatePlan(simulatedStatusMap, locConfig);
             
@@ -694,14 +1041,14 @@ router.get('/debug', async (req, res) => {
             if (safetyCheck.safe) {
                 realQueueHTML = `
                     <h3 style="font-size:0.9rem; margin-bottom:10px; color:#374151;">🚀 待发送队列 (${realPlan.requests.length})</h3>
-                    ${renderRequests(realPlan.requests)}
+                    ${renderRequests(realPlan.requests, loc)}
                 `;
             } else {
                 realQueueHTML = `
                     <div class="blocked-overlay">
                         <div style="font-size:1.5rem; margin-bottom:10px;">⛔</div>
                         <div style="font-weight:bold; font-size:1.1rem; margin-bottom:5px;">队列已被安全拦截</div>
-                        <div style="font-size:0.85rem; opacity:0.8;">由于触发了熔断机制，系统已强制清空待发送队列。<br>本次执行<b>绝对不会</b>发送任何请求。</div>
+                        <div style="font-size:0.85rem; opacity:0.8;">${safetyCheck.reason}<br>本次执行<b>绝对不会</b>发送任何请求。</div>
                     </div>
                 `;
             }
@@ -713,19 +1060,19 @@ router.get('/debug', async (req, res) => {
                 ${!safetyCheck.safe ? `<div class="error-banner">⛔ 熔断警告: ${safetyCheck.reason}</div>` : ''}
 
                 <div class="card">
-                    <h2><span>📊 实时状态 (Target: ${realPlan.targetDate})</span></h2>
+                    <h2><span>📊 实时状态 (推演至: ${realPlan.targetDate})</span></h2>
                     
                     <div class="stat-grid">
-                        <div class="stat-item"><div class="stat-val">${stats.total}</div>总人数</div>
-                        <div class="stat-item"><div class="stat-val" style="color:#059669">${stats.success}</div>成功</div>
-                        <div class="stat-item"><div class="stat-val" style="color:#dc2626">${stats.error}</div>错误</div>
-                        <div class="stat-item"><div class="stat-val">${stats.noData}</div>无记录</div>
+                        <div class="stat-item"><div class="stat-val">${stats.total}</div>总查询人数</div>
+                        <div class="stat-item"><div class="stat-val" style="color:#059669">${stats.success}</div>接口成功</div>
+                        <div class="stat-item"><div class="stat-val" style="color:#dc2626">${stats.error}</div>接口报错</div>
+                        <div class="stat-item"><div class="stat-val">${stats.noData}</div>查询无记录</div>
                     </div>
 
                     <div class="table-wrapper">
                         <table>
                             <thead>
-                                <tr><th>姓名</th><th>有效期止</th><th>状态</th></tr>
+                                <tr><th>姓名/轨迹</th><th>有效期止</th><th>状态</th></tr>
                             </thead>
                             <tbody>
                                 ${realPlan.summary.map(item => `
@@ -748,9 +1095,11 @@ router.get('/debug', async (req, res) => {
                         自由选择人员和日期，生成特定组合的提交报文用于测试或手动发送。
                     </div>
                     <div style="display:flex; flex-direction:column; gap:10px; margin-bottom:15px;">
-                        <div>
-                            <strong>📅 选择日期:</strong> 
-                            <input type="date" id="customDate-${loc}" style="padding:6px; border-radius:4px; border:1px solid #ccc; margin-left:10px;">
+                        <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+                            <strong>📅 起止日期:</strong> 
+                            <input type="date" id="customStartDate-${loc}" style="padding:6px; border-radius:4px; border:1px solid #ccc; flex:1; min-width:120px;">
+                            <span style="color:#64748b; font-weight:bold;">至</span>
+                            <input type="date" id="customEndDate-${loc}" style="padding:6px; border-radius:4px; border:1px solid #ccc; flex:1; min-width:120px;">
                         </div>
                         <div>
                             <strong>👥 选择人员:</strong>
@@ -758,8 +1107,13 @@ router.get('/debug', async (req, res) => {
                                 ${Object.keys(locConfig.personDb).map(base64Id => {
                                     const info = locConfig.personDb[base64Id];
                                     const nameField = info.find(f=>f.label==='姓名');
-                                    const name = nameField && nameField.fieldData ? nameField.fieldData.value : base64Id;
+                                    let name = nameField && nameField.fieldData ? nameField.fieldData.value : base64Id;
                                     const isActive = locConfig.query.visitorIdNos.includes(base64Id);
+                                    
+                                    // 界面提示专属人员
+                                    const hasCustom = locConfig.customReceptionists && locConfig.customReceptionists[base64Id];
+                                    if(hasCustom) name += " ⭐";
+
                                     return `<label style="font-size:0.85rem; display:flex; align-items:center; gap:4px; ${isActive?'':'opacity:0.5;'}"><input type="checkbox" class="person-cb-${loc}" value="${base64Id}" ${isActive?'checked':''}>${name} ${isActive?'':'(停用)'}</label>`;
                                 }).join('')}
                             </div>
@@ -772,7 +1126,7 @@ router.get('/debug', async (req, res) => {
                 <div class="card" style="border-top: 4px solid #9333ea;">
                     <h2>🔮 全员无记录模拟 (Force Sync)</h2>
                     <p style="font-size:0.8rem; color:#666; margin-bottom:10px;">假设数据库清空，系统将从“今天”开始生成完整对齐计划。（此区域仅为逻辑验证，不受熔断影响）</p>
-                    ${renderRequests(simulatedPlan.requests)}
+                    ${renderRequests(simulatedPlan.requests, loc)}
                 </div>
             </div>
             `;
@@ -786,62 +1140,74 @@ router.get('/debug', async (req, res) => {
             <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0">
             <title>申请插件调试面板</title>
             <style>
-                body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background: #f3f4f6; padding: 10px; color: #1f2937; margin:0; }
-                .container { max-width: 1000px; margin: 0 auto; }
-                .card { background: #fff; padding: 15px; border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); margin-bottom: 20px; }
-                
-                h1 { margin: 10px 0 20px 0; color: #111827; font-size: 1.2rem; border-left: 4px solid #3b82f6; padding-left: 10px; display: flex; align-items: center; justify-content: space-between; }
-                h2 { margin-top: 0; color: #4b5563; font-size: 1rem; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; }
-                
-                .tabs { display: flex; gap: 8px; margin-bottom: 20px; position: sticky; top: 0; z-index: 100; background: #f3f4f6; padding: 10px 0; }
-                .tab { flex: 1; text-align: center; padding: 12px 0; background: #e5e7eb; border-radius: 8px; color: #374151; font-weight: bold; cursor: pointer; transition: 0.2s; border: none;}
-                .tab.active { background: #3b82f6; color: white; box-shadow: 0 2px 4px rgba(59,130,246,0.3); }
-                .loc-content { display: none; }
-                .loc-content.active { display: block; animation: fadeIn 0.3s ease; }
-                
-                @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
-                
-                .table-wrapper { overflow-x: auto; margin-bottom: 15px; border-radius: 8px; border: 1px solid #e5e7eb; }
-                table { width: 100%; border-collapse: collapse; min-width: 500px; }
-                th, td { text-align: left; padding: 10px; border-bottom: 1px solid #e5e7eb; font-size: 0.9rem; }
-                th { background: #f9fafb; font-weight: 600; color: #6b7280; }
-                tr:last-child td { border-bottom: none; }
-                
-                .status-badge { padding: 2px 8px; border-radius: 99px; font-size: 0.75rem; font-weight: 600; white-space: nowrap; }
-                .expired { background: #fee2e2; color: #991b1b; }
-                .warning { background: #fef3c7; color: #92400e; }
-                .success { background: #d1fae5; color: #065f46; }
-                
-                .request-item { background: #fff; border: 1px solid #e5e7eb; border-radius: 8px; margin-bottom: 10px; overflow: hidden; }
-                .req-header { padding: 12px; background: #f9fafb; display: flex; flex-direction: column; cursor: pointer; user-select: none; }
-                .req-header-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px; }
-                .req-header-people { font-size: 0.85rem; color: #6b7280; }
-                
-                .code-section { border-top: 1px solid #e5e7eb; }
-                .code-tabs { display: flex; background: #f3f4f6; border-bottom: 1px solid #e5e7eb; }
-                .tab-btn { padding: 8px 15px; font-size: 0.8rem; cursor: pointer; color: #6b7280; border-right: 1px solid #e5e7eb; background: #f3f4f6; border: none; }
-                .tab-btn.active { background: #fff; color: #3b82f6; font-weight: 600; border-bottom: 2px solid #3b82f6; }
-                .code-content { padding: 0; position: relative; display: none; }
-                .code-content.active { display: block; }
-                
-                pre { margin: 0; padding: 15px; overflow-x: auto; font-family: Consolas, monospace; font-size: 0.75rem; line-height: 1.4; color: #d4d4d4; background: #1e1e1e; max-height: 300px; }
-                .copy-btn { position: absolute; top: 10px; right: 10px; background: rgba(255,255,255,0.2); color: #fff; border: 1px solid rgba(255,255,255,0.3); padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 0.7rem; }
-                
-                details > summary { list-style: none; }
-                details > summary::marker { display: none; }
-                .error-banner { background: #fee2e2; border: 1px solid #fca5a5; color: #b91c1c; padding: 15px; border-radius: 8px; margin-bottom: 15px; font-weight: bold; font-size: 0.9rem; }
-                .stat-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 15px; font-size: 0.8rem; color: #666; background: #f9fafb; padding: 10px; border-radius: 8px; }
-                .stat-item { text-align: center; }
-                .stat-val { font-weight: bold; font-size: 1rem; color: #111827; }
-                .blocked-overlay { background: #f3f4f6; border: 2px dashed #d1d5db; border-radius: 8px; padding: 30px; text-align: center; color: #4b5563; }
-                
-                @media (min-width: 600px) {
-                    .req-header { flex-direction: row; justify-content: space-between; align-items: center; }
-                    .req-header-top { margin-bottom: 0; min-width: 150px; }
-                }
-            </style>
-            <script>
-                // SPA 无缝切换核心逻辑
+                    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background: #f3f4f6; padding: 10px; color: #1f2937; margin:0; }
+                    .container { max-width: 1000px; margin: 0 auto; }
+                    .card { background: #fff; padding: 15px; border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); margin-bottom: 20px; }
+                    
+                    h1 { margin: 10px 0 20px 0; color: #111827; font-size: 1.2rem; border-left: 4px solid #3b82f6; padding-left: 10px; display: flex; align-items: center; justify-content: space-between; }
+                    h2 { margin-top: 0; color: #4b5563; font-size: 1rem; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; }
+                    
+                    .tabs { display: flex; gap: 8px; margin-bottom: 20px; position: sticky; top: 0; z-index: 100; background: #f3f4f6; padding: 10px 0; }
+                    .tab { flex: 1; text-align: center; padding: 12px 0; background: #e5e7eb; border-radius: 8px; color: #374151; font-weight: bold; cursor: pointer; transition: 0.2s; border: none;}
+                    .tab.active { background: #3b82f6; color: white; box-shadow: 0 2px 4px rgba(59,130,246,0.3); }
+                    .loc-content { display: none; }
+                    .loc-content.active { display: block; animation: fadeIn 0.3s ease; }
+                    
+                    @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+                    
+                    .table-wrapper { overflow-x: auto; margin-bottom: 15px; border-radius: 8px; border: 1px solid #e5e7eb; }
+                    table { width: 100%; border-collapse: collapse; min-width: 500px; }
+                    th, td { text-align: left; padding: 10px; border-bottom: 1px solid #e5e7eb; font-size: 0.9rem; }
+                    th { background: #f9fafb; font-weight: 600; color: #6b7280; }
+                    tr:last-child td { border-bottom: none; }
+                    
+                    .status-badge { padding: 2px 8px; border-radius: 99px; font-size: 0.75rem; font-weight: 600; white-space: nowrap; }
+                    .expired { background: #fee2e2; color: #991b1b; }
+                    .warning { background: #fef3c7; color: #92400e; }
+                    .success { background: #d1fae5; color: #065f46; }
+                    
+                    .request-item { background: #fff; border: 1px solid #e5e7eb; border-radius: 8px; margin-bottom: 10px; overflow: hidden; }
+                    .req-header { padding: 12px; background: #f9fafb; display: flex; flex-direction: column; cursor: pointer; user-select: none; transition: background 0.2s; }
+                    .req-header:hover { background: #f3f4f6; }
+                    .req-header-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px; }
+                    .req-header-people { font-size: 0.85rem; color: #6b7280; }
+                    
+                    .code-section { border-top: 1px solid #e5e7eb; }
+                    
+                    /* 华丽的动作条和按钮样式 (全新紧凑排版) */
+                    .code-toolbar { display: flex; justify-content: space-between; align-items: center; background: #f3f4f6; border-bottom: 1px solid #e5e7eb; padding-right: 12px; }
+                    .code-tabs { display: flex; }
+                    .tab-btn { padding: 10px 15px; font-size: 0.8rem; cursor: pointer; color: #6b7280; border-right: 1px solid #e5e7eb; background: transparent; border-top: none; border-bottom: none; border-left: none; outline: none; }
+                    .tab-btn.active { background: #fff; color: #3b82f6; font-weight: 600; border-bottom: 2px solid #3b82f6; margin-bottom: -1px; }
+                    
+                    .send-btn { background: linear-gradient(135deg, #ef4444, #dc2626); color: white; border: none; padding: 6px 14px; border-radius: 6px; font-size: 0.85rem; font-weight: bold; cursor: pointer; transition: all 0.2s ease; box-shadow: 0 2px 4px rgba(239, 68, 68, 0.2); }
+                    .send-btn:hover { transform: translateY(-1px); box-shadow: 0 4px 8px rgba(239, 68, 68, 0.3); }
+                    .send-btn:active { transform: translateY(0); box-shadow: none; }
+                    .send-btn:disabled { background: #9ca3af; cursor: not-allowed; box-shadow: none; transform: none; }
+                    
+                    .code-tabs { display: flex; background: #f3f4f6; border-bottom: 1px solid #e5e7eb; }
+                    .tab-btn { padding: 8px 15px; font-size: 0.8rem; cursor: pointer; color: #6b7280; border-right: 1px solid #e5e7eb; background: #f3f4f6; border: none; }
+                    .tab-btn.active { background: #fff; color: #3b82f6; font-weight: 600; border-bottom: 2px solid #3b82f6; }
+                    .code-content { padding: 0; position: relative; display: none; }
+                    .code-content.active { display: block; }
+                    
+                    pre { margin: 0; padding: 15px; overflow-x: auto; font-family: Consolas, monospace; font-size: 0.75rem; line-height: 1.4; color: #d4d4d4; background: #1e1e1e; max-height: 300px; }
+                    .copy-btn { position: absolute; top: 10px; right: 10px; background: rgba(255,255,255,0.2); color: #fff; border: 1px solid rgba(255,255,255,0.3); padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 0.7rem; }
+                    
+                    details > summary { list-style: none; }
+                    details > summary::marker { display: none; }
+                    .error-banner { background: #fee2e2; border: 1px solid #fca5a5; color: #b91c1c; padding: 15px; border-radius: 8px; margin-bottom: 15px; font-weight: bold; font-size: 0.9rem; }
+                    .stat-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 15px; font-size: 0.8rem; color: #666; background: #f9fafb; padding: 10px; border-radius: 8px; }
+                    .stat-item { text-align: center; }
+                    .stat-val { font-weight: bold; font-size: 1rem; color: #111827; }
+                    .blocked-overlay { background: #f3f4f6; border: 2px dashed #d1d5db; border-radius: 8px; padding: 30px; text-align: center; color: #4b5563; }
+                    
+                    @media (min-width: 600px) {
+                        .req-header { flex-direction: row; justify-content: space-between; align-items: center; }
+                        .req-header-top { margin-bottom: 0; min-width: 150px; }
+                    }
+                </style>
+                <script>
                 function switchLoc(loc, btn) {
                     document.querySelectorAll('.loc-content').forEach(el => el.classList.remove('active'));
                     document.querySelectorAll('.loc-tab').forEach(el => el.classList.remove('active'));
@@ -865,50 +1231,157 @@ router.get('/debug', async (req, res) => {
                 }
 
                 async function generateCustom(loc) {
-                    const dateInput = document.getElementById('customDate-' + loc).value;
-                    if (!dateInput) return alert('请选择日期');
-                    const ts = new Date(dateInput + 'T00:00:00+08:00').getTime();
+                    const startInput = document.getElementById('customStartDate-' + loc).value;
+                    let endInput = document.getElementById('customEndDate-' + loc).value;
+                    
+                    if (!startInput) return alert('至少需要选择一个开始日期哦！');
+                    
+                    let isSingleDay = false;
+                    if (!endInput) {
+                        endInput = startInput; // 没选结束日期，默认与开始日期一致
+                        isSingleDay = true;
+                    }
+                    
+                    const startTs = new Date(startInput + 'T00:00:00+08:00').getTime();
+                    const endTs = new Date(endInput + 'T00:00:00+08:00').getTime();
+                    
+                    if (startTs > endTs) return alert('结束日期不能早于开始日期哦！');
                     
                     const cbs = document.querySelectorAll('.person-cb-' + loc + ':checked');
                     const ids = Array.from(cbs).map(cb => cb.value);
                     if (ids.length === 0) return alert('请至少选择一个人');
                     
-                    const res = await fetch('generate-payload', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ loc, ids, ts })
-                    });
-                    const data = await res.json();
-                    if (data.error) return alert(data.error);
+                    const btn = document.querySelector('#content-' + loc + ' button[onclick^="generateCustom"]');
+                    const oldText = btn.innerText;
+                    btn.innerText = "数据生成中...";
                     
-                    const resultDiv = document.getElementById('customResult-' + loc);
-                    resultDiv.innerHTML = \`
-                        <div class="request-item">
-                            <details open>
-                                <summary class="req-header">
-                                    <div class="req-header-top"><strong>📅 \${data.targetDate}</strong></div>
-                                    <div class="req-header-people">👥 \${data.people}</div>
-                                </summary>
-                                <div class="code-section">
-                                    <div class="code-tabs">
-                                        <button class="tab-btn active" onclick="switchTab(this, 0)">Raw JSON</button>
-                                        <button class="tab-btn" onclick="switchTab(this, 1)">Encoded Body</button>
-                                    </div>
-                                    <div class="code-content active">
-                                        <button class="copy-btn" onclick="copyText(this, '\${encodeURIComponent(data.rawJson)}')">Copy</button>
-                                        <pre style="color:#a5d6ff;">\${data.rawJson}</pre>
-                                    </div>
-                                    <div class="code-content">
-                                        <button class="copy-btn" onclick="copyText(this, '\${encodeURIComponent(data.encodedBody)}')">Copy</button>
-                                        <pre style="color:#ffae57; white-space:pre-wrap; word-break:break-all;">\${data.encodedBody}</pre>
-                                    </div>
-                                </div>
-                            </details>
-                        </div>
-                    \`;
-                    resultDiv.style.display = 'block';
+                    try {
+                        const res = await fetch('generate-payload', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ loc, ids, startTs, endTs })
+                        });
+                        const data = await res.json();
+                        
+                        if (data.error) {
+                            alert(data.error);
+                        } else {
+                            const resultDiv = document.getElementById('customResult-' + loc);
+                            resultDiv.innerHTML = data.html;
+                            
+                            // 👇 直接在结果区域的顶部动态插入一个“弱提示”黄色小横幅，安全且直观
+                            if (isSingleDay) {
+                                resultDiv.insertAdjacentHTML('afterbegin', '<div style="background:#fef9c3; color:#b45309; padding:8px; border-radius:6px; margin-bottom:10px; font-size:0.85rem; text-align:center; border:1px solid #fde047;">ℹ️ 未选择结束日期，已默认生成单日（1天）的报文</div>');
+                            }
+                            
+                            resultDiv.querySelectorAll('details').forEach(d => d.open = true);
+                            resultDiv.style.display = 'block';
+                        }
+                    } catch (err) {
+                        alert("网络错误：" + err.message);
+                    } finally {
+                        btn.innerText = oldText;
+                    }
                 }
-            </script>
+
+                // 👇 新增的一键批量发送核心逻辑
+                async function sendAllBatch(mainBtn, loc) {
+                    const container = document.getElementById('customResult-' + loc);
+                    const btns = Array.from(container.querySelectorAll('.batch-send-btn'));
+                    if(btns.length === 0) return alert('没有找到可发送的数据包');
+                    
+                    const pwd = prompt("⚠️ 批量发送确认\\n即将为您自动发送这 " + btns.length + " 个数据包。\\n为了防止触发风控，每个请求之间会强制间隔 0.6 秒。\\n\\n请输入操作密码：");
+                    if(!pwd) return;
+                    
+                    mainBtn.innerText = "🚀 队列自动发送中...";
+                    mainBtn.disabled = true;
+                    mainBtn.style.opacity = "0.7";
+                    
+                    for(let i=0; i<btns.length; i++) {
+                        const b = btns[i];
+                        b.innerText = "发送中...";
+                        b.style.background = "linear-gradient(135deg, #f59e0b, #d97706)";
+                        
+                        try {
+                            const res = await fetch('manual-send', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({
+                                    loc: b.getAttribute('data-loc'),
+                                    targetDate: b.getAttribute('data-date'),
+                                    people: b.getAttribute('data-people'),
+                                    encodedBody: decodeURIComponent(b.getAttribute('data-encoded')),
+                                    pwd: pwd
+                                })
+                            });
+                            const data = await res.json();
+                            if(data.success) {
+                                b.innerText = "✅ 成功";
+                                b.style.background = "linear-gradient(135deg, #10b981, #059669)";
+                            } else {
+                                b.innerText = "❌ 失败: " + data.msg;
+                                b.style.background = "linear-gradient(135deg, #ef4444, #dc2626)";
+                            }
+                        } catch(e) {
+                            b.innerText = "❌ 网络异常";
+                            b.style.background = "linear-gradient(135deg, #ef4444, #dc2626)";
+                        }
+                        
+                        // 强制排队等待，保证日期顺序 100% 正确且防封锁
+                        await new Promise(r => setTimeout(r, 600)); 
+                    }
+                    
+                    mainBtn.innerText = "✅ 批量发送完成";
+                    mainBtn.style.background = "linear-gradient(135deg, #10b981, #059669)";
+                    mainBtn.style.opacity = "1";
+                }
+
+                async function sendPayload(event, loc, targetDate, people, encodedBodyURI) {
+                    event.preventDefault(); 
+                    event.stopPropagation();
+                    
+                    // 👠 看好了！本小姐全换成了双引号拼接，不会再有波浪线了！
+                    const pwd = prompt("⚠️ 危险操作确认\\n即将为 [" + loc + "] 的 [" + people + "] 提交 [" + targetDate + "] 的入厂申请。\\n\\n请输入操作密码：");
+                    if (!pwd) return; 
+
+                    const btn = event.target;
+                    const originalText = btn.innerText;
+                    btn.innerText = "正在发送中...";
+                    btn.style.background = "linear-gradient(135deg, #f59e0b, #d97706)";
+                    btn.disabled = true;
+
+                    try {
+                        const res = await fetch('manual-send', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                loc: loc,
+                                targetDate: targetDate,
+                                people: people,
+                                encodedBody: decodeURIComponent(encodedBodyURI),
+                                pwd: pwd
+                            })
+                        });
+                        const data = await res.json();
+                        
+                        if (data.success) {
+                            alert("✅ 发送成功！\\n实例ID: " + data.id);
+                            btn.innerText = "已发送成功";
+                            btn.style.background = "linear-gradient(135deg, #10b981, #059669)";
+                        } else {
+                            alert("❌ 发送失败！\\n原因: " + data.msg);
+                            btn.innerText = originalText;
+                            btn.style.background = "linear-gradient(135deg, #ef4444, #dc2626)";
+                            btn.disabled = false;
+                        }
+                    } catch (e) {
+                        alert("❌ 网络异常: " + e.message);
+                        btn.innerText = originalText;
+                        btn.style.background = "linear-gradient(135deg, #ef4444, #dc2626)";
+                        btn.disabled = false;
+                    }
+                }
+                </script>
         </head>
         <body>
             <div class="container">
@@ -927,7 +1400,7 @@ router.get('/debug', async (req, res) => {
     }
 });
 
-function renderRequests(requests) {
+function renderRequests(requests, loc) {
     if (requests.length === 0) return '<div style="padding:15px; text-align:center; color:#999; border:1px dashed #ddd; border-radius:8px; font-size:0.8rem;">无需发送数据包</div>';
     return requests.map((req, i) => `
     <div class="request-item">
@@ -937,16 +1410,26 @@ function renderRequests(requests) {
                 <div class="req-header-people">👥 ${req.people}</div>
             </summary>
             <div class="code-section">
-                <div class="code-tabs">
-                    <button class="tab-btn active" onclick="switchTab(this, 0)">Raw JSON</button>
-                    <button class="tab-btn" onclick="switchTab(this, 1)">Encoded Body</button>
+                <div class="code-toolbar">
+                    <div class="code-tabs">
+                        <button class="tab-btn active" onclick="switchTab(this, 0)">Raw JSON</button>
+                        <button class="tab-btn" onclick="switchTab(this, 1)">Encoded Body</button>
+                    </div>
+                    <button class="send-btn batch-send-btn" 
+                            data-loc="${loc}" 
+                            data-date="${req.targetDate}" 
+                            data-people="${req.people}" 
+                            data-encoded="${encodeURIComponent(req.encodedBody).replace(/'/g, "%27")}"
+                            onclick="sendPayload(event, '${loc}', '${req.targetDate}', '${req.people}', '${encodeURIComponent(req.encodedBody).replace(/'/g, "%27")}')">
+                        🚀 确认发送该包
+                    </button>
                 </div>
                 <div class="code-content active">
-                    <button class="copy-btn" onclick="copyText(this, '${encodeURIComponent(req.rawJson)}')">Copy</button>
+                    <button class="copy-btn" onclick="copyText(this, '${encodeURIComponent(req.rawJson).replace(/'/g, "%27")}')">Copy</button>
                     <pre style="color:#a5d6ff;">${req.rawJson}</pre>
                 </div>
                 <div class="code-content">
-                    <button class="copy-btn" onclick="copyText(this, '${encodeURIComponent(req.encodedBody)}')">Copy</button>
+                    <button class="copy-btn" onclick="copyText(this, '${encodeURIComponent(req.encodedBody).replace(/'/g, "%27")}')">Copy</button>
                     <pre style="color:#ffae57; white-space:pre-wrap; word-break:break-all;">${req.encodedBody}</pre>
                 </div>
             </div>
@@ -987,7 +1470,7 @@ router.get('/auto-renew', async (req, res) => {
                 continue;
             }
 
-            log(`📝 ${loc} 计划生成完成: 目标日期 ${plan.targetDate}, 共 ${plan.requests.length} 个请求包`);
+            log(`📝 ${loc} 计划生成完成: 目标推演至 ${plan.targetDate}, 共 ${plan.requests.length} 个请求包`);
 
             const submitPromises = [];
             for (const reqTask of plan.requests) {
@@ -1004,7 +1487,7 @@ router.get('/auto-renew', async (req, res) => {
                         }
                     } 
                 }));
-                await delay(80); 
+                await delay(500); 
             }
             
             await Promise.all(submitPromises);
