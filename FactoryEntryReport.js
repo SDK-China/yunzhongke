@@ -25,8 +25,8 @@ require('dotenv').config({ path: '.env.development.local' });
 
 // 实例化 Redis
 const redis = new Redis({
-    url: process.env.UPSTASH_REDIS_KV_REST_API_URL,
-    token: process.env.UPSTASH_REDIS_KV_REST_API_TOKEN,
+    url: process.env.NewYzk_KV_REST_API_URL, // 换成你的新变量名
+    token: process.env.NewYzk_KV_REST_API_TOKEN, // 确保 Token 变量名也对应修改
 });
 
 /**
