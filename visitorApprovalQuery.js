@@ -19,7 +19,8 @@ const CONFIGS = {
             "NDMyOTAxMTk4MjExMDUyMDE2",
             "MTAyNDE5NDY=",
             "MDczOTM0Njc=",
-            "NDIyMzI2MTk5NTA0Mjg2NDEx" // 窦
+            "NDIyMzI2MTk5NTA0Mjg2NDEx", // 窦
+            "NDEyNzIzMTk4NTA5MjIwODNY"  // 顾
         ],
         regPerson: "17614625112",
         acToken: "E5EF067A42A792436902EB275DCCA379812FF4A4A8A756BE0A1659704557309F"
