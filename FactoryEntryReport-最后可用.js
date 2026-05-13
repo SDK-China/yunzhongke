@@ -17,6 +17,52 @@ const fs = require('fs');
 const path = require('path');
 const router = express.Router();
 
+// ==========================================
+// [新增] Redis 数据库初始化与全局上传模块
+// ==========================================
+const { Redis } = require('@upstash/redis');
+require('dotenv').config({ path: '.env.development.local' });
+
+// 实例化 Redis
+const redis = new Redis({
+    url: process.env.UPSTASH_REDIS_KV_REST_API_URL,
+    token: process.env.UPSTASH_REDIS_KV_REST_API_TOKEN,
+});
+
+/**
+ * 统一的数据库上传辅助函数
+ * @param {string} actionType - 操作类型 (如 'UI生成', '自动续期', '手动发送')
+ * @param {string} location - 厂区代码 (如 'A08', 'Q01')
+ * @param {string} summary - 简要说明
+ * @param {object} payloadData - 具体的数据包或日志详情 (会自动转成JSON)
+ */
+const saveLogToRedis = async (actionType, location, summary, payloadData) => {
+    try {
+        const nowMs = Date.now();
+        // 算出北京时间字符串，例如 "2026-05-11_14-30-00"，方便在数据库后台直接肉眼排序
+        const timeStr = new Date(nowMs + 28800000).toISOString().replace(/T/, '_').replace(/:/g, '-').replace(/\..+/, '');
+        
+        // 构造极度规整的 Key： 类型:厂区:时间_随机数
+        // 例如：FactoryLog:UI生成:Q01:2026-05-11_14-30-00_123
+        const key = `FactoryLog:${actionType}:${location || 'GLOBAL'}:${timeStr}_${Math.floor(Math.random()*1000)}`;
+
+        const logRecord = {
+            time: timeStr,
+            action: actionType,
+            location: location,
+            summary: summary,
+            // 这里保存了真正的发包数据或结果
+            data: payloadData
+        };
+
+        // 存入数据库。{ ex: 2592000 } 代表数据保留 30 天后自动删除，保持数据库干净
+        await redis.set(key, JSON.stringify(logRecord), { ex: 2592000 });
+        console.log(`✅ 日志已成功上传至数据库: ${key}`);
+    } catch (error) {
+        console.error(`❌ 数据库上传失败:`, error.message);
+    }
+};
+
 // --- 工具函数：Base64 解码 ---
 const decode = (str) => Buffer.from(str, 'base64').toString('utf-8');
 
@@ -972,6 +1018,12 @@ router.post('/generate-payload', express.json(), (req, res) => {
         }
         finalHtml += renderRequests(requests, loc);
 
+        // [新增] 异步上传生成的包数据到数据库
+        if (requests.length > 0) {
+            // 我们不 await 它，让它在后台静默上传，不阻塞前端页面响应
+            saveLogToRedis('UI生成', loc, `Debug界面生成了 ${requests.length} 个数据包`, requests).catch(e => console.error(e));
+        }
+
         res.json({ html: finalHtml });
 
     } catch (e) {
@@ -994,6 +1046,13 @@ router.post('/manual-send', express.json(), async (req, res) => {
     try {
         const reqTask = { targetDate, people, encodedBody };
         const result = await submitApplication(reqTask, locConfig);
+        
+        // [新增] 记录手动发送的结果和具体的请求包数据
+        saveLogToRedis('手动发送', loc, `发送结果: ${result.success ? '成功' : '失败'}`, {
+            requestPayload: reqTask, // 发出去的数据包
+            responseResult: result   // 服务器返回的成功/失败信息
+        }).catch(e => console.error(e));
+
         res.json(result);
     } catch (e) {
         res.json({ success: false, msg: "后端执行异常: " + e.message });
@@ -1479,7 +1538,15 @@ router.get('/auto-renew', async (req, res) => {
                 submitPromises.push(submitApplication(reqTask, locConfig).then(r => { 
                     if(r) { 
                         r.loc = loc; 
+                        
+                        // 🌟 【核心修改】：把生成好的完整数据包也塞进这条结果里
+                        r.payload = {
+                            rawJson: reqTask.rawJson,
+                            encodedBody: reqTask.encodedBody
+                        };
+                        
                         allResults.push(r); 
+                        
                         if(!r.success) {
                             log(`❌ [${loc}] ${reqTask.targetDate} 失败: ${r.msg}`);
                         } else {
@@ -1493,7 +1560,10 @@ router.get('/auto-renew', async (req, res) => {
             await Promise.all(submitPromises);
         }
 
-        log("\n=== 🏁 流程结束 ===");
+        const globalEndTime = Date.now(); // 👈 [新增] 记录结束时间戳
+        const costSeconds = ((globalEndTime - globalStartTime) / 1000).toFixed(2); // 计算耗时(秒)
+
+        log(`\n=== 🏁 流程结束 (总耗时: ${costSeconds} 秒) ===`);
         
         let report = "📊 自动续期执行报告\n========================\n";
         allResults.forEach((r, idx) => {
@@ -1505,10 +1575,20 @@ router.get('/auto-renew', async (req, res) => {
         });
         
         if (allResults.length === 0) {
-            report += "✅ 所有厂区状态均正常，未发生实际提交操作。\n========================\n";
+            report += "✅ 所有厂区状态均正常，未发生实际提交操作。\n";
         }
         
+        // 🌟 [新增] 将总耗时拼接到最终返回的文本报告中
+        report += `⏱️ 总计用时: ${costSeconds} 秒\n========================\n`;
+        
         report += "\n🔍 系统日志:\n" + logs.join('\n');
+        
+        // [新增] 将自动续期的完整运行报告、全部发包详情一并上传
+        saveLogToRedis('自动续期', locFilter || 'ALL', '后台自动巡检与续期完成', {
+            textReport: report, // 完整的文本报告
+            actionDetails: allResults // 如果有发包，这里包含了每一通发包的成功/失败详情
+        }).catch(e => console.error(e));
+
         res.type('text/plain').send(report);
 
     } catch (err) {
