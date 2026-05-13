@@ -175,18 +175,41 @@ router.get('/', (req, res) => {
                 const data = log.data;
                 if (!data) return '<div class="text-gray-500 text-sm italic">该日志不包含详细数据体</div>';
 
+                // 🌟 辅助函数：把名字后面跟着的冗长提示，转化为精致的高颜值 UI 徽章
+                const renderPeopleWithBadge = (peopleStr) => {
+                    if (!peopleStr) return '未知';
+                    let badge = '';
+                    let name = peopleStr;
+                    
+                    if (peopleStr.indexOf('(🚀 独立专单') > -1) {
+                        const match = peopleStr.match(/\(🚀 独立专单 -> 接待人: (.*?)\)/);
+                        if (match) {
+                            badge = '<span class="bg-purple-100 text-purple-700 border border-purple-200 text-[10px] px-2 py-0.5 rounded shadow-sm ml-2 font-bold tracking-wide">🎯 专属接待: ' + match[1] + '</span>';
+                            name = peopleStr.replace(/\(🚀 独立专单 -> 接待人: .*?\)/, '').trim();
+                        }
+                    } else if (peopleStr.indexOf('(🏢 常规大部队拼车)') > -1) {
+                        badge = '<span class="bg-indigo-50 text-indigo-600 border border-indigo-200 text-[10px] px-2 py-0.5 rounded shadow-sm ml-2 font-bold tracking-wide">🏢 大部队拼车</span>';
+                        name = peopleStr.replace(/\(🏢 常规大部队拼车\)/, '').trim();
+                    }
+                    
+                    return '<span class="font-medium text-gray-200">' + name + '</span> ' + badge;
+                };
+
                 try {
                     if (log.action === 'UI生成') {
                         if (!Array.isArray(data)) throw new Error('Data is not an array');
                         let html = '<div class="space-y-4">';
                         data.forEach((req, i) => {
+                            // 👇 注意这里的反引号和 $ 均已转义，修复了报错
                             html += \`
                             <div class="bg-gray-800 rounded-lg p-4 border border-gray-700">
                                 <div class="flex items-center gap-3 mb-2 pb-2 border-b border-gray-700">
                                     <span class="bg-blue-900/50 text-blue-300 text-xs px-2 py-1 rounded font-bold">📦 数据包 \${i + 1}</span>
                                     <span class="text-gray-200 text-sm font-medium">📅 \${req.targetDate || '未知'}</span>
                                 </div>
-                                <div class="text-gray-400 text-sm mb-3">👥 \${req.people || '未知'}</div>
+                                <div class="text-sm mb-3 flex items-center flex-wrap">
+                                    <span class="mr-1 text-gray-400">👥</span> \${renderPeopleWithBadge(req.people)}
+                                </div>
                                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
                                     <div class="bg-gray-900 rounded border border-gray-700">
                                         <div class="flex justify-between items-center bg-gray-800 px-3 py-1.5 rounded-t">
@@ -212,13 +235,16 @@ router.get('/', (req, res) => {
                         const req = data.requestPayload || {};
                         const res = data.responseResult || {};
                         const isSuccess = res.success;
+                        // 👇 已转义
                         return \`
                         <div class="space-y-4">
                             <div class="flex flex-col md:flex-row gap-4">
                                 <div class="flex-1 bg-gray-800 rounded-lg p-4 border border-gray-700">
                                     <div class="text-gray-400 text-xs mb-2 uppercase tracking-wider">📤 提交请求</div>
-                                    <div class="text-gray-200 text-sm mb-1">📅 \${req.targetDate || '未知'}</div>
-                                    <div class="text-gray-400 text-sm">👥 \${req.people || '未知'}</div>
+                                    <div class="text-gray-200 text-sm mb-2">📅 \${req.targetDate || '未知'}</div>
+                                    <div class="text-sm flex items-center flex-wrap">
+                                        <span class="mr-1 text-gray-400">👥</span> \${renderPeopleWithBadge(req.people)}
+                                    </div>
                                 </div>
                                 <div class="flex-1 \${isSuccess ? 'bg-green-900/20 border-green-800/50' : 'bg-red-900/20 border-red-800/50'} rounded-lg p-4 border">
                                     <div class="\${isSuccess ? 'text-green-400' : 'text-red-400'} text-xs mb-2 uppercase tracking-wider">📥 接口响应</div>
@@ -238,13 +264,49 @@ router.get('/', (req, res) => {
 
                     if (log.action === '自动续期') {
                         const report = data.textReport || '无文本报告';
+                        const details = data.actionDetails || [];
+                        
+                        let detailsHtml = '';
+                        if (details.length > 0) {
+                            let listStr = '';
+                            for (let j = 0; j < details.length; j++) {
+                                let d = details[j];
+                                let jsonContent = d.payload && d.payload.rawJson ? d.payload.rawJson : '无底层数据';
+                                let icon = d.success ? '✅' : '❌';
+                                let color = d.success ? 'text-green-400' : 'text-red-400';
+                                
+                                // 内部纯字符串拼接，无需转义
+                                listStr += '<details class="bg-gray-800 rounded border border-gray-700 overflow-hidden outline-none">' +
+                                    '<summary class="px-3 py-2 cursor-pointer hover:bg-gray-700 text-xs text-gray-300 flex justify-between items-center outline-none select-none">' +
+                                        '<div class="flex items-center gap-2">' +
+                                            '<span class="' + color + ' font-bold">' + icon + '</span>' +
+                                            '<span class="bg-gray-900 px-2 py-0.5 rounded text-gray-400">' + d.loc + '</span>' +
+                                            '<span>' + d.date + '</span>' +
+                                            '<span class="text-gray-400">|</span>' +
+                                            '<span>' + renderPeopleWithBadge(d.people) + '</span>' +
+                                        '</div>' +
+                                        '<span class="text-gray-500 hover:text-white transition">查看JSON ▼</span>' +
+                                    '</summary>' +
+                                    '<div class="p-3 border-t border-gray-700 bg-gray-900 relative">' +
+                                        '<button onclick="copyRaw(event, \\'' + encodeURIComponent(jsonContent) + '\\')" class="absolute top-2 right-2 text-[10px] bg-gray-700 hover:bg-gray-600 text-gray-200 px-2 py-1 rounded transition">复制</button>' +
+                                        '<pre><code class="language-json text-[11px] leading-relaxed">' + jsonContent + '</code></pre>' +
+                                    '</div>' +
+                                '</details>';
+                            }
+                            detailsHtml = '<div class="mt-4 border-t border-gray-700 pt-3">' +
+                                '<div class="text-gray-400 text-xs mb-2 font-bold">📦 底层发包数据切片 (' + details.length + '个):</div>' +
+                                '<div class="space-y-2">' + listStr + '</div></div>';
+                        }
+
+                        // 👇 已转义
                         return \`
                         <div class="bg-gray-950 p-4 rounded-lg border border-gray-800 shadow-inner">
-                            <div class="text-gray-500 text-xs mb-2 font-mono flex justify-between">
+                            <div class="text-gray-500 text-xs mb-2 font-mono flex justify-between items-center">
                                 <span>[Cron Job Console Output]</span>
-                                <button onclick="copyRaw(event, '\${encodeURIComponent(report)}')" class="hover:text-white">复制</button>
+                                <button onclick="copyRaw(event, '\${encodeURIComponent(report)}')" class="text-xs bg-gray-800 hover:bg-gray-700 text-gray-300 px-2 py-1 rounded transition">复制文本</button>
                             </div>
-                            <div class="text-sm text-emerald-400 whitespace-pre font-mono overflow-x-auto">\${report}</div>
+                            <div class="text-sm text-emerald-400 whitespace-pre font-mono overflow-x-auto leading-relaxed">\${report}</div>
+                            \${detailsHtml}
                         </div>\`;
                     }
 
