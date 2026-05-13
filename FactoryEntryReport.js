@@ -293,6 +293,16 @@ A08_TEMPLATE.push({
         "format": "yyyy-MM-dd"
     }
 });
+// 👇 🌟 新增：紧跟在时间戳后面，注入官方要求的新文本日期字段
+A08_TEMPLATE.push({ 
+    type: 'INJECT_DATE_STR', 
+    template: {
+        "componentName": "TextField",
+        "fieldId": "textField_mjdmoase",
+        "label": "到访日期文本",
+        "fieldData": { "value": "" }
+    }
+});
 FORM_TAIL.slice(4).forEach(item => A08_TEMPLATE.push({ type: 'STATIC', item }));
 
 // ==========================================
@@ -492,6 +502,9 @@ const LOC_CONFIGS = {
             const tableRows = idsBase64.map(id => locConfig.personDb[id]).filter(Boolean);
             const finalForm = [];
             
+            // 👇 获取 YYYY-MM-DD 格式的字符串，供新字段使用
+            const dateStr = new Date(targetTs + 28800000).toISOString().split('T')[0];
+
             A08_TEMPLATE.forEach(block => {
                 if (block.type === 'STATIC') {
                     // 修复：必须进行深拷贝，否则会污染内存里的全局模板
@@ -503,6 +516,9 @@ const LOC_CONFIGS = {
                     });
                 } else if (block.type === 'INJECT_DATE_TS') {
                     finalForm.push({ ...block.template, fieldData: { value: targetTs } });
+                } else if (block.type === 'INJECT_DATE_STR') {
+                    // 👇 🌟 将格式化好的字符串注入新字段
+                    finalForm.push({ ...block.template, fieldData: { value: dateStr } });
                 }
             });
 
@@ -520,7 +536,7 @@ const LOC_CONFIGS = {
             const jsonStr = JSON.stringify(finalForm, null, 2);
             // 👇 强制绑定该账号独有的 Token
             const _token = locConfig.csrf_token || 'e7daa879-7b83-40f7-8335-1a262747f2c9';
-            const fullPostBody = `_csrf_token=${_token}&formUuid=FORM-2768FF7B2C0D4A0AB692FD28DBA09FD57IHQ&appType=APP_GRVPTEOQ6D4B7FLZFYNJ&value=${encodeURIComponent(JSON.stringify(finalForm))}&_schemaVersion=653`;
+            const fullPostBody = `_csrf_token=${_token}&formUuid=FORM-2768FF7B2C0D4A0AB692FD28DBA09FD57IHQ&appType=APP_GRVPTEOQ6D4B7FLZFYNJ&value=${encodeURIComponent(JSON.stringify(finalForm))}&_schemaVersion=672`;
             return { jsonStr, fullPostBody };
         }
     },

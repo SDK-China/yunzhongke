@@ -21,12 +21,14 @@ const router = express.Router();
 // [新增] Redis 数据库初始化与全局上传模块
 // ==========================================
 const { Redis } = require('@upstash/redis');
+// 双重保险，保证绝对能读到本地的 env 文件
 require('dotenv').config({ path: '.env.development.local' });
+require('dotenv').config({ path: '.env.local' });
 
-// 实例化 Redis
+// 实例化 Redis (智能兼容新老名字，再也不会 undefined 啦)
 const redis = new Redis({
-    url: process.env.UPSTASH_REDIS_KV_REST_API_URL,
-    token: process.env.UPSTASH_REDIS_KV_REST_API_TOKEN,
+    url: process.env.NewYzk_KV_REST_API_URL,
+    token: process.env.NewYzk_KV_REST_API_TOKEN,
 });
 
 /**
@@ -233,6 +235,18 @@ const PERSON_DB = {
         {"componentName":"AttachmentField","fieldId":"attachmentField_lxv44osj","label":"身份证照片","fieldData":{"value":[{"name":"mmexport1774193578988.jpg","previewUrl":"/o/E2E66S91LI24L1K2H2XD54ZLK87L2F7DOX1NM8C?appType=APP_GRVPTEOQ6D4B7FLZFYNJ&fileName=APP_GRVPTEOQ6D4B7FLZFYNJ_RTJFNjZTOTFMSTI0TDFLMkgyWEQ1NFpMSzg3TDJFN0RPWDFOTTdD.jpg&instId=&type=open&process=image/resize,m_fill,w_200,h_200,limit_0/quality,q_80","downloadUrl":"/o/E2E66S91LI24L1K2H2XD54ZLK87L2F7DOX1NM8C?appType=APP_GRVPTEOQ6D4B7FLZFYNJ&fileName=APP_GRVPTEOQ6D4B7FLZFYNJ_RTJFNjZTOTFMSTI0TDFLMkgyWEQ1NFpMSzg3TDJFN0RPWDFOTTdD.jpg&instId=&type=download","size":467704,"url":"/o/E2E66S91LI24L1K2H2XD54ZLK87L2F7DOX1NM8C?appType=APP_GRVPTEOQ6D4B7FLZFYNJ&fileName=APP_GRVPTEOQ6D4B7FLZFYNJ_RTJFNjZTOTFMSTI0TDFLMkgyWEQ1NFpMSzg3TDJFN0RPWDFOTTdD.jpg&instId=&type=download","fileUuid":"APP_GRVPTEOQ6D4B7FLZFYNJ_RTJFNjZTOTFMSTI0TDFLMkgyWEQ1NFpMSzg3TDJFN0RPWDFOTTdD.jpg"}]}},
         {"componentName":"AttachmentField","fieldId":"attachmentField_lxv44osk","label":"社保/在职证明","fieldData":{"value":[{"name":"在职证明 - 蔻.pdf","previewUrl":"/dingtalk/mobile/APP_GRVPTEOQ6D4B7FLZFYNJ/inst/preview?appType=APP_GRVPTEOQ6D4B7FLZFYNJ&fileName=APP_GRVPTEOQ6D4B7FLZFYNJ_TTBCNjZPQzFWUDE0TjNEQk9MNlMxNzdaT1FUMTJTMU9PWDFOTUtO.pdf&fileSize=41267&downloadUrl=APP_GRVPTEOQ6D4B7FLZFYNJ_TTBCNjZPQzFWUDE0TjNEQk9MNlMxNzdaT1FUMTJTMU9PWDFOTUtO.pdf","downloadUrl":"/o/M0B66OC1VP14N3DBOL6S177ZOQT12S1OOX1NMLN?appType=APP_GRVPTEOQ6D4B7FLZFYNJ&fileName=APP_GRVPTEOQ6D4B7FLZFYNJ_TTBCNjZPQzFWUDE0TjNEQk9MNlMxNzdaT1FUMTJTMU9PWDFOTUtO.pdf&instId=&type=download","size":41267,"url":"/o/M0B66OC1VP14N3DBOL6S177ZOQT12S1OOX1NMLN?appType=APP_GRVPTEOQ6D4B7FLZFYNJ&fileName=APP_GRVPTEOQ6D4B7FLZFYNJ_TTBCNjZPQzFWUDE0TjNEQk9MNlMxNzdaT1FUMTJTMU9PWDFOTUtO.pdf&instId=&type=download","fileUuid":"APP_GRVPTEOQ6D4B7FLZFYNJ_TTBCNjZPQzFWUDE0TjNEQk9MNlMxNzdaT1FUMTJTMU9PWDFOTUtO.pdf"}]}},
         {"componentName":"AttachmentField","fieldId":"attachmentField_lxv44osn","label":"其他附件","fieldData":{"value":[]}}
+    ],
+    // 顾科举 (新增)
+    "NDEyNzIzMTk4NTA5MjIwODNY": [
+        {"componentName":"SelectField","fieldId":"selectField_lxv44orx","label":"有效身份证件","fieldData":{"value":"身份证","text":"身份证"},"options":[{"defaultChecked":false,"syncLabelValue":true,"__sid":"item_lxjzgsg1","text":"身份证","__sid__":"serial_lxjzgsg0","value":"身份证","sid":"serial_lxjzgsg0"}]},
+        {"componentName":"TextField","fieldId":"textField_lxv44ory","label":"证件号码","fieldData":{"value": decode("NDEyNzIzMTk4NTA5MjIwODNY")}},
+        {"componentName":"TextField","fieldId":"textField_lxv44orw","label":"姓名","fieldData":{"value": decode("6aG+56eR5Li+")}},
+        {"componentName":"SelectField","fieldId":"selectField_mbyjhot6","label":"区号","fieldData":{"value":"86","text":"+86"},"options":[{"defaultChecked":true,"syncLabelValue":false,"__sid":"item_megqe4lm","text":"+86","__sid__":"serial_megqe4ll","value":"86","sid":"serial_mbyjf8gm"}]},
+        {"componentName":"TextField","fieldId":"textField_lxv44orz","label":"联系方式","fieldData":{"value": decode("MTg4NjgzOTM1MjM=") }},
+        {"componentName":"ImageField","fieldId":"imageField_ly9i5k5q","label":"免冠照片","fieldData":{"value":[{"name":"1000547720.jpg","previewUrl":"https://dingtalk.avaryholding.com:8443/dingplus/image/20260512/a5c2484457704efb9a3ca317899fe5db.jpg","downloadUrl":"https://dingtalk.avaryholding.com:8443/dingplus/image/20260512/a5c2484457704efb9a3ca317899fe5db.jpg","size":342350,"url":"https://dingtalk.avaryholding.com:8443/dingplus/image/20260512/a5c2484457704efb9a3ca317899fe5db.jpg"}]}},
+        {"componentName":"AttachmentField","fieldId":"attachmentField_lxv44osj","label":"身份证照片","fieldData":{"value":[{"name":"mmexport1778582023533.jpg","previewUrl":"/o/QMF66WA1M8N5EOODH9M6VCU3RL6J3A7IUH2PMA3?appType=APP_GRVPTEOQ6D4B7FLZFYNJ&fileName=APP_GRVPTEOQ6D4B7FLZFYNJ_UU1GNjZXQTFNOE41RU9PREg5TTZWQ1UzUkw2SjNBN0lVSDJQTTkz.jpg&instId=&type=open&process=image/resize,m_fill,w_200,h_200,limit_0/quality,q_80","downloadUrl":"/o/QMF66WA1M8N5EOODH9M6VCU3RL6J3A7IUH2PMA3?appType=APP_GRVPTEOQ6D4B7FLZFYNJ&fileName=APP_GRVPTEOQ6D4B7FLZFYNJ_UU1GNjZXQTFNOE41RU9PREg5TTZWQ1UzUkw2SjNBN0lVSDJQTTkz.jpg&instId=&type=download","size":162217,"url":"/o/QMF66WA1M8N5EOODH9M6VCU3RL6J3A7IUH2PMA3?appType=APP_GRVPTEOQ6D4B7FLZFYNJ&fileName=APP_GRVPTEOQ6D4B7FLZFYNJ_UU1GNjZXQTFNOE41RU9PREg5TTZWQ1UzUkw2SjNBN0lVSDJQTTkz.jpg&instId=&type=download","fileUuid":"APP_GRVPTEOQ6D4B7FLZFYNJ_UU1GNjZXQTFNOE41RU9PREg5TTZWQ1UzUkw2SjNBN0lVSDJQTTkz.jpg"}]}},
+        {"componentName":"AttachmentField","fieldId":"attachmentField_lxv44osk","label":"社保/在职证明","fieldData":{"value":[{"name":"在职证明 - 顾科举.pdf","previewUrl":"/dingtalk/mobile/APP_GRVPTEOQ6D4B7FLZFYNJ/inst/preview?appType=APP_GRVPTEOQ6D4B7FLZFYNJ&fileName=APP_GRVPTEOQ6D4B7FLZFYNJ_NDFINjZIOTE2OE41SlFDQlBTUjRVN0czS1pZTzNXNFBWSDJQTVky.pdf&fileSize=41602&downloadUrl=APP_GRVPTEOQ6D4B7FLZFYNJ_NDFINjZIOTE2OE41SlFDQlBTUjRVN0czS1pZTzNXNFBWSDJQTVky.pdf","downloadUrl":"/o/41H66H9168N5JQCBPSR4U7G3KZYO3W4PVH2PMZ2?appType=APP_GRVPTEOQ6D4B7FLZFYNJ&fileName=APP_GRVPTEOQ6D4B7FLZFYNJ_NDFINjZIOTE2OE41SlFDQlBTUjRVN0czS1pZTzNXNFBWSDJQTVky.pdf&instId=&type=download","size":41602,"url":"/o/41H66H9168N5JQCBPSR4U7G3KZYO3W4PVH2PMZ2?appType=APP_GRVPTEOQ6D4B7FLZFYNJ&fileName=APP_GRVPTEOQ6D4B7FLZFYNJ_NDFINjZIOTE2OE41SlFDQlBTUjRVN0czS1pZTzNXNFBWSDJQTVky.pdf&instId=&type=download","fileUuid":"APP_GRVPTEOQ6D4B7FLZFYNJ_NDFINjZIOTE2OE41SlFDQlBTUjRVN0czS1pZTzNXNFBWSDJQTVky.pdf"}]}},
+        {"componentName":"AttachmentField","fieldId":"attachmentField_lxv44osn","label":"其他附件","fieldData":{"value":[]}}
     ]
 };
 
@@ -359,7 +373,8 @@ const LOC_CONFIGS = {
                 "MTMwNDI1MTk4OTA4MjkwMzE0", //姜
                 // "MTAyNDE5NDY=", //林
                 // "MDczOTM0Njc=", //陈
-                "NDIyMzI2MTk5NTA0Mjg2NDEx" // 窦
+                "NDIyMzI2MTk5NTA0Mjg2NDEx", // 窦
+                "NDEyNzIzMTk4NTA5MjIwODNY"  // 顾
             ],
             regPerson: "17614625112",
             acToken: "E5EF067A42A792436902EB275DCCA379812FF4A4A8A756BE0A1659704557309F",
@@ -452,6 +467,21 @@ const LOC_CONFIGS = {
                 receptionistPhone: "17643042011",
                 visitReason: "设备维护与保养",
                 keepNormal: true,           // 🌟 核心：设为 true，同样双开！
+                renewThreshold: 0,            // 独立：剩0天时触发专属包
+                renewDays: 2                  // 独立：一次续2天
+            },
+            // 顾
+            "NDEyNzIzMTk4NTA5MjIwODNY": {
+                // receptionistId: "A2449801",
+                // receptionistName: "龚旭明",
+                // receptionDepartment: "QA01設備五課",
+                // receptionistPhone: "17703340319",
+                receptionistId: "A2319601",
+                receptionistName: "赵海富",
+                receptionDepartment: "QA01設備五課",
+                receptionistPhone: "17643042011",
+                visitReason: "设备维护与保养",
+                keepNormal: false,             // 🌟 核心：设为 true，系统就会为他发一份指定的包，再跟大部队发一份原始包！
                 renewThreshold: 0,            // 独立：剩0天时触发专属包
                 renewDays: 2                  // 独立：一次续2天
             },
@@ -841,8 +871,17 @@ const calculatePlan = (idStatusMap, locConfig) => {
             needRenew = true;
         }
 
+        // 👇 新增：将冗长的文字剥离，改为精美的 HTML 独立徽章标签
+        let customHtml = '';
         if (vu.type === 'custom') {
-            statusText += ` [专属接待: ${vu.customConf.receptionistName}${vu.customConf.keepNormal ? ' ➕ 双开大单' : ''}] (规则: <=${threshold}天续${addDays}天)`;
+            customHtml = `<div style="margin-top: 6px; font-size: 0.75rem; line-height: 1.4;">
+                <span style="background: #f3e8ff; color: #6b21a8; padding: 2px 6px; border-radius: 4px; border: 1px solid #e9d5ff; display: inline-block;">
+                    🎯 专属接待: <b>${vu.customConf.receptionistName}</b>
+                </span><br>
+                <span style="color: #64748b; margin-top:2px; display:inline-block;">
+                    ⚙️ 规则: ≤${threshold}天续${addDays}天 ${vu.customConf.keepNormal ? '<span style="color:#059669; font-weight:bold;">[➕双开原始包]</span>' : ''}
+                </span>
+            </div>`;
         }
 
         const rawId = decode(vu.idBase64);
@@ -853,7 +892,8 @@ const calculatePlan = (idStatusMap, locConfig) => {
             idMask: idMask,
             lastDate: vu.maxEndTs === 0 ? "无记录" : getFormattedDate(vu.maxEndTs),
             status: statusText,
-            class: statusClass
+            class: statusClass,
+            customHtml: customHtml // 👈 绑定我们新写的精美标签
         });
         
         vu.currentEndTs = currentEndTs;
@@ -1059,404 +1099,437 @@ router.post('/manual-send', express.json(), async (req, res) => {
     }
 });
 
-// --- SPA 极速单页面 Debug 界面 ---
-router.get('/debug', async (req, res) => {
+// ==========================================
+// [新增] 异步获取底层数据的专属 API (专供秒开面板调用)
+// ==========================================
+router.get('/debug-content', async (req, res) => {
+    const loc = req.query.loc;
+    const locConfig = LOC_CONFIGS[loc];
+    if (!locConfig || !locConfig.enabled) return res.json({ error: "未开启的厂区配置" });
+
+    try {
+        const { statusMap: realStatusMap, stats } = await getAllStatuses(locConfig.query);
+        const safetyCheck = checkSafeToRun(stats);
+        const realPlan = calculatePlan(realStatusMap, locConfig);
+
+        const simulatedStatusMap = {};
+        locConfig.query.visitorIdNos.forEach(idBase64 => {
+             simulatedStatusMap[decode(idBase64)] = []; 
+        });
+        const simulatedPlan = calculatePlan(simulatedStatusMap, locConfig);
+
+        const safetyBadge = safetyCheck.safe 
+            ? `<span style="background:#ecfdf5; color:#059669; padding:4px 8px; border-radius:4px; border:1px solid #a7f3d0; font-size:0.8rem;">✅ 安全 (Ready)</span>`
+            : `<span style="background:#fef2f2; color:#dc2626; padding:4px 8px; border-radius:4px; border:1px solid #fecaca; font-size:0.8rem;">❌ 熔断 (BLOCKED)</span>`;
+
+        let realQueueHTML = '';
+        if (safetyCheck.safe) {
+            realQueueHTML = `
+                <h3 style="font-size:0.9rem; margin-bottom:10px; color:#374151;">🚀 待发送队列 (${realPlan.requests.length})</h3>
+                ${renderRequests(realPlan.requests, loc)}
+            `;
+        } else {
+            realQueueHTML = `
+                <div class="blocked-overlay">
+                    <div style="font-size:1.5rem; margin-bottom:10px;">⛔</div>
+                    <div style="font-weight:bold; font-size:1.1rem; margin-bottom:5px;">队列已被安全拦截</div>
+                    <div style="font-size:0.85rem; opacity:0.8;">${safetyCheck.reason}<br>本次执行<b>绝对不会</b>发送任何请求。</div>
+                </div>
+            `;
+        }
+
+        // 返回核心的 HTML 碎片给前端
+        const html = `
+            <h1><span>🔧 [${locConfig.title}] 自动续期调试</span> ${safetyBadge}</h1>
+
+            ${!safetyCheck.safe ? `<div class="error-banner">⛔ 熔断警告: ${safetyCheck.reason}</div>` : ''}
+
+            <div class="card">
+                <h2><span>📊 实时状态 (推演至: ${realPlan.targetDate})</span></h2>
+                
+                <div class="stat-grid">
+                    <div class="stat-item"><div class="stat-val">${stats.total}</div>总查询人数</div>
+                    <div class="stat-item"><div class="stat-val" style="color:#059669">${stats.success}</div>接口成功</div>
+                    <div class="stat-item"><div class="stat-val" style="color:#dc2626">${stats.error}</div>接口报错</div>
+                    <div class="stat-item"><div class="stat-val">${stats.noData}</div>查询无记录</div>
+                </div>
+
+                <div class="table-wrapper">
+                    <table>
+                        <thead>
+                            <tr><th>姓名/轨迹</th><th>有效期止</th><th>状态</th></tr>
+                        </thead>
+                        <tbody>
+                            ${realPlan.summary.map(item => `
+                            <tr>
+                                <td><strong>${item.name}</strong><br><span style="font-size:0.7rem;color:#999">${item.idMask}</span></td>
+                                <td>${item.lastDate}</td>
+                                <td>
+                                    <span class="status-badge ${item.class}">${item.status}</span>
+                                    ${item.customHtml ? item.customHtml : ''}
+                                </td>
+                            </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                </div>
+                
+                ${realQueueHTML}
+            </div>
+
+            <div class="card" style="border-top: 4px solid #10b981;">
+                <h2>🛠️ 自定义报文生成器</h2>
+                <div style="margin-bottom: 10px; font-size: 0.85rem; color: #4b5563;">
+                    自由选择人员和日期，生成特定组合的提交报文用于测试或手动发送。
+                </div>
+                <div style="display:flex; flex-direction:column; gap:10px; margin-bottom:15px;">
+                    <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+                        <strong>📅 起止日期:</strong> 
+                        <input type="date" id="customStartDate-${loc}" style="padding:6px; border-radius:4px; border:1px solid #ccc; flex:1; min-width:120px;">
+                        <span style="color:#64748b; font-weight:bold;">至</span>
+                        <input type="date" id="customEndDate-${loc}" style="padding:6px; border-radius:4px; border:1px solid #ccc; flex:1; min-width:120px;">
+                    </div>
+                    <div>
+                        <strong>👥 选择人员:</strong>
+                        <div style="display:flex; flex-wrap:wrap; gap:8px; margin-top:8px; background:#f9fafb; padding:10px; border-radius:6px; border:1px solid #e5e7eb;">
+                            ${Object.keys(locConfig.personDb).map(base64Id => {
+                                const info = locConfig.personDb[base64Id];
+                                const nameField = info.find(f=>f.label==='姓名');
+                                let name = nameField && nameField.fieldData ? nameField.fieldData.value : base64Id;
+                                const isActive = locConfig.query.visitorIdNos.includes(base64Id);
+                                
+                                const hasCustom = locConfig.customReceptionists && locConfig.customReceptionists[base64Id];
+                                if(hasCustom) name += " ⭐";
+
+                                return `<label style="font-size:0.85rem; display:flex; align-items:center; gap:4px; ${isActive?'':'opacity:0.5;'}"><input type="checkbox" class="person-cb-${loc}" value="${base64Id}" ${isActive?'checked':''}>${name} ${isActive?'':'(停用)'}</label>`;
+                            }).join('')}
+                        </div>
+                    </div>
+                    <button onclick="generateCustom('${loc}')" style="padding:8px 15px; background:#10b981; color:white; border:none; border-radius:6px; cursor:pointer; font-weight:bold; align-self:flex-start;">⚡ 立即生成报文</button>
+                </div>
+                <div id="customResult-${loc}" style="display:none;"></div>
+            </div>
+
+            <div class="card" style="border-top: 4px solid #9333ea;">
+                <h2>🔮 全员无记录模拟 (Force Sync)</h2>
+                <p style="font-size:0.8rem; color:#666; margin-bottom:10px;">假设数据库清空，系统将从“今天”开始生成完整对齐计划。（此区域仅为逻辑验证，不受熔断影响）</p>
+                ${renderRequests(simulatedPlan.requests, loc)}
+            </div>
+        `;
+        res.json({ html });
+    } catch (e) {
+        res.json({ error: e.message });
+    }
+});
+
+// --- SPA 极速单页面 Debug 界面 (前端秒开骨架屏版) ---
+router.get('/debug', (req, res) => {
     const locs = Object.keys(LOC_CONFIGS).filter(k => LOC_CONFIGS[k].enabled);
     if (locs.length === 0) return res.status(404).send("没有开启的厂区配置");
 
-    try {
-        const allLocData = {};
-        
-        const fetchPromises = locs.map(async loc => {
-            const locConfig = LOC_CONFIGS[loc];
-            const { statusMap: realStatusMap, stats } = await getAllStatuses(locConfig.query);
-            const safetyCheck = checkSafeToRun(stats);
-            const realPlan = calculatePlan(realStatusMap, locConfig);
+    const tabsHtml = locs.map((loc, i) => 
+        `<button class="tab loc-tab ${i === 0 ? 'active' : ''}" onclick="switchLoc('${loc}', this)">🏢 ${LOC_CONFIGS[loc].title}</button>`
+    ).join('');
 
-            const simulatedStatusMap = {};
-            locConfig.query.visitorIdNos.forEach(idBase64 => {
-                 simulatedStatusMap[decode(idBase64)] = []; // 模拟0记录直接传空数组
-            });
-            const simulatedPlan = calculatePlan(simulatedStatusMap, locConfig);
-            
-            allLocData[loc] = { locConfig, stats, safetyCheck, realPlan, simulatedPlan };
-        });
+    // 👇 返回给浏览器的是极速空壳骨架，不带阻塞查询
+    const contentsHtml = locs.map((loc, i) => `
+        <div id="content-${loc}" class="loc-content ${i === 0 ? 'active' : ''}">
+            <div style="padding: 60px 20px; text-align: center; color: #64748b; font-weight: bold; background: #fff; border-radius: 12px; border: 1px solid #e5e7eb; box-shadow: 0 1px 3px rgba(0,0,0,0.05); margin-top: 10px;">
+                <div style="font-size: 2rem; margin-bottom: 15px; animation: pulse 1.5s infinite;">⏳</div>
+                <div style="font-size: 1.1rem;">正在前往 ${loc} 厂区拉取底层数据...</div>
+                <div style="font-size: 0.85rem; opacity: 0.7; margin-top: 8px;">根据名单人数，可能需要几秒钟时间，请稍候</div>
+            </div>
+        </div>
+    `).join('');
 
-        await Promise.all(fetchPromises);
+    const html = `
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0">
+        <title>申请插件调试面板</title>
+        <style>
+                body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background: #f3f4f6; padding: 10px; color: #1f2937; margin:0; }
+                .container { max-width: 1000px; margin: 0 auto; }
+                .card { background: #fff; padding: 15px; border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); margin-bottom: 20px; }
+                
+                h1 { margin: 10px 0 20px 0; color: #111827; font-size: 1.2rem; border-left: 4px solid #3b82f6; padding-left: 10px; display: flex; align-items: center; justify-content: space-between; }
+                h2 { margin-top: 0; color: #4b5563; font-size: 1rem; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; }
+                
+                .tabs { display: flex; gap: 8px; margin-bottom: 20px; position: sticky; top: 0; z-index: 100; background: #f3f4f6; padding: 10px 0; }
+                .tab { flex: 1; text-align: center; padding: 12px 0; background: #e5e7eb; border-radius: 8px; color: #374151; font-weight: bold; cursor: pointer; transition: 0.2s; border: none;}
+                .tab.active { background: #3b82f6; color: white; box-shadow: 0 2px 4px rgba(59,130,246,0.3); }
+                .loc-content { display: none; }
+                .loc-content.active { display: block; animation: fadeIn 0.3s ease; }
+                
+                @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+                @keyframes pulse { 0% { transform: scale(0.9); opacity: 0.7; } 50% { transform: scale(1.1); opacity: 1; } 100% { transform: scale(0.9); opacity: 0.7; } }
+                
+                .table-wrapper { overflow-x: auto; margin-bottom: 15px; border-radius: 8px; border: 1px solid #e5e7eb; }
+                table { width: 100%; border-collapse: collapse; min-width: 500px; }
+                th, td { text-align: left; padding: 10px; border-bottom: 1px solid #e5e7eb; font-size: 0.9rem; }
+                th { background: #f9fafb; font-weight: 600; color: #6b7280; }
+                tr:last-child td { border-bottom: none; }
+                
+                .status-badge { padding: 2px 8px; border-radius: 99px; font-size: 0.75rem; font-weight: 600; white-space: nowrap; }
+                .expired { background: #fee2e2; color: #991b1b; }
+                .warning { background: #fef3c7; color: #92400e; }
+                .success { background: #d1fae5; color: #065f46; }
+                
+                .request-item { background: #fff; border: 1px solid #e5e7eb; border-radius: 8px; margin-bottom: 10px; overflow: hidden; }
+                .req-header { padding: 12px; background: #f9fafb; display: flex; flex-direction: column; cursor: pointer; user-select: none; transition: background 0.2s; }
+                .req-header:hover { background: #f3f4f6; }
+                .req-header-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px; }
+                .req-header-people { font-size: 0.85rem; color: #6b7280; }
+                
+                .code-section { border-top: 1px solid #e5e7eb; }
+                
+                .code-toolbar { display: flex; justify-content: space-between; align-items: center; background: #f3f4f6; border-bottom: 1px solid #e5e7eb; padding-right: 12px; }
+                .code-tabs { display: flex; }
+                .tab-btn { padding: 10px 15px; font-size: 0.8rem; cursor: pointer; color: #6b7280; border-right: 1px solid #e5e7eb; background: transparent; border-top: none; border-bottom: none; border-left: none; outline: none; }
+                .tab-btn.active { background: #fff; color: #3b82f6; font-weight: 600; border-bottom: 2px solid #3b82f6; margin-bottom: -1px; }
+                
+                .send-btn { background: linear-gradient(135deg, #ef4444, #dc2626); color: white; border: none; padding: 6px 14px; border-radius: 6px; font-size: 0.85rem; font-weight: bold; cursor: pointer; transition: all 0.2s ease; box-shadow: 0 2px 4px rgba(239, 68, 68, 0.2); }
+                .send-btn:hover { transform: translateY(-1px); box-shadow: 0 4px 8px rgba(239, 68, 68, 0.3); }
+                .send-btn:active { transform: translateY(0); box-shadow: none; }
+                .send-btn:disabled { background: #9ca3af; cursor: not-allowed; box-shadow: none; transform: none; }
+                
+                .code-content { padding: 0; position: relative; display: none; }
+                .code-content.active { display: block; }
+                
+                pre { margin: 0; padding: 15px; overflow-x: auto; font-family: Consolas, monospace; font-size: 0.75rem; line-height: 1.4; color: #d4d4d4; background: #1e1e1e; max-height: 300px; }
+                .copy-btn { position: absolute; top: 10px; right: 10px; background: rgba(255,255,255,0.2); color: #fff; border: 1px solid rgba(255,255,255,0.3); padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 0.7rem; }
+                
+                details > summary { list-style: none; }
+                details > summary::marker { display: none; }
+                .error-banner { background: #fee2e2; border: 1px solid #fca5a5; color: #b91c1c; padding: 15px; border-radius: 8px; margin-bottom: 15px; font-weight: bold; font-size: 0.9rem; }
+                .stat-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 15px; font-size: 0.8rem; color: #666; background: #f9fafb; padding: 10px; border-radius: 8px; }
+                .stat-item { text-align: center; }
+                .stat-val { font-weight: bold; font-size: 1rem; color: #111827; }
+                .blocked-overlay { background: #f3f4f6; border: 2px dashed #d1d5db; border-radius: 8px; padding: 30px; text-align: center; color: #4b5563; }
+                
+                @media (min-width: 600px) {
+                    .req-header { flex-direction: row; justify-content: space-between; align-items: center; }
+                    .req-header-top { margin-bottom: 0; min-width: 150px; }
+                }
+        </style>
+        <script>
+            // 👇 新增缓存器，点过的厂区就不会重复加载了
+            const loadedLocs = {};
 
-        const tabsHtml = locs.map((loc, i) => 
-            `<button class="tab loc-tab ${i === 0 ? 'active' : ''}" onclick="switchLoc('${loc}', this)">🏢 ${LOC_CONFIGS[loc].title}</button>`
-        ).join('');
-
-        const contentsHtml = locs.map((loc, i) => {
-            const data = allLocData[loc];
-            const { locConfig, stats, safetyCheck, realPlan, simulatedPlan } = data;
-            
-            const safetyBadge = safetyCheck.safe 
-                ? `<span style="background:#ecfdf5; color:#059669; padding:4px 8px; border-radius:4px; border:1px solid #a7f3d0; font-size:0.8rem;">✅ 安全 (Ready)</span>`
-                : `<span style="background:#fef2f2; color:#dc2626; padding:4px 8px; border-radius:4px; border:1px solid #fecaca; font-size:0.8rem;">❌ 熔断 (BLOCKED)</span>`;
-
-            let realQueueHTML = '';
-            if (safetyCheck.safe) {
-                realQueueHTML = `
-                    <h3 style="font-size:0.9rem; margin-bottom:10px; color:#374151;">🚀 待发送队列 (${realPlan.requests.length})</h3>
-                    ${renderRequests(realPlan.requests, loc)}
-                `;
-            } else {
-                realQueueHTML = `
-                    <div class="blocked-overlay">
-                        <div style="font-size:1.5rem; margin-bottom:10px;">⛔</div>
-                        <div style="font-weight:bold; font-size:1.1rem; margin-bottom:5px;">队列已被安全拦截</div>
-                        <div style="font-size:0.85rem; opacity:0.8;">${safetyCheck.reason}<br>本次执行<b>绝对不会</b>发送任何请求。</div>
-                    </div>
-                `;
+            // 🌟 核心：异步请求新 API，填充骨架
+            async function loadLocData(loc) {
+                if (loadedLocs[loc]) return; // 已加载则跳过
+                
+                const container = document.getElementById('content-' + loc);
+                try {
+                    const res = await fetch('debug-content?loc=' + loc);
+                    const data = await res.json();
+                    
+                    if (data.error) {
+                        container.innerHTML = '<div class="error-banner" style="margin-top:10px;">❌ 加载失败: ' + data.error + '</div>';
+                    } else {
+                        // 瞬间替换为真实的 HTML
+                        container.innerHTML = data.html;
+                        loadedLocs[loc] = true;
+                    }
+                } catch (err) {
+                    container.innerHTML = '<div class="error-banner" style="margin-top:10px;">❌ 网络请求异常: ' + err.message + '</div>';
+                }
             }
 
-            return `
-            <div id="content-${loc}" class="loc-content ${i === 0 ? 'active' : ''}">
-                <h1><span>🔧 [${locConfig.title}] 自动续期调试</span> ${safetyBadge}</h1>
+            function switchLoc(loc, btn) {
+                document.querySelectorAll('.loc-content').forEach(el => el.classList.remove('active'));
+                document.querySelectorAll('.loc-tab').forEach(el => el.classList.remove('active'));
+                document.getElementById('content-' + loc).classList.add('active');
+                btn.classList.add('active');
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+                
+                // 触发加载数据
+                loadLocData(loc);
+            }
 
-                ${!safetyCheck.safe ? `<div class="error-banner">⛔ 熔断警告: ${safetyCheck.reason}</div>` : ''}
+            function copyText(btn, text) {
+                navigator.clipboard.writeText(decodeURIComponent(text)).then(() => {
+                    const original = btn.innerText; btn.innerText = 'Copied!'; setTimeout(() => btn.innerText = original, 2000);
+                });
+            }
 
-                <div class="card">
-                    <h2><span>📊 实时状态 (推演至: ${realPlan.targetDate})</span></h2>
-                    
-                    <div class="stat-grid">
-                        <div class="stat-item"><div class="stat-val">${stats.total}</div>总查询人数</div>
-                        <div class="stat-item"><div class="stat-val" style="color:#059669">${stats.success}</div>接口成功</div>
-                        <div class="stat-item"><div class="stat-val" style="color:#dc2626">${stats.error}</div>接口报错</div>
-                        <div class="stat-item"><div class="stat-val">${stats.noData}</div>查询无记录</div>
-                    </div>
+            function switchTab(btn, index) {
+                const parent = btn.closest('.code-section');
+                parent.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+                parent.querySelectorAll('.code-content').forEach(c => c.classList.remove('active'));
+                btn.classList.add('active');
+                parent.querySelectorAll('.code-content')[index].classList.add('active');
+            }
 
-                    <div class="table-wrapper">
-                        <table>
-                            <thead>
-                                <tr><th>姓名/轨迹</th><th>有效期止</th><th>状态</th></tr>
-                            </thead>
-                            <tbody>
-                                ${realPlan.summary.map(item => `
-                                <tr>
-                                    <td><strong>${item.name}</strong><br><span style="font-size:0.7rem;color:#999">${item.idMask}</span></td>
-                                    <td>${item.lastDate}</td>
-                                    <td><span class="status-badge ${item.class}">${item.status}</span></td>
-                                </tr>
-                                `).join('')}
-                            </tbody>
-                        </table>
-                    </div>
-                    
-                    ${realQueueHTML}
-                </div>
-
-                <div class="card" style="border-top: 4px solid #10b981;">
-                    <h2>🛠️ 自定义报文生成器</h2>
-                    <div style="margin-bottom: 10px; font-size: 0.85rem; color: #4b5563;">
-                        自由选择人员和日期，生成特定组合的提交报文用于测试或手动发送。
-                    </div>
-                    <div style="display:flex; flex-direction:column; gap:10px; margin-bottom:15px;">
-                        <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
-                            <strong>📅 起止日期:</strong> 
-                            <input type="date" id="customStartDate-${loc}" style="padding:6px; border-radius:4px; border:1px solid #ccc; flex:1; min-width:120px;">
-                            <span style="color:#64748b; font-weight:bold;">至</span>
-                            <input type="date" id="customEndDate-${loc}" style="padding:6px; border-radius:4px; border:1px solid #ccc; flex:1; min-width:120px;">
-                        </div>
-                        <div>
-                            <strong>👥 选择人员:</strong>
-                            <div style="display:flex; flex-wrap:wrap; gap:8px; margin-top:8px; background:#f9fafb; padding:10px; border-radius:6px; border:1px solid #e5e7eb;">
-                                ${Object.keys(locConfig.personDb).map(base64Id => {
-                                    const info = locConfig.personDb[base64Id];
-                                    const nameField = info.find(f=>f.label==='姓名');
-                                    let name = nameField && nameField.fieldData ? nameField.fieldData.value : base64Id;
-                                    const isActive = locConfig.query.visitorIdNos.includes(base64Id);
-                                    
-                                    // 界面提示专属人员
-                                    const hasCustom = locConfig.customReceptionists && locConfig.customReceptionists[base64Id];
-                                    if(hasCustom) name += " ⭐";
-
-                                    return `<label style="font-size:0.85rem; display:flex; align-items:center; gap:4px; ${isActive?'':'opacity:0.5;'}"><input type="checkbox" class="person-cb-${loc}" value="${base64Id}" ${isActive?'checked':''}>${name} ${isActive?'':'(停用)'}</label>`;
-                                }).join('')}
-                            </div>
-                        </div>
-                        <button onclick="generateCustom('${loc}')" style="padding:8px 15px; background:#10b981; color:white; border:none; border-radius:6px; cursor:pointer; font-weight:bold; align-self:flex-start;">⚡ 立即生成报文</button>
-                    </div>
-                    <div id="customResult-${loc}" style="display:none;"></div>
-                </div>
-
-                <div class="card" style="border-top: 4px solid #9333ea;">
-                    <h2>🔮 全员无记录模拟 (Force Sync)</h2>
-                    <p style="font-size:0.8rem; color:#666; margin-bottom:10px;">假设数据库清空，系统将从“今天”开始生成完整对齐计划。（此区域仅为逻辑验证，不受熔断影响）</p>
-                    ${renderRequests(simulatedPlan.requests, loc)}
-                </div>
-            </div>
-            `;
-        }).join('');
-
-        const html = `
-        <!DOCTYPE html>
-        <html>
-        <head>
-            <meta charset="utf-8">
-            <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0">
-            <title>申请插件调试面板</title>
-            <style>
-                    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background: #f3f4f6; padding: 10px; color: #1f2937; margin:0; }
-                    .container { max-width: 1000px; margin: 0 auto; }
-                    .card { background: #fff; padding: 15px; border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); margin-bottom: 20px; }
-                    
-                    h1 { margin: 10px 0 20px 0; color: #111827; font-size: 1.2rem; border-left: 4px solid #3b82f6; padding-left: 10px; display: flex; align-items: center; justify-content: space-between; }
-                    h2 { margin-top: 0; color: #4b5563; font-size: 1rem; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; }
-                    
-                    .tabs { display: flex; gap: 8px; margin-bottom: 20px; position: sticky; top: 0; z-index: 100; background: #f3f4f6; padding: 10px 0; }
-                    .tab { flex: 1; text-align: center; padding: 12px 0; background: #e5e7eb; border-radius: 8px; color: #374151; font-weight: bold; cursor: pointer; transition: 0.2s; border: none;}
-                    .tab.active { background: #3b82f6; color: white; box-shadow: 0 2px 4px rgba(59,130,246,0.3); }
-                    .loc-content { display: none; }
-                    .loc-content.active { display: block; animation: fadeIn 0.3s ease; }
-                    
-                    @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
-                    
-                    .table-wrapper { overflow-x: auto; margin-bottom: 15px; border-radius: 8px; border: 1px solid #e5e7eb; }
-                    table { width: 100%; border-collapse: collapse; min-width: 500px; }
-                    th, td { text-align: left; padding: 10px; border-bottom: 1px solid #e5e7eb; font-size: 0.9rem; }
-                    th { background: #f9fafb; font-weight: 600; color: #6b7280; }
-                    tr:last-child td { border-bottom: none; }
-                    
-                    .status-badge { padding: 2px 8px; border-radius: 99px; font-size: 0.75rem; font-weight: 600; white-space: nowrap; }
-                    .expired { background: #fee2e2; color: #991b1b; }
-                    .warning { background: #fef3c7; color: #92400e; }
-                    .success { background: #d1fae5; color: #065f46; }
-                    
-                    .request-item { background: #fff; border: 1px solid #e5e7eb; border-radius: 8px; margin-bottom: 10px; overflow: hidden; }
-                    .req-header { padding: 12px; background: #f9fafb; display: flex; flex-direction: column; cursor: pointer; user-select: none; transition: background 0.2s; }
-                    .req-header:hover { background: #f3f4f6; }
-                    .req-header-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px; }
-                    .req-header-people { font-size: 0.85rem; color: #6b7280; }
-                    
-                    .code-section { border-top: 1px solid #e5e7eb; }
-                    
-                    /* 华丽的动作条和按钮样式 (全新紧凑排版) */
-                    .code-toolbar { display: flex; justify-content: space-between; align-items: center; background: #f3f4f6; border-bottom: 1px solid #e5e7eb; padding-right: 12px; }
-                    .code-tabs { display: flex; }
-                    .tab-btn { padding: 10px 15px; font-size: 0.8rem; cursor: pointer; color: #6b7280; border-right: 1px solid #e5e7eb; background: transparent; border-top: none; border-bottom: none; border-left: none; outline: none; }
-                    .tab-btn.active { background: #fff; color: #3b82f6; font-weight: 600; border-bottom: 2px solid #3b82f6; margin-bottom: -1px; }
-                    
-                    .send-btn { background: linear-gradient(135deg, #ef4444, #dc2626); color: white; border: none; padding: 6px 14px; border-radius: 6px; font-size: 0.85rem; font-weight: bold; cursor: pointer; transition: all 0.2s ease; box-shadow: 0 2px 4px rgba(239, 68, 68, 0.2); }
-                    .send-btn:hover { transform: translateY(-1px); box-shadow: 0 4px 8px rgba(239, 68, 68, 0.3); }
-                    .send-btn:active { transform: translateY(0); box-shadow: none; }
-                    .send-btn:disabled { background: #9ca3af; cursor: not-allowed; box-shadow: none; transform: none; }
-                    
-                    .code-tabs { display: flex; background: #f3f4f6; border-bottom: 1px solid #e5e7eb; }
-                    .tab-btn { padding: 8px 15px; font-size: 0.8rem; cursor: pointer; color: #6b7280; border-right: 1px solid #e5e7eb; background: #f3f4f6; border: none; }
-                    .tab-btn.active { background: #fff; color: #3b82f6; font-weight: 600; border-bottom: 2px solid #3b82f6; }
-                    .code-content { padding: 0; position: relative; display: none; }
-                    .code-content.active { display: block; }
-                    
-                    pre { margin: 0; padding: 15px; overflow-x: auto; font-family: Consolas, monospace; font-size: 0.75rem; line-height: 1.4; color: #d4d4d4; background: #1e1e1e; max-height: 300px; }
-                    .copy-btn { position: absolute; top: 10px; right: 10px; background: rgba(255,255,255,0.2); color: #fff; border: 1px solid rgba(255,255,255,0.3); padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 0.7rem; }
-                    
-                    details > summary { list-style: none; }
-                    details > summary::marker { display: none; }
-                    .error-banner { background: #fee2e2; border: 1px solid #fca5a5; color: #b91c1c; padding: 15px; border-radius: 8px; margin-bottom: 15px; font-weight: bold; font-size: 0.9rem; }
-                    .stat-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 15px; font-size: 0.8rem; color: #666; background: #f9fafb; padding: 10px; border-radius: 8px; }
-                    .stat-item { text-align: center; }
-                    .stat-val { font-weight: bold; font-size: 1rem; color: #111827; }
-                    .blocked-overlay { background: #f3f4f6; border: 2px dashed #d1d5db; border-radius: 8px; padding: 30px; text-align: center; color: #4b5563; }
-                    
-                    @media (min-width: 600px) {
-                        .req-header { flex-direction: row; justify-content: space-between; align-items: center; }
-                        .req-header-top { margin-bottom: 0; min-width: 150px; }
-                    }
-                </style>
-                <script>
-                function switchLoc(loc, btn) {
-                    document.querySelectorAll('.loc-content').forEach(el => el.classList.remove('active'));
-                    document.querySelectorAll('.loc-tab').forEach(el => el.classList.remove('active'));
-                    document.getElementById('content-' + loc).classList.add('active');
-                    btn.classList.add('active');
-                    window.scrollTo({ top: 0, behavior: 'smooth' });
+            async function generateCustom(loc) {
+                const startInput = document.getElementById('customStartDate-' + loc).value;
+                let endInput = document.getElementById('customEndDate-' + loc).value;
+                
+                if (!startInput) return alert('至少需要选择一个开始日期哦！');
+                
+                let isSingleDay = false;
+                if (!endInput) {
+                    endInput = startInput; 
+                    isSingleDay = true;
                 }
-
-                function copyText(btn, text) {
-                    navigator.clipboard.writeText(decodeURIComponent(text)).then(() => {
-                        const original = btn.innerText; btn.innerText = 'Copied!'; setTimeout(() => btn.innerText = original, 2000);
+                
+                const startTs = new Date(startInput + 'T00:00:00+08:00').getTime();
+                const endTs = new Date(endInput + 'T00:00:00+08:00').getTime();
+                
+                if (startTs > endTs) return alert('结束日期不能早于开始日期哦！');
+                
+                const cbs = document.querySelectorAll('.person-cb-' + loc + ':checked');
+                const ids = Array.from(cbs).map(cb => cb.value);
+                if (ids.length === 0) return alert('请至少选择一个人');
+                
+                const btn = document.querySelector('#content-' + loc + ' button[onclick^="generateCustom"]');
+                const oldText = btn.innerText;
+                btn.innerText = "数据生成中...";
+                
+                try {
+                    const res = await fetch('generate-payload', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ loc, ids, startTs, endTs })
                     });
-                }
-
-                function switchTab(btn, index) {
-                    const parent = btn.closest('.code-section');
-                    parent.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-                    parent.querySelectorAll('.code-content').forEach(c => c.classList.remove('active'));
-                    btn.classList.add('active');
-                    parent.querySelectorAll('.code-content')[index].classList.add('active');
-                }
-
-                async function generateCustom(loc) {
-                    const startInput = document.getElementById('customStartDate-' + loc).value;
-                    let endInput = document.getElementById('customEndDate-' + loc).value;
+                    const data = await res.json();
                     
-                    if (!startInput) return alert('至少需要选择一个开始日期哦！');
-                    
-                    let isSingleDay = false;
-                    if (!endInput) {
-                        endInput = startInput; // 没选结束日期，默认与开始日期一致
-                        isSingleDay = true;
-                    }
-                    
-                    const startTs = new Date(startInput + 'T00:00:00+08:00').getTime();
-                    const endTs = new Date(endInput + 'T00:00:00+08:00').getTime();
-                    
-                    if (startTs > endTs) return alert('结束日期不能早于开始日期哦！');
-                    
-                    const cbs = document.querySelectorAll('.person-cb-' + loc + ':checked');
-                    const ids = Array.from(cbs).map(cb => cb.value);
-                    if (ids.length === 0) return alert('请至少选择一个人');
-                    
-                    const btn = document.querySelector('#content-' + loc + ' button[onclick^="generateCustom"]');
-                    const oldText = btn.innerText;
-                    btn.innerText = "数据生成中...";
-                    
-                    try {
-                        const res = await fetch('generate-payload', {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ loc, ids, startTs, endTs })
-                        });
-                        const data = await res.json();
+                    if (data.error) {
+                        alert(data.error);
+                    } else {
+                        const resultDiv = document.getElementById('customResult-' + loc);
+                        resultDiv.innerHTML = data.html;
                         
-                        if (data.error) {
-                            alert(data.error);
-                        } else {
-                            const resultDiv = document.getElementById('customResult-' + loc);
-                            resultDiv.innerHTML = data.html;
-                            
-                            // 👇 直接在结果区域的顶部动态插入一个“弱提示”黄色小横幅，安全且直观
-                            if (isSingleDay) {
-                                resultDiv.insertAdjacentHTML('afterbegin', '<div style="background:#fef9c3; color:#b45309; padding:8px; border-radius:6px; margin-bottom:10px; font-size:0.85rem; text-align:center; border:1px solid #fde047;">ℹ️ 未选择结束日期，已默认生成单日（1天）的报文</div>');
-                            }
-                            
-                            resultDiv.querySelectorAll('details').forEach(d => d.open = true);
-                            resultDiv.style.display = 'block';
-                        }
-                    } catch (err) {
-                        alert("网络错误：" + err.message);
-                    } finally {
-                        btn.innerText = oldText;
-                    }
-                }
-
-                // 👇 新增的一键批量发送核心逻辑
-                async function sendAllBatch(mainBtn, loc) {
-                    const container = document.getElementById('customResult-' + loc);
-                    const btns = Array.from(container.querySelectorAll('.batch-send-btn'));
-                    if(btns.length === 0) return alert('没有找到可发送的数据包');
-                    
-                    const pwd = prompt("⚠️ 批量发送确认\\n即将为您自动发送这 " + btns.length + " 个数据包。\\n为了防止触发风控，每个请求之间会强制间隔 0.6 秒。\\n\\n请输入操作密码：");
-                    if(!pwd) return;
-                    
-                    mainBtn.innerText = "🚀 队列自动发送中...";
-                    mainBtn.disabled = true;
-                    mainBtn.style.opacity = "0.7";
-                    
-                    for(let i=0; i<btns.length; i++) {
-                        const b = btns[i];
-                        b.innerText = "发送中...";
-                        b.style.background = "linear-gradient(135deg, #f59e0b, #d97706)";
-                        
-                        try {
-                            const res = await fetch('manual-send', {
-                                method: 'POST',
-                                headers: { 'Content-Type': 'application/json' },
-                                body: JSON.stringify({
-                                    loc: b.getAttribute('data-loc'),
-                                    targetDate: b.getAttribute('data-date'),
-                                    people: b.getAttribute('data-people'),
-                                    encodedBody: decodeURIComponent(b.getAttribute('data-encoded')),
-                                    pwd: pwd
-                                })
-                            });
-                            const data = await res.json();
-                            if(data.success) {
-                                b.innerText = "✅ 成功";
-                                b.style.background = "linear-gradient(135deg, #10b981, #059669)";
-                            } else {
-                                b.innerText = "❌ 失败: " + data.msg;
-                                b.style.background = "linear-gradient(135deg, #ef4444, #dc2626)";
-                            }
-                        } catch(e) {
-                            b.innerText = "❌ 网络异常";
-                            b.style.background = "linear-gradient(135deg, #ef4444, #dc2626)";
+                        if (isSingleDay) {
+                            resultDiv.insertAdjacentHTML('afterbegin', '<div style="background:#fef9c3; color:#b45309; padding:8px; border-radius:6px; margin-bottom:10px; font-size:0.85rem; text-align:center; border:1px solid #fde047;">ℹ️ 未选择结束日期，已默认生成单日（1天）的报文</div>');
                         }
                         
-                        // 强制排队等待，保证日期顺序 100% 正确且防封锁
-                        await new Promise(r => setTimeout(r, 600)); 
+                        resultDiv.querySelectorAll('details').forEach(d => d.open = true);
+                        resultDiv.style.display = 'block';
                     }
-                    
-                    mainBtn.innerText = "✅ 批量发送完成";
-                    mainBtn.style.background = "linear-gradient(135deg, #10b981, #059669)";
-                    mainBtn.style.opacity = "1";
+                } catch (err) {
+                    alert("网络错误：" + err.message);
+                } finally {
+                    btn.innerText = oldText;
                 }
+            }
 
-                async function sendPayload(event, loc, targetDate, people, encodedBodyURI) {
-                    event.preventDefault(); 
-                    event.stopPropagation();
+            async function sendAllBatch(mainBtn, loc) {
+                const container = document.getElementById('customResult-' + loc);
+                const btns = Array.from(container.querySelectorAll('.batch-send-btn'));
+                if(btns.length === 0) return alert('没有找到可发送的数据包');
+                
+                const pwd = prompt("⚠️ 批量发送确认\\n即将为您自动发送这 " + btns.length + " 个数据包。\\n为了防止触发风控，每个请求之间会强制间隔 0.6 秒。\\n\\n请输入操作密码：");
+                if(!pwd) return;
+                
+                mainBtn.innerText = "🚀 队列自动发送中...";
+                mainBtn.disabled = true;
+                mainBtn.style.opacity = "0.7";
+                
+                for(let i=0; i<btns.length; i++) {
+                    const b = btns[i];
+                    b.innerText = "发送中...";
+                    b.style.background = "linear-gradient(135deg, #f59e0b, #d97706)";
                     
-                    // 👠 看好了！本小姐全换成了双引号拼接，不会再有波浪线了！
-                    const pwd = prompt("⚠️ 危险操作确认\\n即将为 [" + loc + "] 的 [" + people + "] 提交 [" + targetDate + "] 的入厂申请。\\n\\n请输入操作密码：");
-                    if (!pwd) return; 
-
-                    const btn = event.target;
-                    const originalText = btn.innerText;
-                    btn.innerText = "正在发送中...";
-                    btn.style.background = "linear-gradient(135deg, #f59e0b, #d97706)";
-                    btn.disabled = true;
-
                     try {
                         const res = await fetch('manual-send', {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' },
                             body: JSON.stringify({
-                                loc: loc,
-                                targetDate: targetDate,
-                                people: people,
-                                encodedBody: decodeURIComponent(encodedBodyURI),
+                                loc: b.getAttribute('data-loc'),
+                                targetDate: b.getAttribute('data-date'),
+                                people: b.getAttribute('data-people'),
+                                encodedBody: decodeURIComponent(b.getAttribute('data-encoded')),
                                 pwd: pwd
                             })
                         });
                         const data = await res.json();
-                        
-                        if (data.success) {
-                            alert("✅ 发送成功！\\n实例ID: " + data.id);
-                            btn.innerText = "已发送成功";
-                            btn.style.background = "linear-gradient(135deg, #10b981, #059669)";
+                        if(data.success) {
+                            b.innerText = "✅ 成功";
+                            b.style.background = "linear-gradient(135deg, #10b981, #059669)";
                         } else {
-                            alert("❌ 发送失败！\\n原因: " + data.msg);
-                            btn.innerText = originalText;
-                            btn.style.background = "linear-gradient(135deg, #ef4444, #dc2626)";
-                            btn.disabled = false;
+                            b.innerText = "❌ 失败: " + data.msg;
+                            b.style.background = "linear-gradient(135deg, #ef4444, #dc2626)";
                         }
-                    } catch (e) {
-                        alert("❌ 网络异常: " + e.message);
+                    } catch(e) {
+                        b.innerText = "❌ 网络异常";
+                        b.style.background = "linear-gradient(135deg, #ef4444, #dc2626)";
+                    }
+                    
+                    await new Promise(r => setTimeout(r, 600)); 
+                }
+                
+                mainBtn.innerText = "✅ 批量发送完成";
+                mainBtn.style.background = "linear-gradient(135deg, #10b981, #059669)";
+                mainBtn.style.opacity = "1";
+            }
+
+            async function sendPayload(event, loc, targetDate, people, encodedBodyURI) {
+                event.preventDefault(); 
+                event.stopPropagation();
+                
+                const pwd = prompt("⚠️ 危险操作确认\\n即将为 [" + loc + "] 的 [" + people + "] 提交 [" + targetDate + "] 的入厂申请。\\n\\n请输入操作密码：");
+                if (!pwd) return; 
+
+                const btn = event.target;
+                const originalText = btn.innerText;
+                btn.innerText = "正在发送中...";
+                btn.style.background = "linear-gradient(135deg, #f59e0b, #d97706)";
+                btn.disabled = true;
+
+                try {
+                    const res = await fetch('manual-send', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            loc: loc,
+                            targetDate: targetDate,
+                            people: people,
+                            encodedBody: decodeURIComponent(encodedBodyURI),
+                            pwd: pwd
+                        })
+                    });
+                    const data = await res.json();
+                    
+                    if (data.success) {
+                        alert("✅ 发送成功！\\n实例ID: " + data.id);
+                        btn.innerText = "已发送成功";
+                        btn.style.background = "linear-gradient(135deg, #10b981, #059669)";
+                    } else {
+                        alert("❌ 发送失败！\\n原因: " + data.msg);
                         btn.innerText = originalText;
                         btn.style.background = "linear-gradient(135deg, #ef4444, #dc2626)";
                         btn.disabled = false;
                     }
+                } catch (e) {
+                    alert("❌ 网络异常: " + e.message);
+                    btn.innerText = originalText;
+                    btn.style.background = "linear-gradient(135deg, #ef4444, #dc2626)";
+                    btn.disabled = false;
                 }
-                </script>
-        </head>
-        <body>
-            <div class="container">
-                <div class="tabs">
-                    ${tabsHtml}
-                </div>
-                ${contentsHtml}
+            }
+
+            // 🎯 页面加载完成后，自动触发第一个厂区的数据拉取！
+            window.onload = () => {
+                const firstLoc = '${locs[0]}';
+                if(firstLoc) loadLocData(firstLoc);
+            };
+        </script>
+    </head>
+    <body>
+        <div class="container">
+            <div class="tabs">
+                ${tabsHtml}
             </div>
-        </body>
-        </html>
-        `;
-        res.send(html);
-    } catch (err) {
-        console.error(err);
-        res.status(500).send(`Debug Error: ${err.message}`);
-    }
+            ${contentsHtml}
+        </div>
+    </body>
+    </html>
+    `;
+    res.send(html);
 });
 
 function renderRequests(requests, loc) {
