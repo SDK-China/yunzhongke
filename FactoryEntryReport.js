@@ -536,7 +536,7 @@ const LOC_CONFIGS = {
             const jsonStr = JSON.stringify(finalForm, null, 2);
             // 👇 强制绑定该账号独有的 Token
             const _token = locConfig.csrf_token || 'e7daa879-7b83-40f7-8335-1a262747f2c9';
-            const fullPostBody = `_csrf_token=${_token}&formUuid=FORM-2768FF7B2C0D4A0AB692FD28DBA09FD57IHQ&appType=APP_GRVPTEOQ6D4B7FLZFYNJ&value=${encodeURIComponent(JSON.stringify(finalForm))}&_schemaVersion=672`;
+            const fullPostBody = `_csrf_token=${_token}&formUuid=FORM-2768FF7B2C0D4A0AB692FD28DBA09FD57IHQ&appType=APP_GRVPTEOQ6D4B7FLZFYNJ&value=${encodeURIComponent(JSON.stringify(finalForm))}&_schemaVersion=653`;
             return { jsonStr, fullPostBody };
         }
     },
@@ -1592,9 +1592,12 @@ router.get('/auto-renew', async (req, res) => {
     const allResults = [];
     
     try {
+        // 👇 🌟 就是漏了下面这一行！把它补上，用来记录开始发令枪的时间
+        const globalStartTime = Date.now(); 
+
         log("=== 🚀 开始自动续期流程 ===");
         
-        const locFilter = req.query.loc; 
+        const locFilter = req.query.loc;
         const locsToRun = locFilter ? [locFilter] : Object.keys(LOC_CONFIGS);
 
         for (const loc of locsToRun) {
