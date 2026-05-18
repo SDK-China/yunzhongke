@@ -247,6 +247,18 @@ const PERSON_DB = {
         {"componentName":"AttachmentField","fieldId":"attachmentField_lxv44osj","label":"身份证照片","fieldData":{"value":[{"name":"mmexport1778582023533.jpg","previewUrl":"/o/QMF66WA1M8N5EOODH9M6VCU3RL6J3A7IUH2PMA3?appType=APP_GRVPTEOQ6D4B7FLZFYNJ&fileName=APP_GRVPTEOQ6D4B7FLZFYNJ_UU1GNjZXQTFNOE41RU9PREg5TTZWQ1UzUkw2SjNBN0lVSDJQTTkz.jpg&instId=&type=open&process=image/resize,m_fill,w_200,h_200,limit_0/quality,q_80","downloadUrl":"/o/QMF66WA1M8N5EOODH9M6VCU3RL6J3A7IUH2PMA3?appType=APP_GRVPTEOQ6D4B7FLZFYNJ&fileName=APP_GRVPTEOQ6D4B7FLZFYNJ_UU1GNjZXQTFNOE41RU9PREg5TTZWQ1UzUkw2SjNBN0lVSDJQTTkz.jpg&instId=&type=download","size":162217,"url":"/o/QMF66WA1M8N5EOODH9M6VCU3RL6J3A7IUH2PMA3?appType=APP_GRVPTEOQ6D4B7FLZFYNJ&fileName=APP_GRVPTEOQ6D4B7FLZFYNJ_UU1GNjZXQTFNOE41RU9PREg5TTZWQ1UzUkw2SjNBN0lVSDJQTTkz.jpg&instId=&type=download","fileUuid":"APP_GRVPTEOQ6D4B7FLZFYNJ_UU1GNjZXQTFNOE41RU9PREg5TTZWQ1UzUkw2SjNBN0lVSDJQTTkz.jpg"}]}},
         {"componentName":"AttachmentField","fieldId":"attachmentField_lxv44osk","label":"社保/在职证明","fieldData":{"value":[{"name":"在职证明 - 顾科举.pdf","previewUrl":"/dingtalk/mobile/APP_GRVPTEOQ6D4B7FLZFYNJ/inst/preview?appType=APP_GRVPTEOQ6D4B7FLZFYNJ&fileName=APP_GRVPTEOQ6D4B7FLZFYNJ_NDFINjZIOTE2OE41SlFDQlBTUjRVN0czS1pZTzNXNFBWSDJQTVky.pdf&fileSize=41602&downloadUrl=APP_GRVPTEOQ6D4B7FLZFYNJ_NDFINjZIOTE2OE41SlFDQlBTUjRVN0czS1pZTzNXNFBWSDJQTVky.pdf","downloadUrl":"/o/41H66H9168N5JQCBPSR4U7G3KZYO3W4PVH2PMZ2?appType=APP_GRVPTEOQ6D4B7FLZFYNJ&fileName=APP_GRVPTEOQ6D4B7FLZFYNJ_NDFINjZIOTE2OE41SlFDQlBTUjRVN0czS1pZTzNXNFBWSDJQTVky.pdf&instId=&type=download","size":41602,"url":"/o/41H66H9168N5JQCBPSR4U7G3KZYO3W4PVH2PMZ2?appType=APP_GRVPTEOQ6D4B7FLZFYNJ&fileName=APP_GRVPTEOQ6D4B7FLZFYNJ_NDFINjZIOTE2OE41SlFDQlBTUjRVN0czS1pZTzNXNFBWSDJQTVky.pdf&instId=&type=download","fileUuid":"APP_GRVPTEOQ6D4B7FLZFYNJ_NDFINjZIOTE2OE41SlFDQlBTUjRVN0czS1pZTzNXNFBWSDJQTVky.pdf"}]}},
         {"componentName":"AttachmentField","fieldId":"attachmentField_lxv44osn","label":"其他附件","fieldData":{"value":[]}}
+    ],
+    // 周杰 (新增)
+    "NTExNTI1MTk5MzA1MTAxNjE5": [
+        {"componentName":"SelectField","fieldId":"selectField_lxv44orx","label":"有效身份证件","fieldData":{"value":"身份证","text":"身份证"},"options":[{"defaultChecked":false,"syncLabelValue":true,"__sid":"item_lxjzgsg1","text":"身份证","__sid__":"serial_lxjzgsg0","value":"身份证","sid":"serial_lxjzgsg0"}]},
+        {"componentName":"TextField","fieldId":"textField_lxv44ory","label":"证件号码","fieldData":{"value": decode("NTExNTI1MTk5MzA1MTAxNjE5")}},
+        {"componentName":"TextField","fieldId":"textField_lxv44orw","label":"姓名","fieldData":{"value": decode("5ZGo5p2w")}},
+        {"componentName":"SelectField","fieldId":"selectField_mbyjhot6","label":"区号","fieldData":{"value":"86","text":"+86"},"options":[{"defaultChecked":true,"syncLabelValue":false,"__sid":"item_megqe4lm","text":"+86","__sid__":"serial_megqe4ll","value":"86","sid":"serial_mbyjf8gm"}]},
+        {"componentName":"TextField","fieldId":"textField_lxv44orz","label":"联系方式","fieldData":{"value": decode("MTU3MDU3MzM4NjY=") }},
+        {"componentName":"ImageField","fieldId":"imageField_ly9i5k5q","label":"免冠照片","fieldData":{"value":[{"name":"1000547983.jpg","previewUrl":"https://dingtalk.avaryholding.com:8443/dingplus/image/20260518/a28913a42bc4d5756f32379fa696dfec.jpg","downloadUrl":"https://dingtalk.avaryholding.com:8443/dingplus/image/20260518/a28913a42bc4d5756f32379fa696dfec.jpg","size":139355,"url":"https://dingtalk.avaryholding.com:8443/dingplus/image/20260518/a28913a42bc4d5756f32379fa696dfec.jpg"}]}},
+        {"componentName":"AttachmentField","fieldId":"attachmentField_lxv44osj","label":"身份证照片","fieldData":{"value":[{"name":"mmexport1779071564782.jpg","previewUrl":"/o/CG666H91D7N56C6HLWS1J7L6NNM92HTOALAPMDE?appType=APP_GRVPTEOQ6D4B7FLZFYNJ&fileName=APP_GRVPTEOQ6D4B7FLZFYNJ_Q0c2NjZIOTFEN041NkM2SExXUzFKN0w2Tk5NOTJIVE9BTEFQTUNF.jpg&instId=&type=open&process=image/resize,m_fill,w_200,h_200,limit_0/quality,q_80","downloadUrl":"/o/CG666H91D7N56C6HLWS1J7L6NNM92HTOALAPMDE?appType=APP_GRVPTEOQ6D4B7FLZFYNJ&fileName=APP_GRVPTEOQ6D4B7FLZFYNJ_Q0c2NjZIOTFEN041NkM2SExXUzFKN0w2Tk5NOTJIVE9BTEFQTUNF.jpg&instId=&type=download","size":714827,"url":"/o/CG666H91D7N56C6HLWS1J7L6NNM92HTOALAPMDE?appType=APP_GRVPTEOQ6D4B7FLZFYNJ&fileName=APP_GRVPTEOQ6D4B7FLZFYNJ_Q0c2NjZIOTFEN041NkM2SExXUzFKN0w2Tk5NOTJIVE9BTEFQTUNF.jpg&instId=&type=download","fileUuid":"APP_GRVPTEOQ6D4B7FLZFYNJ_Q0c2NjZIOTFEN041NkM2SExXUzFKN0w2Tk5NOTJIVE9BTEFQTUNF.jpg"}]}},
+        {"componentName":"AttachmentField","fieldId":"attachmentField_lxv44osk","label":"社保/在职证明","fieldData":{"value":[{"name":"mmexport1779071557289.jpg","previewUrl":"/o/FHC663D1U6N5ZNWZL8NDHCX0230D20MWALAPMAE?appType=APP_GRVPTEOQ6D4B7FLZFYNJ&fileName=APP_GRVPTEOQ6D4B7FLZFYNJ_RkhDNjYzRDFVNk41Wk5XWkw4TkRIQ1gwMjMwRDIwTVdBTEFQTTlF.jpg&instId=&type=open&process=image/resize,m_fill,w_200,h_200,limit_0/quality,q_80","downloadUrl":"/o/FHC663D1U6N5ZNWZL8NDHCX0230D20MWALAPMAE?appType=APP_GRVPTEOQ6D4B7FLZFYNJ&fileName=APP_GRVPTEOQ6D4B7FLZFYNJ_RkhDNjYzRDFVNk41Wk5XWkw4TkRIQ1gwMjMwRDIwTVdBTEFQTTlF.jpg&instId=&type=download","size":51091,"url":"/o/FHC663D1U6N5ZNWZL8NDHCX0230D20MWALAPMAE?appType=APP_GRVPTEOQ6D4B7FLZFYNJ&fileName=APP_GRVPTEOQ6D4B7FLZFYNJ_RkhDNjYzRDFVNk41Wk5XWkw4TkRIQ1gwMjMwRDIwTVdBTEFQTTlF.jpg&instId=&type=download","fileUuid":"APP_GRVPTEOQ6D4B7FLZFYNJ_RkhDNjYzRDFVNk41Wk5XWkw4TkRIQ1gwMjMwRDIwTVdBTEFQTTlF.jpg"}]}},
+        {"componentName":"AttachmentField","fieldId":"attachmentField_lxv44osn","label":"其他附件","fieldData":{"value":[]}}
     ]
 };
 
@@ -384,7 +396,8 @@ const LOC_CONFIGS = {
                 // "MTAyNDE5NDY=", //林
                 // "MDczOTM0Njc=", //陈
                 "NDIyMzI2MTk5NTA0Mjg2NDEx", // 窦
-                "NDEyNzIzMTk4NTA5MjIwODNY"  // 顾
+                "NDEyNzIzMTk4NTA5MjIwODNY",  // 顾
+                "NTExNTI1MTk5MzA1MTAxNjE5"  // 👇 新增：周杰
             ],
             regPerson: "17614625112",
             acToken: "E5EF067A42A792436902EB275DCCA379812FF4A4A8A756BE0A1659704557309F",
@@ -482,6 +495,21 @@ const LOC_CONFIGS = {
             },
             // 顾
             "NDEyNzIzMTk4NTA5MjIwODNY": {
+                // receptionistId: "A2449801",
+                // receptionistName: "龚旭明",
+                // receptionDepartment: "QA01設備五課",
+                // receptionistPhone: "17703340319",
+                receptionistId: "A2319601",
+                receptionistName: "赵海富",
+                receptionDepartment: "QA01設備五課",
+                receptionistPhone: "17643042011",
+                visitReason: "设备维护与保养",
+                keepNormal: false,             // 🌟 核心：设为 true，系统就会为他发一份指定的包，再跟大部队发一份原始包！
+                renewThreshold: 0,            // 独立：剩0天时触发专属包
+                renewDays: 2                  // 独立：一次续2天
+            },
+            // 周杰
+            "NTExNTI1MTk5MzA1MTAxNjE5": {
                 // receptionistId: "A2449801",
                 // receptionistName: "龚旭明",
                 // receptionDepartment: "QA01設備五課",
@@ -1676,10 +1704,11 @@ router.get('/auto-renew', async (req, res) => {
         report += "\n🔍 系统日志:\n" + logs.join('\n');
         
         // [新增] 将自动续期的完整运行报告、全部发包详情一并上传
-        saveLogToRedis('自动续期', locFilter || 'ALL', '后台自动巡检与续期完成', {
+        // 👇 🌟 核心修复：加上 await！死死按住 Vercel，不存完不许结束！
+        await saveLogToRedis('自动续期', locFilter || 'ALL', '后台自动巡检与续期完成', {
             textReport: report, // 完整的文本报告
             actionDetails: allResults // 如果有发包，这里包含了每一通发包的成功/失败详情
-        }).catch(e => console.error(e));
+        }).catch(e => console.error("Redis上传遭遇拦截:", e));
 
         res.type('text/plain').send(report);
 
