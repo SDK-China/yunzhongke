@@ -71,6 +71,20 @@ router.post('/api/clear', express.json(), async (req, res) => {
         res.json({ success: false, msg: '清空失败: ' + error.message });
     }
 });
+// 👇 🌟 [新增部分] 提供后端 API：批量/单个 精准删除指定日志
+// ==========================================
+router.post('/api/delete', express.json(), async (req, res) => {
+    const { pwd, keys } = req.body;
+    if (pwd !== '123123') return res.json({ success: false, msg: '密码错误，拒绝操作！' });
+    if (!keys || !Array.isArray(keys) || keys.length === 0) return res.json({ success: false, msg: '未提供要删除的记录！' });
+
+    try {
+        await redis.del(...keys); // Redis 直接支持传入一整个数组批量删除
+        res.json({ success: true, msg: `已成功删除 ${keys.length} 条日志！` });
+    } catch (error) {
+        res.json({ success: false, msg: '删除失败: ' + error.message });
+    }
+});
 
 // ==========================================
 // 3. 渲染高颜值 SPA 前端界面
@@ -118,6 +132,11 @@ router.get('/', (req, res) => {
             </div>
 
             <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-100 mb-6 flex flex-wrap gap-4 items-center">
+                <div class="flex items-center gap-2 pr-4 border-r border-gray-200">
+                    <input type="checkbox" id="selectAllCb" onclick="selectAllFiltered(event)" class="w-4 h-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500 cursor-pointer">
+                    <label for="selectAllCb" class="text-sm font-bold text-gray-700 cursor-pointer">全选当前</label>
+                </div>
+                
                 <div class="flex items-center gap-2">
                     <label class="text-sm font-bold text-gray-600">时间维度:</label>
                     <select id="timeFilter" onchange="renderLogs()" class="border border-gray-300 rounded-md px-3 py-1.5 text-sm bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500">
@@ -144,13 +163,106 @@ router.get('/', (req, res) => {
                 </div>
             </div>
 
-            <div id="logContainer" class="flex flex-col gap-4">
+            <div id="logContainer" class="flex flex-col gap-4 pb-20">
                 <div class="text-center text-gray-400 py-10">加载中...</div>
+            </div>
+
+            <div id="bulkActionBar" class="fixed bottom-8 left-1/2 transform -translate-x-1/2 translate-y-24 opacity-0 bg-gray-900/95 backdrop-blur-md text-white px-6 py-3 rounded-full shadow-2xl flex items-center gap-4 transition-all duration-300 z-50 pointer-events-none">
+                <span class="text-sm font-medium">已选中 <span id="bulkCount" class="text-blue-400 font-bold text-lg mx-1">0</span>项</span>
+                <div class="w-px h-5 bg-gray-600"></div>
+                <button onclick="deleteSelected()" class="bg-red-500 hover:bg-red-400 text-white px-4 py-1.5 rounded-full text-sm font-bold transition shadow-[0_0_15px_rgba(239,68,68,0.4)] flex items-center gap-1">
+                    🗑️ 永久删除
+                </button>
             </div>
         </div>
 
         <script>
             let allLogs = [];
+            let selectedLogs = new Set(); // 🌟 [新增] 全局管理选中的键集合
+
+            // 🌟 [新增] 处理单行勾选
+            function toggleLogSelect(e, key) {
+                e.stopPropagation(); 
+                if (e.target.checked) selectedLogs.add(key);
+                else selectedLogs.delete(key);
+                updateBulkActionBar();
+                
+                // 判断是否已经手动全选了
+                const checkboxes = document.querySelectorAll('.log-checkbox');
+                const allChecked = Array.from(checkboxes).every(cb => cb.checked);
+                document.getElementById('selectAllCb').checked = (checkboxes.length > 0 && allChecked);
+            }
+
+            // 🌟 [新增] 处理全选/全不选
+            function selectAllFiltered(e) {
+                const isChecked = e.target.checked;
+                const checkboxes = document.querySelectorAll('.log-checkbox');
+                checkboxes.forEach(cb => {
+                    cb.checked = isChecked;
+                    if (isChecked) selectedLogs.add(cb.value);
+                    else selectedLogs.delete(cb.value);
+                });
+                updateBulkActionBar();
+            }
+
+            // 🌟 [新增] 动态呼出/隐藏底部悬浮操作栏
+            function updateBulkActionBar() {
+                const count = selectedLogs.size;
+                const bar = document.getElementById('bulkActionBar');
+                const countTxt = document.getElementById('bulkCount');
+                if (count > 0) {
+                    countTxt.innerText = count;
+                    bar.classList.remove('translate-y-24', 'opacity-0', 'pointer-events-none');
+                    bar.classList.add('translate-y-0', 'opacity-100', 'pointer-events-auto');
+                } else {
+                    bar.classList.remove('translate-y-0', 'opacity-100', 'pointer-events-auto');
+                    bar.classList.add('translate-y-24', 'opacity-0', 'pointer-events-none');
+                }
+            }
+
+            // 🌟 [新增] 单个日志删除 API 调用
+            async function deleteSingle(event, key) {
+                event.stopPropagation();
+                const pwd = prompt("⚠️ 即将永久删除此条记录，不可恢复！\\n\\n请输入确认密码：");
+                if (!pwd) return;
+
+                try {
+                    const res = await fetch('/LogViewer/api/delete', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ pwd: pwd, keys: [key] })
+                    });
+                    const json = await res.json();
+                    if (json.success) {
+                        selectedLogs.delete(key);
+                        updateBulkActionBar();
+                        fetchLogs(); // 重新加载数据
+                    } else { alert(json.msg); }
+                } catch (e) { alert('网络异常'); }
+            }
+
+            // 🌟 [新增] 批量选中日志删除 API 调用
+            async function deleteSelected() {
+                if (selectedLogs.size === 0) return;
+                const pwd = prompt(\`⚠️ 危险操作！即将会把您勾选的 \${selectedLogs.size} 条记录灰飞烟灭！\\n\\n请输入确认密码：\`);
+                if (!pwd) return;
+
+                try {
+                    const res = await fetch('/LogViewer/api/delete', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ pwd: pwd, keys: Array.from(selectedLogs) })
+                    });
+                    const json = await res.json();
+                    alert(json.msg);
+                    if (json.success) {
+                        selectedLogs.clear();
+                        document.getElementById('selectAllCb').checked = false; // 取消全选高亮
+                        updateBulkActionBar();
+                        fetchLogs(); 
+                    }
+                } catch (e) { alert('网络异常'); }
+            }
 
             function getTodayStr() { return new Date().toISOString().split('T')[0]; }
 
@@ -363,14 +475,21 @@ router.get('/', (req, res) => {
                     if(log.action === "手动发送") badgeColor = "bg-emerald-100 text-emerald-700 border border-emerald-200";
 
                     return \`
-                    <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+                    <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden relative group">
                         <div class="p-4 flex flex-col md:flex-row md:items-center justify-between gap-4 log-card cursor-pointer bg-white hover:bg-blue-50/30" onclick="toggleDetails(\${i})">
-                            <div class="flex flex-wrap items-center gap-3">
+                            <div class="flex flex-wrap items-center gap-3 w-full pr-8">
+                                <div class="flex items-center" onclick="event.stopPropagation()">
+                                    <input type="checkbox" class="log-checkbox w-4 h-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500 cursor-pointer" value="\${log.key}" \${selectedLogs.has(log.key) ? 'checked' : ''} onclick="toggleLogSelect(event, '\${log.key}')">
+                                </div>
                                 <div class="px-3 py-1 rounded-full text-xs font-bold \${badgeColor}">\${log.action}</div>
                                 <div class="font-mono text-xs text-gray-500 bg-gray-50 px-2 py-1 rounded border border-gray-100">🕒 \${log.time.replace('_', ' ')}</div>
                                 <div class="font-bold text-gray-800">🏢 \${log.location}</div>
+                                <div class="text-gray-600 text-sm font-medium flex-1 truncate">\${log.summary}</div>
                             </div>
-                            <div class="text-gray-600 text-sm font-medium">\${log.summary}</div>
+                            
+                            <button onclick="deleteSingle(event, '\${log.key}')" class="absolute right-4 top-4 text-gray-300 hover:text-red-500 hover:bg-red-50 p-1.5 rounded-lg transition opacity-0 group-hover:opacity-100" title="删除此记录">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                            </button>
                         </div>
                         
                         <div id="details-\${i}" class="log-details bg-gray-900 border-t border-gray-200">
