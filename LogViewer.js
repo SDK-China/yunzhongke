@@ -17,19 +17,60 @@ const redis = new Redis({
 });
 
 // ==========================================
-// 1. 提供后端 API：获取所有日志
+// 1. 提供后端 API：极限称重，按 10MB 物理红线进行智能打包
 // ==========================================
-router.get('/api/logs', async (req, res) => {
+router.get('/api/log-plan', async (req, res) => {
     try {
-        if (!dbUrl || !dbToken) {
-            return res.json({ success: false, msg: '致命错误: 未能读取到任何环境变量密钥！' });
-        }
+        if (!dbUrl || !dbToken) return res.json({ success: false, msg: '致命错误: 未能读取到任何环境变量密钥！' });
 
         const keys = await redis.keys('FactoryLog:*');
+        if (keys.length === 0) return res.json({ success: true, chunks: [] });
+
+        // 按时间倒序
+        keys.sort((a, b) => {
+            const timeA = a.split(':')[3] || '';
+            const timeB = b.split(':')[3] || '';
+            return timeB.localeCompare(timeA);
+        });
+
+        // 探针：获取所有 Key 的字节大小
+        const p = redis.pipeline();
+        keys.forEach(k => p.strlen(k));
+        const sizes = await p.exec(); 
+
+        const chunks = [];
+        let currentChunkKeys = [];
+        let currentSize = 0;
         
-        if (keys.length === 0) {
-            return res.json({ success: true, data: [] });
+        // 极限阈值：9.8 MB，贴着 Upstash 的 10MB 物理红线拉取
+        const MAX_CHUNK_SIZE = 9.8 * 1024 * 1024; 
+
+        for (let i = 0; i < keys.length; i++) {
+            const size = sizes[i] || 0;
+            if (currentSize + size > MAX_CHUNK_SIZE && currentChunkKeys.length > 0) {
+                chunks.push(currentChunkKeys);
+                currentChunkKeys = [];
+                currentSize = 0;
+            }
+            currentChunkKeys.push(keys[i]);
+            currentSize += size;
         }
+        if (currentChunkKeys.length > 0) chunks.push(currentChunkKeys);
+
+        res.json({ success: true, chunks: chunks });
+    } catch (error) {
+        console.error('获取计划失败:', error);
+        res.status(500).json({ success: false, msg: `获取下载计划失败: ${error.message}` });
+    }
+});
+
+// ==========================================
+// 2. 提供后端 API：根据计划里的 Key 清单，执行极限拉取
+// ==========================================
+router.post('/api/log-batch', express.json(), async (req, res) => {
+    try {
+        const { keys } = req.body;
+        if (!keys || keys.length === 0) return res.json({ success: true, data: [] });
 
         const rawValues = await redis.mget(...keys);
         
@@ -43,14 +84,10 @@ router.get('/api/logs', async (req, res) => {
             return { key: key, ...parsedData };
         });
 
-        // 按时间倒序排列
-        logs.sort((a, b) => new Date(b.time.replace(/_/g, ' ').replace(/-/g, '/')) - new Date(a.time.replace(/_/g, ' ').replace(/-/g, '/')));
-
         res.json({ success: true, data: logs });
     } catch (error) {
-        // 把真实的错误原因打印到前端，不再黑盒！
-        console.error('获取日志失败:', error);
-        res.status(500).json({ success: false, msg: `数据库读取失败: ${error.message} (当前URL: ${dbUrl})` });
+        console.error('分批拉取失败:', error);
+        res.status(500).json({ success: false, msg: `数据极限拉取失败: ${error.message}` });
     }
 });
 
@@ -268,18 +305,80 @@ router.get('/', (req, res) => {
 
             async function fetchLogs() {
                 const container = document.getElementById('logContainer');
-                container.innerHTML = '<div class="text-center text-gray-400 py-10 animate-pulse">📡 正在连接数据库拉取记录...</div>';
+                
+                // 👇 注意：这里已经为您加上了反斜杠转义 \`，编辑器不会再报错了
+                container.innerHTML = \`
+                <div class="bg-white p-6 rounded-xl border border-blue-100 shadow-sm text-center">
+                    <div class="text-blue-500 font-bold mb-3 text-lg" id="loadingTitle">⚖️ 正在探测数据库并智能称重分包...</div>
+                    <div class="w-full bg-gray-200 rounded-full h-3 mb-2 overflow-hidden">
+                        <div class="bg-blue-500 h-3 rounded-full transition-all duration-300" id="loadingBar" style="width: 0%"></div>
+                    </div>
+                    <div class="text-gray-400 text-sm font-mono" id="loadingSub">正在构建极速下载通道</div>
+                </div>\`;
+                
                 try {
-                    const res = await fetch('/LogViewer/api/logs');
-                    const json = await res.json();
-                    if (json.success) {
-                        allLogs = json.data;
+                    // 1. 获取称重后的打包计划
+                    const planRes = await fetch('/LogViewer/api/log-plan');
+                    const planData = await planRes.json();
+                    
+                    if (!planData.success) throw new Error(planData.msg);
+                    
+                    const chunks = planData.chunks;
+                    if (chunks.length === 0) {
+                        allLogs = [];
                         renderLogs();
-                    } else {
-                        container.innerHTML = \`<div class="text-center text-red-500 py-10">❌ 错误: \${json.msg}</div>\`;
+                        return;
                     }
+
+                    const titleEl = document.getElementById('loadingTitle');
+                    const barEl = document.getElementById('loadingBar');
+                    const subEl = document.getElementById('loadingSub');
+
+                    // 👇 变量插值也加上了转义 \${}
+                    titleEl.innerText = \`📦 系统已将数据智能切分为 \${chunks.length} 个极限体积包，开始拉取...\`;
+                    
+                    allLogs = [];
+                    
+                    // 2. 🚀 多车道并发拉取数据（火力全开）
+                    let completedChunks = 0;
+                    
+                    // 把所有请求一次性全部扔出去
+                    const fetchPromises = chunks.map(async (chunk) => {
+                        const batchRes = await fetch('/LogViewer/api/log-batch', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ keys: chunk })
+                        });
+                        const batchData = await batchRes.json();
+                        
+                        // 只要有任何一辆"车"拉着数据回来了，就更新一次进度条
+                        completedChunks++;
+                        const percent = Math.round((completedChunks / chunks.length) * 100);
+                        barEl.style.width = \`\${percent}%\`;
+                        subEl.innerText = \`⚡ 并发极速拉取: 已就位 [\${completedChunks} / \${chunks.length}] - 进度 \${percent}%\`;
+
+                        if (batchData.success) {
+                            return batchData.data;
+                        } else {
+                            console.error("某批次拉取失败:", batchData.msg);
+                            return [];
+                        }
+                    });
+
+                    // 瞬间等待所有"车"全部归队
+                    const results = await Promise.all(fetchPromises);
+                    
+                    // 将所有数据合并装车
+                    results.forEach(dataArray => {
+                        allLogs.push(...dataArray);
+                    });
+
+                    // 3. 组装完毕
+                    subEl.innerText = "✅ 数据 100% 拉取完毕，正在渲染界面...";
+                    setTimeout(() => { renderLogs(); }, 300);
+
                 } catch (e) {
-                    container.innerHTML = '<div class="text-center text-red-500 py-10">❌ 网络异常，无法连接到服务器</div>';
+                    container.innerHTML = \`<div class="text-center text-red-500 py-10 bg-white rounded-xl border border-red-100">❌ 加载失败: \${e.message}</div>\`;
                 }
             }
 
@@ -507,22 +606,40 @@ router.get('/', (req, res) => {
                         </div>
                     </div>\`;
                 }).join('');
-
-                document.querySelectorAll('.language-json').forEach(el => hljs.highlightElement(el));
             }
 
+            // 🌟 升级版：点开面板时，再懒加载执行该面板内的高亮任务 (瞬间提升全局流畅度)
             function toggleDetails(index) {
-                document.getElementById('details-' + index).classList.toggle('open');
+                const detailsBox = document.getElementById('details-' + index);
+                detailsBox.classList.toggle('open');
+                
+                // 只有当面板被展开，且还没被高亮过时，才执行高亮
+                if (detailsBox.classList.contains('open') && !detailsBox.dataset.highlighted) {
+                    detailsBox.querySelectorAll('.language-json').forEach(el => {
+                        // 稍微延迟 10 毫秒让面板展开动画先执行，防止动画卡顿
+                        setTimeout(() => hljs.highlightElement(el), 10);
+                    });
+                    detailsBox.dataset.highlighted = "true"; // 标记为已高亮，下次点开就不重复算了
+                }
             }
 
             function switchView(event, index, type) {
                 const detailsContainer = document.getElementById('details-' + index);
                 detailsContainer.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active', 'text-blue-500'));
                 event.target.classList.add('active', 'text-blue-500');
+                
                 detailsContainer.querySelector('#view-pretty-' + index).classList.toggle('hidden', type !== 'pretty');
                 detailsContainer.querySelector('#view-pretty-' + index).classList.toggle('block', type === 'pretty');
-                detailsContainer.querySelector('#view-raw-' + index).classList.toggle('hidden', type !== 'raw');
-                detailsContainer.querySelector('#view-raw-' + index).classList.toggle('block', type === 'raw');
+                
+                const rawView = detailsContainer.querySelector('#view-raw-' + index);
+                rawView.classList.toggle('hidden', type !== 'raw');
+                rawView.classList.toggle('block', type === 'raw');
+
+                // 如果切换到了“原始 JSON 树”视图，且还没高亮过，立即高亮
+                if (type === 'raw' && !rawView.dataset.highlighted) {
+                    rawView.querySelectorAll('.language-json').forEach(el => hljs.highlightElement(el));
+                    rawView.dataset.highlighted = "true";
+                }
             }
 
             function copyRaw(event, encodedStr) {
