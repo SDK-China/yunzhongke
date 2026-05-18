@@ -271,12 +271,14 @@ router.get('/', (req, res) => {
                             let listStr = '';
                             for (let j = 0; j < details.length; j++) {
                                 let d = details[j];
-                                let jsonContent = d.payload && d.payload.rawJson ? d.payload.rawJson : '无底层数据';
+                                // 🌟 核心：把两种数据都取出来
+                                let rawJson = d.payload && d.payload.rawJson ? d.payload.rawJson : '无明文数据';
+                                let encoded = d.payload && d.payload.encodedBody ? d.payload.encodedBody : '无真正发包数据';
+                                
                                 let icon = d.success ? '✅' : '❌';
                                 let color = d.success ? 'text-green-400' : 'text-red-400';
                                 
-                                // 内部纯字符串拼接，无需转义
-                                listStr += '<details class="bg-gray-800 rounded border border-gray-700 overflow-hidden outline-none">' +
+                                listStr += '<details class="bg-gray-800 rounded border border-gray-700 overflow-hidden outline-none mb-3">' +
                                     '<summary class="px-3 py-2 cursor-pointer hover:bg-gray-700 text-xs text-gray-300 flex justify-between items-center outline-none select-none">' +
                                         '<div class="flex items-center gap-2">' +
                                             '<span class="' + color + ' font-bold">' + icon + '</span>' +
@@ -285,11 +287,25 @@ router.get('/', (req, res) => {
                                             '<span class="text-gray-400">|</span>' +
                                             '<span>' + renderPeopleWithBadge(d.people) + '</span>' +
                                         '</div>' +
-                                        '<span class="text-gray-500 hover:text-white transition">查看JSON ▼</span>' +
+                                        '<span class="text-gray-500 hover:text-white transition">查看双重底包 ▼</span>' +
                                     '</summary>' +
-                                    '<div class="p-3 border-t border-gray-700 bg-gray-900 relative">' +
-                                        '<button onclick="copyRaw(event, \\'' + encodeURIComponent(jsonContent) + '\\')" class="absolute top-2 right-2 text-[10px] bg-gray-700 hover:bg-gray-600 text-gray-200 px-2 py-1 rounded transition">复制</button>' +
-                                        '<pre><code class="language-json text-[11px] leading-relaxed">' + jsonContent + '</code></pre>' +
+                                    '<div class="grid grid-cols-1 lg:grid-cols-2 gap-4 p-3 border-t border-gray-700 bg-gray-900">' +
+                                        // 🌟 左侧：展示真正发出去的 URL-Encoded 报文
+                                        '<div class="bg-gray-950 rounded border border-gray-700">' +
+                                            '<div class="flex justify-between items-center bg-gray-800 px-3 py-1.5 rounded-t">' +
+                                                '<span class="text-xs text-orange-300 font-mono">Encoded Body (真正发出去的数据)</span>' +
+                                                '<button onclick="copyRaw(event, \\'' + encodeURIComponent(encoded) + '\\')" class="text-[10px] bg-gray-700 hover:bg-gray-600 text-gray-200 px-2 py-1 rounded transition">复制</button>' +
+                                            '</div>' +
+                                            '<div class="p-3 text-[11px] text-gray-300 break-all h-32 overflow-y-auto font-mono">' + encoded + '</div>' +
+                                        '</div>' +
+                                        // 🌟 右侧：展示用来查看结构的原始 JSON
+                                        '<div class="bg-gray-950 rounded border border-gray-700">' +
+                                            '<div class="flex justify-between items-center bg-gray-800 px-3 py-1.5 rounded-t">' +
+                                                '<span class="text-xs text-green-300 font-mono">Raw JSON (原始明文结构)</span>' +
+                                                '<button onclick="copyRaw(event, \\'' + encodeURIComponent(rawJson) + '\\')" class="text-[10px] bg-gray-700 hover:bg-gray-600 text-gray-200 px-2 py-1 rounded transition">复制</button>' +
+                                            '</div>' +
+                                            '<div class="p-3 text-[11px] text-gray-300 whitespace-pre overflow-x-auto h-32 overflow-y-auto font-mono">' + rawJson + '</div>' +
+                                        '</div>' +
                                     '</div>' +
                                 '</details>';
                             }
