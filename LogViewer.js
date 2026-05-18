@@ -575,18 +575,30 @@ router.get('/', (req, res) => {
 
                     return \`
                     <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden relative group">
-                        <div class="p-4 flex flex-col md:flex-row md:items-center justify-between gap-4 log-card cursor-pointer bg-white hover:bg-blue-50/30" onclick="toggleDetails(\${i})">
-                            <div class="flex flex-wrap items-center gap-3 w-full pr-8">
-                                <div class="flex items-center" onclick="event.stopPropagation()">
-                                    <input type="checkbox" class="log-checkbox w-4 h-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500 cursor-pointer" value="\${log.key}" \${selectedLogs.has(log.key) ? 'checked' : ''} onclick="toggleLogSelect(event, '\${log.key}')">
+                        <div class="p-3 md:p-4 flex items-start justify-between log-card cursor-pointer bg-white hover:bg-blue-50/30 transition-colors" onclick="toggleDetails(\${i})">
+                            
+                            <div class="flex items-start gap-3 w-full pr-8">
+                                
+                                <div class="flex-shrink-0 flex items-center mt-[3px] md:mt-1" onclick="event.stopPropagation()">
+                                    <input type="checkbox" class="log-checkbox w-4 h-4 text-blue-600 rounded border-gray-300 shadow-sm focus:ring-blue-500 cursor-pointer" value="\${log.key}" \${selectedLogs.has(log.key) ? 'checked' : ''} onclick="toggleLogSelect(event, '\${log.key}')">
                                 </div>
-                                <div class="px-3 py-1 rounded-full text-xs font-bold \${badgeColor}">\${log.action}</div>
-                                <div class="font-mono text-xs text-gray-500 bg-gray-50 px-2 py-1 rounded border border-gray-100">🕒 \${log.time.replace('_', ' ')}</div>
-                                <div class="font-bold text-gray-800">🏢 \${log.location}</div>
-                                <div class="text-gray-600 text-sm font-medium flex-1 truncate">\${log.summary}</div>
+                                
+                                <div class="flex flex-col flex-1 gap-1.5 min-w-0">
+                                    
+                                    <div class="flex items-center gap-2 flex-wrap">
+                                        <div class="px-2 py-0.5 rounded text-[11px] md:text-xs font-bold \${badgeColor}">\${log.action}</div>
+                                        <div class="font-bold text-gray-800 text-sm tracking-wide">🏢 \${log.location}</div>
+                                        <div class="font-mono text-[11px] md:text-xs text-gray-500 bg-gray-50 px-2 py-0.5 rounded border border-gray-200">🕒 \${log.time.replace('_', ' ')}</div>
+                                    </div>
+                                    
+                                    <div class="text-gray-600 text-sm md:text-[14.5px] font-medium leading-relaxed line-clamp-2 md:line-clamp-1 break-words">
+                                        \${log.summary}
+                                    </div>
+                                    
+                                </div>
                             </div>
                             
-                            <button onclick="deleteSingle(event, '\${log.key}')" class="absolute right-4 top-4 text-gray-300 hover:text-red-500 hover:bg-red-50 p-1.5 rounded-lg transition opacity-0 group-hover:opacity-100" title="删除此记录">
+                            <button onclick="deleteSingle(event, '\${log.key}')" class="absolute right-3 top-3 md:right-4 md:top-4 text-gray-400 md:text-gray-300 hover:text-red-500 hover:bg-red-50 p-1.5 rounded-lg transition md:opacity-0 group-hover:opacity-100" title="删除此记录">
                                 <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
                             </button>
                         </div>
