@@ -425,8 +425,8 @@ const LOC_CONFIGS = {
                 receptionistPhone: "15032303506",
                 visitReason: "设备维护与保养",
                 keepNormal: true,             // 🌟 核心：设为 true，系统就会为他发一份指定的包，再跟大部队发一份原始包！
-                renewThreshold: 0,            // 独立：剩0天时触发专属包
-                renewDays: 2                  // 独立：一次续2天
+                renewThreshold: 2,            // 独立：剩0天时触发专属包
+                renewDays: 7                  // 独立：一次续2天
             },
             // 张强
             "MTMwMzIyMTk4ODA2MjQyMDE4": {
@@ -446,8 +446,8 @@ const LOC_CONFIGS = {
                 receptionistPhone: "15032303506",
                 visitReason: "设备维护与保养",
                 keepNormal: true,           // 🌟 核心：设为 true，同样双开！
-                renewThreshold: 0,            // 独立：剩0天时触发专属包
-                renewDays: 2               // 独立：一次续2天
+                renewThreshold: 2,            // 独立：剩0天时触发专属包
+                renewDays: 7               // 独立：一次续2天
             },
             //  姜建龙
             "MTMwNDI1MTk4OTA4MjkwMzE0": {
@@ -467,8 +467,8 @@ const LOC_CONFIGS = {
                 receptionistPhone: "15032303506",
                 visitReason: "设备维护与保养",
                 keepNormal: true,           // 🌟 核心：设为 true，同样双开！
-                renewThreshold: 0,            // 独立：剩0天时触发专属包
-                renewDays: 2                  // 独立：一次续2天
+                renewThreshold: 2,            // 独立：剩0天时触发专属包
+                renewDays: 7                  // 独立：一次续2天
             },
             // 王菁
             // "MTMxMTIxMTk4OTAxMDU1MDEx": {
@@ -499,8 +499,8 @@ const LOC_CONFIGS = {
                 receptionistPhone: "15032303506",
                 visitReason: "设备维护与保养",
                 keepNormal: true,           // 🌟 核心：设为 true，同样双开！
-                renewThreshold: 0,            // 独立：剩0天时触发专属包
-                renewDays: 2                  // 独立：一次续2天
+                renewThreshold: 2,            // 独立：剩0天时触发专属包
+                renewDays: 7                  // 独立：一次续2天
             },
             //  窦桂阳
             "NDIyMzI2MTk5NTA0Mjg2NDEx": {
@@ -520,8 +520,8 @@ const LOC_CONFIGS = {
                 receptionistPhone: "15032303506",
                 visitReason: "设备维护与保养",
                 keepNormal: true,           // 🌟 核心：设为 true，同样双开！
-                renewThreshold: 0,            // 独立：剩0天时触发专属包
-                renewDays: 2                  // 独立：一次续2天
+                renewThreshold: 2,            // 独立：剩0天时触发专属包
+                renewDays: 7                  // 独立：一次续2天
             },
             // 顾
             "NDEyNzIzMTk4NTA5MjIwODNY": {
@@ -541,8 +541,8 @@ const LOC_CONFIGS = {
                 receptionistPhone: "15032303506",
                 visitReason: "设备维护与保养",
                 keepNormal: false,             // 🌟 核心：设为 true，系统就会为他发一份指定的包，再跟大部队发一份原始包！
-                renewThreshold: 0,            // 独立：剩0天时触发专属包
-                renewDays: 2                  // 独立：一次续2天
+                renewThreshold: 2,            // 独立：剩0天时触发专属包
+                renewDays: 7                  // 独立：一次续2天
             },
             // 周杰
             "NTExNTI1MTk5MzA1MTAxNjE5": {
@@ -562,8 +562,8 @@ const LOC_CONFIGS = {
                 receptionistPhone: "15032303506",
                 visitReason: "设备维护与保养",
                 keepNormal: false,             // 🌟 核心：设为 true，系统就会为他发一份指定的包，再跟大部队发一份原始包！
-                renewThreshold: 0,            // 独立：剩0天时触发专属包
-                renewDays: 2                  // 独立：一次续2天
+                renewThreshold: 2,            // 独立：剩0天时触发专属包
+                renewDays: 7                  // 独立：一次续2天
             }
         },
 
