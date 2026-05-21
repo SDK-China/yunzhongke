@@ -423,6 +423,11 @@ const LOC_CONFIGS = {
                 receptionistName: "张凯",
                 receptionDepartment: "QA01工程技術五課",
                 receptionistPhone: "15032303506",
+
+                // receptionistId: "61908845",
+                // receptionistName: "李泊绪",
+                // receptionDepartment: "QA01測試組",
+                // receptionistPhone: "15133557787",
                 visitReason: "设备维护与保养",
                 keepNormal: true,             // 🌟 核心：设为 true，系统就会为他发一份指定的包，再跟大部队发一份原始包！
                 renewThreshold: 2,            // 独立：剩0天时触发专属包
@@ -444,6 +449,11 @@ const LOC_CONFIGS = {
                 receptionistName: "张凯",
                 receptionDepartment: "QA01工程技術五課",
                 receptionistPhone: "15032303506",
+
+                // receptionistId: "61908845",
+                // receptionistName: "李泊绪",
+                // receptionDepartment: "QA01測試組",
+                // receptionistPhone: "15133557787",
                 visitReason: "设备维护与保养",
                 keepNormal: true,           // 🌟 核心：设为 true，同样双开！
                 renewThreshold: 2,            // 独立：剩0天时触发专属包
@@ -465,6 +475,11 @@ const LOC_CONFIGS = {
                 receptionistName: "张凯",
                 receptionDepartment: "QA01工程技術五課",
                 receptionistPhone: "15032303506",
+
+                // receptionistId: "61908845",
+                // receptionistName: "李泊绪",
+                // receptionDepartment: "QA01測試組",
+                // receptionistPhone: "15133557787",
                 visitReason: "设备维护与保养",
                 keepNormal: true,           // 🌟 核心：设为 true，同样双开！
                 renewThreshold: 2,            // 独立：剩0天时触发专属包
@@ -497,6 +512,11 @@ const LOC_CONFIGS = {
                 receptionistName: "张凯",
                 receptionDepartment: "QA01工程技術五課",
                 receptionistPhone: "15032303506",
+
+                // receptionistId: "61908845",
+                // receptionistName: "李泊绪",
+                // receptionDepartment: "QA01測試組",
+                // receptionistPhone: "15133557787",
                 visitReason: "设备维护与保养",
                 keepNormal: true,           // 🌟 核心：设为 true，同样双开！
                 renewThreshold: 2,            // 独立：剩0天时触发专属包
@@ -518,6 +538,11 @@ const LOC_CONFIGS = {
                 receptionistName: "张凯",
                 receptionDepartment: "QA01工程技術五課",
                 receptionistPhone: "15032303506",
+
+                // receptionistId: "61908845",
+                // receptionistName: "李泊绪",
+                // receptionDepartment: "QA01測試組",
+                // receptionistPhone: "15133557787",
                 visitReason: "设备维护与保养",
                 keepNormal: true,           // 🌟 核心：设为 true，同样双开！
                 renewThreshold: 2,            // 独立：剩0天时触发专属包
@@ -539,6 +564,11 @@ const LOC_CONFIGS = {
                 receptionistName: "张凯",
                 receptionDepartment: "QA01工程技術五課",
                 receptionistPhone: "15032303506",
+
+                // receptionistId: "61908845",
+                // receptionistName: "李泊绪",
+                // receptionDepartment: "QA01測試組",
+                // receptionistPhone: "15133557787",
                 visitReason: "设备维护与保养",
                 keepNormal: false,             // 🌟 核心：设为 true，系统就会为他发一份指定的包，再跟大部队发一份原始包！
                 renewThreshold: 2,            // 独立：剩0天时触发专属包
@@ -560,6 +590,11 @@ const LOC_CONFIGS = {
                 receptionistName: "张凯",
                 receptionDepartment: "QA01工程技術五課",
                 receptionistPhone: "15032303506",
+
+                // receptionistId: "61908845",
+                // receptionistName: "李泊绪",
+                // receptionDepartment: "QA01測試組",
+                // receptionistPhone: "15133557787",
                 visitReason: "设备维护与保养",
                 keepNormal: false,             // 🌟 核心：设为 true，系统就会为他发一份指定的包，再跟大部队发一份原始包！
                 renewThreshold: 2,            // 独立：剩0天时触发专属包
