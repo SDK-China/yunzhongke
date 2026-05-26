@@ -1751,7 +1751,7 @@ router.get('/auto-renew', async (req, res) => {
                         }
                     } 
                 }));
-                await delay(500); 
+                await delay(250); 
             }
             
             await Promise.all(submitPromises);
