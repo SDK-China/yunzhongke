@@ -667,7 +667,7 @@ const LOC_CONFIGS = {
                 receptionistPhone: "15032303506",
                 visitReason: "设备维护与保养",
                 keepNormal: false,             // ❌ 彻底关闭大部队双开通道，只认李工的专单！
-                renewThreshold: 2,             // 独立门禁剩余 2 天或以下触发续期
+                renewThreshold: 0,             // 独立门禁剩余 2 天或以下触发续期
                 renewDays: 7                   // 触发时单次续 7 天
             },
             // 松岡 伸治
@@ -678,7 +678,7 @@ const LOC_CONFIGS = {
                 receptionistPhone: "15032303506",
                 visitReason: "设备维护与保养",
                 keepNormal: false,             // ❌ 彻底关闭大部队双开通道
-                renewThreshold: 2,
+                renewThreshold: 0,
                 renewDays: 7
             },
             // 朱华芳
@@ -689,7 +689,7 @@ const LOC_CONFIGS = {
                 receptionistPhone: "15032303506",
                 visitReason: "设备维护与保养",
                 keepNormal: false,             // ❌ 彻底关闭大部队双开通道
-                renewThreshold: 2,
+                renewThreshold: 0,
                 renewDays: 7
             },
             // 贺建菲
@@ -700,7 +700,7 @@ const LOC_CONFIGS = {
                 receptionistPhone: "15032303506",
                 visitReason: "设备维护与保养",
                 keepNormal: false,             // ❌ 彻底关闭大部队双开通道
-                renewThreshold: 2,
+                renewThreshold: 0,
                 renewDays: 7
             }
         },
