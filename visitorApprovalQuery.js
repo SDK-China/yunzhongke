@@ -21,7 +21,11 @@ const CONFIGS = {
             "MDczOTM0Njc=",
             "NDIyMzI2MTk5NTA0Mjg2NDEx", // 窦
             "NDEyNzIzMTk4NTA5MjIwODNY",  // 顾
-            "NTExNTI1MTk5MzA1MTAxNjE5"  // 👇 新增：周杰
+            "NTExNTI1MTk5MzA1MTAxNjE5",  // 👇 新增：周杰
+            "VE0xNjczNTg5",
+            "VFMwNjkzODk0",
+            "MzMwNzI3MTk4MjEwMjkxNjQ1",
+            "MjEwMTEyMTk4MzA3MDQwMjMx"
         ],
         regPerson: "17614625112",
         acToken: "E5EF067A42A792436902EB275DCCA379812FF4A4A8A756BE0A1659704557309F"
