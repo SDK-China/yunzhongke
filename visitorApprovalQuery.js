@@ -54,7 +54,8 @@ const CONFIGS = {
             "MDcyMjg1Nzc=", //朱会民 (新)
             "NTMyNDY5ODc0",
             "NDIyMzI2MTk5NTA0Mjg2NDEx", //竇桂陽
-            "MTMwMzIzMjAwMzEyMDc1NjE1" //周家豪
+            "MTMwMzIzMjAwMzEyMDc1NjE1", //周家豪
+            "MTE2ODkyOTE="   // 👇 🌟新增：张建成
         ],
         regPerson: "15032325162",
         acToken: "53F44A99C6D8AADE22942CD9E1D803E8812FF4A4A8A756BE0A1659704557309F"
