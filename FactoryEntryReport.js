@@ -311,6 +311,20 @@ const PERSON_DB = {
         {"componentName":"AttachmentField","fieldId":"attachmentField_lxv44osk","label":"社保/在职证明","fieldData":{"value":[{"name":"在职证明 - 理德.pdf","previewUrl":"/dingtalk/mobile/APP_GRVPTEOQ6D4B7FLZFYNJ/inst/preview?appType=APP_GRVPTEOQ6D4B7FLZFYNJ&fileName=APP_GRVPTEOQ6D4B7FLZFYNJ_MjdHNjYwQTFZUTM2RlpYNkhQSzFXQk84OUpDUDNHSVU2OFFQTVY3.pdf&fileSize=44121&downloadUrl=APP_GRVPTEOQ6D4B7FLZFYNJ_MjdHNjYwQTFZUTM2RlpYNkhQSzFXQk84OUpDUDNHSVU2OFFQTVY3.pdf","downloadUrl":"/o/27G660A1YQ36FZX6HPK1WBO89JCP3GIU68QPMW7?appType=APP_GRVPTEOQ6D4B7FLZFYNJ&fileName=APP_GRVPTEOQ6D4B7FLZFYNJ_MjdHNjYwQTFZUTM2RlpYNkhQSzFXQk84OUpDUDNHSVU2OFFQTVY3.pdf&instId=&type=download","size":44121,"url":"/o/27G660A1YQ36FZX6HPK1WBO89JCP3GIU68QPMW7?appType=APP_GRVPTEOQ6D4B7FLZFYNJ&fileName=APP_GRVPTEOQ6D4B7FLZFYNJ_MjdHNjYwQTFZUTM2RlpYNkhQSzFXQk84OUpDUDNHSVU2OFFQTVY3.pdf&instId=&type=download","fileUuid":"APP_GRVPTEOQ6D4B7FLZFYNJ_MjdHNjYwQTFZUTM2RlpYNkhQSzFXQk84OUpDUDNHSVU2OFFQTVY3.pdf"}]}},
         {"componentName":"AttachmentField","fieldId":"attachmentField_lxv44osn","label":"其他附件","fieldData":{"value":[]}}
     ],
+    // =========================================================
+    // 🌟 2026-06-01 新增：樊莹烽 (A08 厂区张凯专单)
+    // =========================================================
+    "MzMwNjAyMTk5ODEwMjkyNTEy": [
+        {"componentName":"SelectField","fieldId":"selectField_lxv44orx","label":"有效身份证件","fieldData":{"value":"身份证","text":"身份证"},"options":[{"defaultChecked":false,"syncLabelValue":true,"__sid":"item_lxjzgsg1","text":"身份证","__sid__":"serial_lxjzgsg0","value":"身份证","sid":"serial_lxjzgsg0"}]},
+        {"componentName":"TextField","fieldId":"textField_lxv44ory","label":"证件号码","fieldData":{"value": decode("MzMwNjAyMTk5ODEwMjkyNTEy")}},
+        {"componentName":"TextField","fieldId":"textField_lxv44orw","label":"姓名","fieldData":{"value": "樊莹烽"}}, // 🛡️ 纯正汉字防乱码
+        {"componentName":"SelectField","fieldId":"selectField_mbyjhot6","label":"区号","fieldData":{"value":"86","text":"+86"},"options":[{"defaultChecked":true,"syncLabelValue":false,"__sid":"item_megqe4lm","text":"+86","__sid__":"serial_megqe4ll","value":"86","sid":"serial_mbyjf8gm"}]},
+        {"componentName":"TextField","fieldId":"textField_lxv44orz","label":"联系方式","fieldData":{"value": decode("MTg4ODg2ODc2ODY=") }},
+        {"componentName":"ImageField","fieldId":"imageField_ly9i5k5q","label":"免冠照片","fieldData":{"value":[{"name":"1000548927.jpg","previewUrl":"https://dingtalk.avaryholding.com:8443/dingplus/image/20260601/22489ca28259801c0160e036e61c7739.jpg","downloadUrl":"https://dingtalk.avaryholding.com:8443/dingplus/image/20260601/22489ca28259801c0160e036e61c7739.jpg","size":165909,"url":"https://dingtalk.avaryholding.com:8443/dingplus/image/20260601/22489ca28259801c0160e036e61c7739.jpg"}]}},
+        {"componentName":"AttachmentField","fieldId":"attachmentField_lxv44osj","label":"身份证照片","fieldData":{"value":[{"name":"mmexport1780275874829.jpg","previewUrl":"/o/3VF66W714X26WTA3GN0S164ORVAB37OQMIUPMJG?appType=APP_GRVPTEOQ6D4B7FLZFYNJ&fileName=APP_GRVPTEOQ6D4B7FLZFYNJ_M1ZGNjZXNzE0WDI2V1RBM0dOMFMxNjRPUlZBQjM3T1FNSVVQTUlH.jpg&instId=&type=open&process=image/resize,m_fill,w_200,h_200,limit_0/quality,q_80","downloadUrl":"/o/3VF66W714X26WTA3GN0S164ORVAB37OQMIUPMJG?appType=APP_GRVPTEOQ6D4B7FLZFYNJ&fileName=APP_GRVPTEOQ6D4B7FLZFYNJ_M1ZGNjZXNzE0WDI2V1RBM0dOMFMxNjRPUlZBQjM3T1FNSVVQTUlH.jpg&instId=&type=download","size":165080,"url":"/o/3VF66W714X26WTA3GN0S164ORVAB37OQMIUPMJG?appType=APP_GRVPTEOQ6D4B7FLZFYNJ&fileName=APP_GRVPTEOQ6D4B7FLZFYNJ_M1ZGNjZXNzE0WDI2V1RBM0dOMFMxNjRPUlZBQjM3T1FNSVVQTUlH.jpg&instId=&type=download","fileUuid":"APP_GRVPTEOQ6D4B7FLZFYNJ_M1ZGNjZXNzE0WDI2V1RBM0dOMFMxNjRPUlZBQjM3T1FNSVVQTUlH.jpg"}]}},
+        {"componentName":"AttachmentField","fieldId":"attachmentField_lxv44osk","label":"社保/在职证明","fieldData":{"value":[{"name":"3_在职证明.pdf","previewUrl":"/dingtalk/mobile/APP_GRVPTEOQ6D4B7FLZFYNJ/inst/preview?appType=APP_GRVPTEOQ6D4B7FLZFYNJ&fileName=APP_GRVPTEOQ6D4B7FLZFYNJ_WTlINjY0NzFaTzQ2S0owWkYxV1IzRDA4M1RGVTNTV09OSVVQTTE2.pdf&fileSize=164619&downloadUrl=APP_GRVPTEOQ6D4B7FLZFYNJ_WTlINjY0NzFaTzQ2S0owWkYxV1IzRDA4M1RGVTNTV09OSVVQTTE2.pdf","downloadUrl":"/o/Y9H66471ZO46KJ0ZF1WR3D083TFU3SWONIUPM26?appType=APP_GRVPTEOQ6D4B7FLZFYNJ&fileName=APP_GRVPTEOQ6D4B7FLZFYNJ_WTlINjY0NzFaTzQ2S0owWkYxV1IzRDA4M1RGVTNTV09OSVVQTTE2.pdf&instId=&type=download","size":164619,"url":"/o/Y9H66471ZO46KJ0ZF1WR3D083TFU3SWONIUPM26?appType=APP_GRVPTEOQ6D4B7FLZFYNJ&fileName=APP_GRVPTEOQ6D4B7FLZFYNJ_WTlINjY0NzFaTzQ2S0owWkYxV1IzRDA4M1RGVTNTV09OSVVQTTE2.pdf&instId=&type=download","fileUuid":"APP_GRVPTEOQ6D4B7FLZFYNJ_WTlINjY0NzFaTzQ2S0owWkYxV1IzRDA4M1RGVTNTV09OSVVQTTE2.pdf"}]}},
+        {"componentName":"AttachmentField","fieldId":"attachmentField_lxv44osn","label":"其他附件","fieldData":{"value":[]}}
+    ],
 };
 
 const FORM_BASE = [
@@ -453,7 +467,8 @@ const LOC_CONFIGS = {
                 "VE0xNjczNTg5",              // 伊藤太一
                 "VFMwNjkzODk0",              // 松岡 伸治
                 "MzMwNzI3MTk4MjEwMjkxNjQ1",  // 朱华芳
-                "MjEwMTEyMTk4MzA3MDQwMjMx"   // 贺建菲
+                "MjEwMTEyMTk4MzA3MDQwMjMx",   // 贺建菲
+                "MzMwNjAyMTk5ODEwMjkyNTEy"   // 👇 🌟 2026-06-01 新增：樊莹烽
             ],
             regPerson: "17614625112",
             acToken: "E5EF067A42A792436902EB275DCCA379812FF4A4A8A756BE0A1659704557309F",
@@ -702,6 +717,17 @@ const LOC_CONFIGS = {
                 keepNormal: false,             // ❌ 彻底关闭大部队双开通道
                 renewThreshold: 2,
                 renewDays: 7
+            },
+            // 樊莹烽
+            "MzMwNjAyMTk5ODEwMjkyNTEy": {
+                receptionistId: "A2451885",
+                receptionistName: "张凯",
+                receptionDepartment: "QA01工程技術五課",
+                receptionistPhone: "15032303506",
+                visitReason: "设备维护与保养",
+                keepNormal: false,             // ❌ 彻底关闭大部队双开通道，只认李工专单！
+                renewThreshold: 2,             
+                renewDays: 7                   
             }
         },
 
@@ -1796,14 +1822,22 @@ function renderRequests(requests, loc) {
 
 // --- 主逻辑路由 (一次遍历运行所有启用的厂区) ---
 router.get('/auto-renew', async (req, res) => {
+    // 👇 🌟 修改1：将全局零点移到最上面，作为赛车秒表的起点
+    const globalStartTime = Date.now(); 
+
     const logs = [];
-    const log = (msg) => { console.log(msg); logs.push(msg); };
+    
+    // 👇 🌟 修改2：新增“时间轴助手”，让每句日志前面自动加上 [0.00s] 标记
+    const getTs = () => `[${((Date.now() - globalStartTime) / 1000).toFixed(2)}s]`;
+    const log = (msg) => { 
+        const finalMsg = `${getTs()} ${msg}`; 
+        console.log(finalMsg); 
+        logs.push(finalMsg); 
+    };
+    
     const allResults = [];
     
     try {
-        // 👇 🌟 就是漏了下面这一行！把它补上，用来记录开始发令枪的时间
-        const globalStartTime = Date.now(); 
-
         log("=== 🚀 开始自动续期流程 ===");
         
         const locFilter = req.query.loc;
@@ -1815,7 +1849,15 @@ router.get('/auto-renew', async (req, res) => {
             
             log(`\n====== [${locConfig.title}] 开始执行 ======`);
             
+            // 👇 🌟 修改3：精确监控【查询阶段】的耗时
+            log(`🔍 开始查询 [${loc}] 人员历史记录...`);
+            const queryStartTime = Date.now();
+            
             const { statusMap, stats } = await getAllStatuses(locConfig.query);
+            
+            const queryEndTime = Date.now();
+            log(`🏁 查询完毕 [${loc}]，共耗时: ${((queryEndTime - queryStartTime) / 1000).toFixed(2)} 秒`);
+            
             const safetyCheck = checkSafeToRun(stats);
             
             if (!safetyCheck.safe) {
@@ -1834,35 +1876,43 @@ router.get('/auto-renew', async (req, res) => {
 
             const submitPromises = [];
             for (const reqTask of plan.requests) {
-                log(`🚀 正在为 [${reqTask.people}] 提交申请 -> 日期: ${reqTask.targetDate}`);
-                // 👇 将 locConfig 传给引擎，以便附带不同的 Cookie 凭证
+                log(`🚀 开始发包 [${reqTask.people}] -> 日期: ${reqTask.targetDate}`);
+                
+                // 👇 🌟 修改4：精确监控【每个单独发包】的耗时
+                const reqStartTime = Date.now(); // 记录这一个包的起跑时间
+                
                 submitPromises.push(submitApplication(reqTask, locConfig).then(r => { 
+                    // 记录这一个包的终点时间并计算差值
+                    const reqEndTime = Date.now();
+                    const reqCost = ((reqEndTime - reqStartTime) / 1000).toFixed(2);
+                    
                     if(r) { 
                         r.loc = loc; 
-                        
-                        // 🌟 【核心修改】：把生成好的完整数据包也塞进这条结果里
                         r.payload = {
                             rawJson: reqTask.rawJson,
                             encodedBody: reqTask.encodedBody
                         };
                         
+                        // 把这个包的耗时存入结果，这样 Redis 里的 JSON 也能看到耗时
+                        r.costSeconds = reqCost;
+                        
                         allResults.push(r); 
                         
                         if(!r.success) {
-                            log(`❌ [${loc}] ${reqTask.targetDate} 失败: ${r.msg}`);
+                            log(`❌ 发包失败 [${loc}] ${reqTask.targetDate} (此包耗时: ${reqCost}秒) -> 原因: ${r.msg}`);
                         } else {
-                            log(`✅ [${loc}] ${reqTask.targetDate} 成功! 实例ID: ${r.id}`);
+                            log(`✅ 发包成功 [${loc}] ${reqTask.targetDate} (此包耗时: ${reqCost}秒) -> 实例ID: ${r.id}`);
                         }
                     } 
                 }));
-                await delay(350); 
+                await delay(250); 
             }
             
             await Promise.all(submitPromises);
         }
 
-        const globalEndTime = Date.now(); // 👈 [新增] 记录结束时间戳
-        const costSeconds = ((globalEndTime - globalStartTime) / 1000).toFixed(2); // 计算耗时(秒)
+        const globalEndTime = Date.now(); 
+        const costSeconds = ((globalEndTime - globalStartTime) / 1000).toFixed(2); 
 
         log(`\n=== 🏁 流程结束 (总耗时: ${costSeconds} 秒) ===`);
         
@@ -1872,6 +1922,8 @@ router.get('/auto-renew', async (req, res) => {
             report += `${icon} [${r.loc}] 日期: ${r.date}\n`;
             report += `    人员: ${r.names}\n`;
             report += `    结果: ${r.success ? "成功 (" + r.id + ")" : "失败 (" + r.msg + ")"}\n`;
+            // 👇 🌟 修改5：在最终反馈报告中，追加显示每个包的耗时
+            report += `    耗时: ${r.costSeconds} 秒\n`;
             report += "------------------------\n";
         });
         
@@ -1879,16 +1931,13 @@ router.get('/auto-renew', async (req, res) => {
             report += "✅ 所有厂区状态均正常，未发生实际提交操作。\n";
         }
         
-        // 🌟 [新增] 将总耗时拼接到最终返回的文本报告中
         report += `⏱️ 总计用时: ${costSeconds} 秒\n========================\n`;
         
-        report += "\n🔍 系统日志:\n" + logs.join('\n');
+        report += "\n🔍 系统时间轴日志:\n" + logs.join('\n');
         
-        // [新增] 将自动续期的完整运行报告、全部发包详情一并上传
-        // 👇 🌟 核心修复：加上 await！死死按住 Vercel，不存完不许结束！
         await saveLogToRedis('自动续期', locFilter || 'ALL', '后台自动巡检与续期完成', {
-            textReport: report, // 完整的文本报告
-            actionDetails: allResults // 如果有发包，这里包含了每一通发包的成功/失败详情
+            textReport: report, 
+            actionDetails: allResults 
         }).catch(e => console.error("Redis上传遭遇拦截:", e));
 
         res.type('text/plain').send(report);
