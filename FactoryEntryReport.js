@@ -464,11 +464,11 @@ const LOC_CONFIGS = {
                 "NDEyNzIzMTk4NTA5MjIwODNY",  // 顾
                 "NTExNTI1MTk5MzA1MTAxNjE5",  // 👇 新增：周杰
                 // 👇 🌟 2026-05-29 新增：理德 4 人大部队
-                "VE0xNjczNTg5",              // 伊藤太一
-                "VFMwNjkzODk0",              // 松岡 伸治
-                "MzMwNzI3MTk4MjEwMjkxNjQ1",  // 朱华芳
-                "MjEwMTEyMTk4MzA3MDQwMjMx",   // 贺建菲
-                "MzMwNjAyMTk5ODEwMjkyNTEy"   // 👇 🌟 2026-06-01 新增：樊莹烽
+                // "VE0xNjczNTg5",              // 伊藤太一
+                // "VFMwNjkzODk0",              // 松岡 伸治
+                // "MzMwNzI3MTk4MjEwMjkxNjQ1",  // 朱华芳
+                // "MjEwMTEyMTk4MzA3MDQwMjMx",   // 贺建菲
+                // "MzMwNjAyMTk5ODEwMjkyNTEy"   // 👇 🌟 2026-06-01 新增：樊莹烽
             ],
             regPerson: "17614625112",
             acToken: "E5EF067A42A792436902EB275DCCA379812FF4A4A8A756BE0A1659704557309F",
@@ -674,61 +674,61 @@ const LOC_CONFIGS = {
             // =========================================================
             // 🌟 2026-05-29 新增：理德 4 人组专属独立轨迹配置 (不跟常规大部队拼车)
             // =========================================================
-            // 伊藤太一
-            "VE0xNjczNTg5": {
-                receptionistId: "A2451885",
-                receptionistName: "张凯",
-                receptionDepartment: "QA01工程技術五課",
-                receptionistPhone: "15032303506",
-                visitReason: "设备维护与保养",
-                keepNormal: false,             // ❌ 彻底关闭大部队双开通道，只认李工的专单！
-                renewThreshold: 2,             // 独立门禁剩余 2 天或以下触发续期
-                renewDays: 7                   // 触发时单次续 7 天
-            },
-            // 松岡 伸治
-            "VFMwNjkzODk0": {
-                receptionistId: "A2451885",
-                receptionistName: "张凯",
-                receptionDepartment: "QA01工程技術五課",
-                receptionistPhone: "15032303506",
-                visitReason: "设备维护与保养",
-                keepNormal: false,             // ❌ 彻底关闭大部队双开通道
-                renewThreshold: 2,
-                renewDays: 7
-            },
-            // 朱华芳
-            "MzMwNzI3MTk4MjEwMjkxNjQ1": {
-                receptionistId: "A2451885",
-                receptionistName: "张凯",
-                receptionDepartment: "QA01工程技術五課",
-                receptionistPhone: "15032303506",
-                visitReason: "设备维护与保养",
-                keepNormal: false,             // ❌ 彻底关闭大部队双开通道
-                renewThreshold: 2,
-                renewDays: 7
-            },
-            // 贺建菲
-            "MjEwMTEyMTk4MzA3MDQwMjMx": {
-                receptionistId: "A2451885",
-                receptionistName: "张凯",
-                receptionDepartment: "QA01工程技術五課",
-                receptionistPhone: "15032303506",
-                visitReason: "设备维护与保养",
-                keepNormal: false,             // ❌ 彻底关闭大部队双开通道
-                renewThreshold: 2,
-                renewDays: 7
-            },
-            // 樊莹烽
-            "MzMwNjAyMTk5ODEwMjkyNTEy": {
-                receptionistId: "A2451885",
-                receptionistName: "张凯",
-                receptionDepartment: "QA01工程技術五課",
-                receptionistPhone: "15032303506",
-                visitReason: "设备维护与保养",
-                keepNormal: false,             // ❌ 彻底关闭大部队双开通道，只认李工专单！
-                renewThreshold: 2,             
-                renewDays: 7                   
-            }
+            // // 伊藤太一
+            // "VE0xNjczNTg5": {
+            //     receptionistId: "A2451885",
+            //     receptionistName: "张凯",
+            //     receptionDepartment: "QA01工程技術五課",
+            //     receptionistPhone: "15032303506",
+            //     visitReason: "设备维护与保养",
+            //     keepNormal: false,             // ❌ 彻底关闭大部队双开通道，只认李工的专单！
+            //     renewThreshold: 2,             // 独立门禁剩余 2 天或以下触发续期
+            //     renewDays: 7                   // 触发时单次续 7 天
+            // },
+            // // 松岡 伸治
+            // "VFMwNjkzODk0": {
+            //     receptionistId: "A2451885",
+            //     receptionistName: "张凯",
+            //     receptionDepartment: "QA01工程技術五課",
+            //     receptionistPhone: "15032303506",
+            //     visitReason: "设备维护与保养",
+            //     keepNormal: false,             // ❌ 彻底关闭大部队双开通道
+            //     renewThreshold: 2,
+            //     renewDays: 7
+            // },
+            // // 朱华芳
+            // "MzMwNzI3MTk4MjEwMjkxNjQ1": {
+            //     receptionistId: "A2451885",
+            //     receptionistName: "张凯",
+            //     receptionDepartment: "QA01工程技術五課",
+            //     receptionistPhone: "15032303506",
+            //     visitReason: "设备维护与保养",
+            //     keepNormal: false,             // ❌ 彻底关闭大部队双开通道
+            //     renewThreshold: 2,
+            //     renewDays: 7
+            // },
+            // // 贺建菲
+            // "MjEwMTEyMTk4MzA3MDQwMjMx": {
+            //     receptionistId: "A2451885",
+            //     receptionistName: "张凯",
+            //     receptionDepartment: "QA01工程技術五課",
+            //     receptionistPhone: "15032303506",
+            //     visitReason: "设备维护与保养",
+            //     keepNormal: false,             // ❌ 彻底关闭大部队双开通道
+            //     renewThreshold: 2,
+            //     renewDays: 7
+            // },
+            // // 樊莹烽
+            // "MzMwNjAyMTk5ODEwMjkyNTEy": {
+            //     receptionistId: "A2451885",
+            //     receptionistName: "张凯",
+            //     receptionDepartment: "QA01工程技術五課",
+            //     receptionistPhone: "15032303506",
+            //     visitReason: "设备维护与保养",
+            //     keepNormal: false,             // ❌ 彻底关闭大部队双开通道，只认李工专单！
+            //     renewThreshold: 2,             
+            //     renewDays: 7                   
+            // }
         },
 
         // A08 的独立老组包逻辑 (已加入指定接待人合并支持)
@@ -818,7 +818,7 @@ const LOC_CONFIGS = {
                 "MTIwNDUxOTI=", //张乃文
                 "SzEzOTMxMihBKQ==", //陈毅鸿
                 "NDMxMjIyMTk5NzEyMDUzMzEz", //向林  
-                "NTIyNzMxMjAwMDAxMTAzNjEx", //王煊廷
+                // "NTIyNzMxMjAwMDAxMTAzNjEx", //王煊廷
                 "MTMwMzIxMjAwMjA0MTY2MjE4", //邵相辉 
                 // "NDUwMjIxMTk4OTA0MDUyNDNY", //曾静 
                 // "NDIxMTgxMTk5MDAxMTc2MzFY", //余新旺 
@@ -828,11 +828,11 @@ const LOC_CONFIGS = {
                 // "MDYyNDg5MDE=", //马可为
                 "WjkwOTQwMSg3KQ==", //冼延浩 (新)
                 "NDQxNDgxMTk4ODAzMTYwODky", //张远彬 (新)
-                "MDcyMjg1Nzc=", //朱会民 (新)
+                // "MDcyMjg1Nzc=", //朱会民 (新)
                 // "NTMyNDY5ODc0" //Denis Gerassimenko
                 "NDIyMzI2MTk5NTA0Mjg2NDEx", //竇桂陽
                 "MTMwMzIzMjAwMzEyMDc1NjE1",  //周家豪
-                "MTE2ODkyOTE="   // 👇 🌟新增：张建成
+                // "MTE2ODkyOTE="   // 👇 🌟新增：张建成
 ],
             regPerson: "15032325162",
             acToken: "53F44A99C6D8AADE22942CD9E1D803E8812FF4A4A8A756BE0A1659704557309F",
