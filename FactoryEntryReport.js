@@ -828,7 +828,7 @@ const LOC_CONFIGS = {
                 // "MDYyNDg5MDE=", //马可为
                 "WjkwOTQwMSg3KQ==", //冼延浩 (新)
                 "NDQxNDgxMTk4ODAzMTYwODky", //张远彬 (新)
-                // "MDcyMjg1Nzc=", //朱会民 (新)
+                "MDcyMjg1Nzc=", //朱会民 (新)
                 // "NTMyNDY5ODc0" //Denis Gerassimenko
                 "NDIyMzI2MTk5NTA0Mjg2NDEx", //竇桂陽
                 "MTMwMzIzMjAwMzEyMDc1NjE1",  //周家豪
