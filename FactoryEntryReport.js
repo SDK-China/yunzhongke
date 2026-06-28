@@ -598,7 +598,7 @@ const LOC_CONFIGS = {
                 renewDays: 7                  // 独立：一次续2天
             },
             //  窦桂阳
-            "NDIyMzI2MTk5NTA0Mjg2NDEx": {
+            // "NDIyMzI2MTk5NTA0Mjg2NDEx": {
                 // receptionistId: "A2449801",
                 // receptionistName: "龚旭明",
                 // receptionDepartment: "QA01設備五課",
@@ -614,17 +614,17 @@ const LOC_CONFIGS = {
                 // receptionDepartment: "QA01工程技術五課",
                 // receptionistPhone: "15032303506",
 
-                receptionistId: "61908845",
-                receptionistName: "李泊绪",
-                receptionDepartment: "QA01測試組",
-                receptionistPhone: "15133557787",
-                visitReason: "设备维护与保养",
-                keepNormal: true,           // 🌟 核心：设为 true，同样双开！
-                renewThreshold: 2,            // 独立：剩0天时触发专属包
-                renewDays: 7                  // 独立：一次续2天
-            },
+            //     receptionistId: "61908845",
+            //     receptionistName: "李泊绪",
+            //     receptionDepartment: "QA01測試組",
+            //     receptionistPhone: "15133557787",
+            //     visitReason: "设备维护与保养",
+            //     keepNormal: true,           // 🌟 核心：设为 true，同样双开！
+            //     renewThreshold: 2,            // 独立：剩0天时触发专属包
+            //     renewDays: 7                  // 独立：一次续2天
+            // },
             // 顾
-            "NDEyNzIzMTk4NTA5MjIwODNY": {
+            // "NDEyNzIzMTk4NTA5MjIwODNY": {
                 // receptionistId: "A2449801",
                 // receptionistName: "龚旭明",
                 // receptionDepartment: "QA01設備五課",
@@ -640,17 +640,17 @@ const LOC_CONFIGS = {
                 // receptionDepartment: "QA01工程技術五課",
                 // receptionistPhone: "15032303506",
 
-                receptionistId: "61908845",
-                receptionistName: "李泊绪",
-                receptionDepartment: "QA01測試組",
-                receptionistPhone: "15133557787",
-                visitReason: "设备维护与保养",
-                keepNormal: false,             // 🌟 核心：设为 true，系统就会为他发一份指定的包，再跟大部队发一份原始包！
-                renewThreshold: 2,            // 独立：剩0天时触发专属包
-                renewDays: 7                  // 独立：一次续2天
-            },
+                // receptionistId: "61908845",
+                // receptionistName: "李泊绪",
+                // receptionDepartment: "QA01測試組",
+                // receptionistPhone: "15133557787",
+                // visitReason: "设备维护与保养",
+                // keepNormal: false,             // 🌟 核心：设为 true，系统就会为他发一份指定的包，再跟大部队发一份原始包！
+                // renewThreshold: 2,            // 独立：剩0天时触发专属包
+                // renewDays: 7                  // 独立：一次续2天
+            // },
             // 周杰
-            "NTExNTI1MTk5MzA1MTAxNjE5": {
+            // "NTExNTI1MTk5MzA1MTAxNjE5": {
                 // receptionistId: "A2449801",
                 // receptionistName: "龚旭明",
                 // receptionDepartment: "QA01設備五課",
@@ -666,15 +666,15 @@ const LOC_CONFIGS = {
                 // receptionDepartment: "QA01工程技術五課",
                 // receptionistPhone: "15032303506",
 
-                receptionistId: "61908845",
-                receptionistName: "李泊绪",
-                receptionDepartment: "QA01測試組",
-                receptionistPhone: "15133557787",
-                visitReason: "设备维护与保养",
-                keepNormal: false,             // 🌟 核心：设为 true，系统就会为他发一份指定的包，再跟大部队发一份原始包！
-                renewThreshold: 2,            // 独立：剩0天时触发专属包
-                renewDays: 7                  // 独立：一次续2天
-            },
+            //     receptionistId: "61908845",
+            //     receptionistName: "李泊绪",
+            //     receptionDepartment: "QA01測試組",
+            //     receptionistPhone: "15133557787",
+            //     visitReason: "设备维护与保养",
+            //     keepNormal: false,             // 🌟 核心：设为 true，系统就会为他发一份指定的包，再跟大部队发一份原始包！
+            //     renewThreshold: 2,            // 独立：剩0天时触发专属包
+            //     renewDays: 7                  // 独立：一次续2天
+            // },
             // =========================================================
             // 🌟 2026-05-29 新增：理德 4 人组专属独立轨迹配置 (不跟常规大部队拼车)
             // =========================================================
