@@ -450,7 +450,7 @@ const LOC_CONFIGS = {
         csrf_token: "e7daa879-7b83-40f7-8335-1a262747f2c9",
         cookie: "tianshu_corp_user=ding2b4c83bec54a29c6f2c783f7214b6d69_FREEUSER; tianshu_csrf_token=e7daa879-7b83-40f7-8335-1a262747f2c9; c_csrf=e7daa879-7b83-40f7-8335-1a262747f2c9; cookie_visitor_id=zfGITZnn; cna=QhOGIdjbQ3ABASQOBEFsQ0YG; xlly_s=1; tianshu_app_type=APP_GRVPTEOQ6D4B7FLZFYNJ; JSESSIONID=BF2C6304A367F22183E99C3E5B5181C4; tfstk=gOZxf6D0ah_YmbR2H5blSie9vWyOMa2qeSyBjfcD57F8iJ8615qgycFzMIcmSS4-67N-GjmfQ1Fun54imlewXAw__tlG3a243co1t6qOx-yqEsPFbo36NgwrKxT1rqiRmR_At6jhqZ9SXsC3nq6jmbMZNxMXlE6-VAH6fcgjG36-CAAX5jN_FThrQAOXfhG5VAkB5ci_186-QbGsfqN_FTHZNf91kGhG5b-Tu6E2PQTVe3t72x3x1HG9XDqyxFGLhbtMyWMxkt2jwht_4PdnXxc1VBhaV5nIku6MWXnrwAHYDOYE_yDTCvnBhny8G7ZKRufyjfsyqkqd5-AnU0LfeTLw7qMrh42tpxCQDiM-tTfH7FuY8YhheTLw7qMreXXrUF8Zky5..; isg=BJCQbJGPzSIDPJDoHxPbfgneatziWXSjkwUE44pgG-BuxflvPmhTMY7zmMuAWSx7",
         // 🔪 新增：明确 A08 厂区大部队的常规接待人 (用于精准过滤普通组记录)
-        normalReceptionistId: "61990794", // 王晗的工号
+        normalReceptionistId: "62090782", // 曹斗的工号
         query: {
             visitorIdNos: [
                 "MTMwMzIzMTk4NjAyMjgwODFY",  //康
@@ -464,9 +464,9 @@ const LOC_CONFIGS = {
                 "MTMwNDI1MTk4OTA4MjkwMzE0", //姜
                 // "MTAyNDE5NDY=", //林
                 // "MDczOTM0Njc=", //陈
-                "NDIyMzI2MTk5NTA0Mjg2NDEx", // 窦
-                "NDEyNzIzMTk4NTA5MjIwODNY",  // 顾
-                "NTExNTI1MTk5MzA1MTAxNjE5",  // 👇 新增：周杰
+                // "NDIyMzI2MTk5NTA0Mjg2NDEx", // 窦
+                // "NDEyNzIzMTk4NTA5MjIwODNY",  // 顾
+                // "NTExNTI1MTk5MzA1MTAxNjE5",  // 👇 新增：周杰
                 // 👇 🌟 2026-05-29 新增：理德 4 人大部队
                 // "VE0xNjczNTg5",              // 伊藤太一
                 // "VFMwNjkzODk0",              // 松岡 伸治
