@@ -334,7 +334,7 @@ const FORM_BASE = [
     {"componentName":"TextField","fieldId":"textField_lydnpzas","label":"地区代码","fieldData":{"value":"QHD"}},
     {"componentName":"TextField","fieldId":"textField_ly3uw4as","label":"法人代码","fieldData":{"value":"1070"}},
     {"componentName":"TextField","fieldId":"textField_ly3uw4ar","label":"园区代码","fieldData":{"value":"QA"}},
-    {"componentName":"TextField","fieldId":"textField_m2lk8mr2","label":"供应商code","fieldData":{"value":"VCN01135"}},
+    {"componentName":"TextField","fieldId":"textField_m2lk8mr2","label":"供应商code","fieldData":{"value":""}},
     {"componentName":"RadioField","fieldId":"radioField_m4g9sf7c","label":"是否外籍","fieldData":{"value":"否","text":"否"},"options":[{"defaultChecked":true,"syncLabelValue":true,"__sid":"item_m4g9skpu","text":"否","__sid__":"serial_m4g9skpu","value":"否","sid":"serial_m4g9skpu"}]},
     {"componentName":"SelectField","fieldId":"selectField_ly3o95xh","label":"到访园区","fieldData":{"value":"秦皇岛园区","text":"秦皇岛园区"},"options":[{"value":"秦皇岛园区","text":"秦皇岛园区"}]},
     {"componentName":"SelectField","fieldId":"selectField_ly3o95xf","label":"到访公司","fieldData":{"value":"宏启胜精密电子(秦皇岛)有限公司","text":"宏启胜精密电子(秦皇岛)有限公司"},"options":[{"value":"宏启胜精密电子(秦皇岛)有限公司","text":"宏启胜精密电子(秦皇岛)有限公司"}]},
@@ -344,7 +344,7 @@ const FORM_BASE = [
     {"componentName":"TextareaField","fieldId":"textareaField_lxn9o9eg","label":"服务/事由描述","fieldData":{"value":"设备维护与保养"}},
     // {"componentName":"SelectField","fieldId":"selectField_lxn9o9em","label":"所属公司","fieldData":{"value":"VCN01135(昆山友景电路板测试有限公司)"},"options":[]},
     {"componentName":"TextField","fieldId":"textField_lxn9o9gc","label":"所属公司/单位名称","fieldData":{"value":"VCN01135(昆山友景电路板测试有限公司)"}},
-    {"componentName":"RadioField","fieldId":"radioField_lzs3fswt","label":"是否为竞商？","fieldData":{"value":"否","text":"否"},"options":[{"defaultChecked":true,"syncLabelValue":true,"__sid":"item_lzs3ftx2","text":"否","__sid__":"serial_lzs3ftx2","value":"否","sid":"serial_lzs3ftx2"}]}
+    {"componentName":"RadioField","fieldId":"radioField_lzs3fswt","label":"是否为竞商？","fieldData":{"value":"否","text":"否"},"options":[{"defaultChecked":false,"syncLabelValue":true,"__sid":"item_lzs3ftx2","text":"否","__sid__":"serial_lzs3ftx2","value":"否","sid":"serial_lzs3ftx2"}]}
 ];
 
 const FORM_TAIL = [
@@ -820,23 +820,26 @@ const LOC_CONFIGS = {
                 // "MTMwMzIzMTk4OTA5MDQ2NDEx", //付海超
                 "MDU4NDMzNDg=", //张道玄
                 "MTIwNDUxOTI=", //张乃文
-                "SzEzOTMxMihBKQ==", //陈毅鸿
+                // "SzEzOTMxMihBKQ==", //陈毅鸿
                 "NDMxMjIyMTk5NzEyMDUzMzEz", //向林  
                 // "NTIyNzMxMjAwMDAxMTAzNjEx", //王煊廷
                 "MTMwMzIxMjAwMjA0MTY2MjE4", //邵相辉 
-                // "NDUwMjIxMTk4OTA0MDUyNDNY", //曾静 
-                // "NDIxMTgxMTk5MDAxMTc2MzFY", //余新旺 
+                "NDUwMjIxMTk4OTA0MDUyNDNY", //曾静 
+                "NDIxMTgxMTk5MDAxMTc2MzFY", //余新旺 
                 // "NDQwOTgyMTk5NzEwMDgyNTk3", //周勇驰 
-                "NDExNTI0MjAwNTEyMTA3NjU2", //杨瑞 
-                "MDg5NjQ3MzI=", //赖彦翔 
+                // "NDExNTI0MjAwNTEyMTA3NjU2", //杨瑞 
+                // "MDg5NjQ3MzI=", //赖彦翔 
                 // "MDYyNDg5MDE=", //马可为
                 "WjkwOTQwMSg3KQ==", //冼延浩 (新)
-                "NDQxNDgxMTk4ODAzMTYwODky", //张远彬 (新)
+                // "NDQxNDgxMTk4ODAzMTYwODky", //张远彬 (新)
                 "MDcyMjg1Nzc=", //朱会民 (新)
                 // "NTMyNDY5ODc0" //Denis Gerassimenko
-                "NDIyMzI2MTk5NTA0Mjg2NDEx", //竇桂陽
+                // "NDIyMzI2MTk5NTA0Mjg2NDEx", //竇桂陽
                 "MTMwMzIzMjAwMzEyMDc1NjE1",  //周家豪
                 // "MTE2ODkyOTE="   // 👇 🌟新增：张建成
+                "MTMwNjM0MTk5OTEyMjAwMDEw",  // 张鑫达
+                "MTMwMzIxMTk5NjExMDk5MDM3",  // 董建岐
+                "NDQwMTgxMTk5ODA4MTczMDE2"   // 梁梓杰
 ],
             regPerson: "15032325162",
             acToken: "53F44A99C6D8AADE22942CD9E1D803E8812FF4A4A8A756BE0A1659704557309F",
