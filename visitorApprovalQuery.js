@@ -34,12 +34,12 @@ const CONFIGS = {
     'Q01': {
         title: "QA01 访客通 Pro V1.5",
         visitorIdNos: [
-            // "MTMwMzIzMTk5MjEyMTY2NDM0",  //张江路
+                // "MTMwMzIzMTk5MjEyMTY2NDM0",  //张江路
                 // "MTMwMzIzMTk5ODA2MTQxMDU4", //刘宏飞
                 // "MTMwMzIzMTk5MDAzMDc2NDE2", //张江宽
                 // "MTMwMzIzMTk4OTA5MDQ2NDEx", //付海超
-                "MDU4NDMzNDg=", //张道玄
-                "MTIwNDUxOTI=", //张乃文
+                // "MDU4NDMzNDg=", //张道玄
+                // "MTIwNDUxOTI=", //张乃文
                 // "SzEzOTMxMihBKQ==", //陈毅鸿
                 "NDMxMjIyMTk5NzEyMDUzMzEz", //向林  
                 // "NTIyNzMxMjAwMDAxMTAzNjEx", //王煊廷
@@ -50,7 +50,7 @@ const CONFIGS = {
                 // "NDExNTI0MjAwNTEyMTA3NjU2", //杨瑞 
                 // "MDg5NjQ3MzI=", //赖彦翔 
                 // "MDYyNDg5MDE=", //马可为
-                "WjkwOTQwMSg3KQ==", //冼延浩 (新)
+                // "WjkwOTQwMSg3KQ==", //冼延浩 (新)
                 "NDQxNDgxMTk4ODAzMTYwODky", //张远彬 (新)
                 "MDcyMjg1Nzc=", //朱会民 (新)
                 // "NTMyNDY5ODc0" //Denis Gerassimenko
