@@ -59,7 +59,8 @@ const CONFIGS = {
                 // "MTE2ODkyOTE="   // 👇 🌟新增：张建成
                 "MTMwNjM0MTk5OTEyMjAwMDEw",  // 张鑫达
                 "MTMwMzIxMTk5NjExMDk5MDM3",  // 董建岐
-                "NDQwMTgxMTk5ODA4MTczMDE2"   // 梁梓杰
+                "NDQwMTgxMTk5ODA4MTczMDE2",   // 梁梓杰
+                "MTMwMzIzMjAwNDA5MTc1NjEy"   // 杜卫华
         ],
         regPerson: "15032325162",
         acToken: "53F44A99C6D8AADE22942CD9E1D803E8812FF4A4A8A756BE0A1659704557309F"
