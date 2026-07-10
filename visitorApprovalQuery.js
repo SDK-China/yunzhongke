@@ -34,29 +34,29 @@ const CONFIGS = {
     'Q01': {
         title: "QA01 访客通 Pro V1.5",
         visitorIdNos: [
-                // "MTMwMzIzMTk5MjEyMTY2NDM0",  //张江路
-                // "MTMwMzIzMTk5ODA2MTQxMDU4", //刘宏飞
-                // "MTMwMzIzMTk5MDAzMDc2NDE2", //张江宽
-                // "MTMwMzIzMTk4OTA5MDQ2NDEx", //付海超
-                // "MDU4NDMzNDg=", //张道玄
-                // "MTIwNDUxOTI=", //张乃文
-                // "SzEzOTMxMihBKQ==", //陈毅鸿
+                "MTMwMzIzMTk5MjEyMTY2NDM0",  //张江路
+                "MTMwMzIzMTk5ODA2MTQxMDU4", //刘宏飞
+                "MTMwMzIzMTk5MDAzMDc2NDE2", //张江宽
+                "MTMwMzIzMTk4OTA5MDQ2NDEx", //付海超
+                "MDU4NDMzNDg=", //张道玄
+                "MTIwNDUxOTI=", //张乃文
+                "SzEzOTMxMihBKQ==", //陈毅鸿
                 "NDMxMjIyMTk5NzEyMDUzMzEz", //向林  
-                // "NTIyNzMxMjAwMDAxMTAzNjEx", //王煊廷
+                "NTIyNzMxMjAwMDAxMTAzNjEx", //王煊廷
                 "MTMwMzIxMjAwMjA0MTY2MjE4", //邵相辉 
                 "NDUwMjIxMTk4OTA0MDUyNDNY", //曾静 
                 "NDIxMTgxMTk5MDAxMTc2MzFY", //余新旺 
-                // "NDQwOTgyMTk5NzEwMDgyNTk3", //周勇驰 
-                // "NDExNTI0MjAwNTEyMTA3NjU2", //杨瑞 
-                // "MDg5NjQ3MzI=", //赖彦翔 
-                // "MDYyNDg5MDE=", //马可为
-                // "WjkwOTQwMSg3KQ==", //冼延浩 (新)
+                "NDQwOTgyMTk5NzEwMDgyNTk3", //周勇驰 
+                "NDExNTI0MjAwNTEyMTA3NjU2", //杨瑞 
+                "MDg5NjQ3MzI=", //赖彦翔 
+                "MDYyNDg5MDE=", //马可为
+                "WjkwOTQwMSg3KQ==", //冼延浩 (新)
                 "NDQxNDgxMTk4ODAzMTYwODky", //张远彬 (新)
                 "MDcyMjg1Nzc=", //朱会民 (新)
-                // "NTMyNDY5ODc0" //Denis Gerassimenko
-                // "NDIyMzI2MTk5NTA0Mjg2NDEx", //竇桂陽
+                "NTMyNDY5ODc0", //Denis Gerassimenko
+                "NDIyMzI2MTk5NTA0Mjg2NDEx", //竇桂陽
                 "MTMwMzIzMjAwMzEyMDc1NjE1",  //周家豪
-                // "MTE2ODkyOTE="   // 👇 🌟新增：张建成
+                "MTE2ODkyOTE=",   // 👇 🌟新增：张建成
                 "MTMwNjM0MTk5OTEyMjAwMDEw",  // 张鑫达
                 "MTMwMzIxMTk5NjExMDk5MDM3",  // 董建岐
                 "NDQwMTgxMTk5ODA4MTczMDE2",   // 梁梓杰
@@ -773,7 +773,7 @@ router.get('/visitor-status', async (req, res) => {
         // ======================
         // 核心修改区：严格 100ms 发一个，不等返回，加入【智能失败重试机制】
         // ======================
-        const delayMs = 100; // 发包间隔（毫秒）
+        const delayMs = 300; // 发包间隔（毫秒）
         let sent = 0;
 
         // 提取出的公共结束检查函数，避免在重试时逻辑错乱
