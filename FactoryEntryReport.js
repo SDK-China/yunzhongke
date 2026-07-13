@@ -488,7 +488,7 @@ const LOC_CONFIGS = {
                 // "MzMwNzI3MTk4MjEwMjkxNjQ1",  // 朱华芳
                 // "MjEwMTEyMTk4MzA3MDQwMjMx",   // 贺建菲
                 // "MzMwNjAyMTk5ODEwMjkyNTEy"   // 👇 🌟 2026-06-01 新增：樊莹烽
-                "NDIxMjIyMTk5MDAzMTQwMTEz"
+                "NDIxMjIyMTk5MDAzMTQwMTEz"  // 👇 🌟 2026-07-13 新增：王報平
             ],
             regPerson: "17614625112",
             acToken: "E5EF067A42A792436902EB275DCCA379812FF4A4A8A756BE0A1659704557309F",
@@ -749,6 +749,17 @@ const LOC_CONFIGS = {
             //     renewThreshold: 2,             
             //     renewDays: 7                   
             // }
+             //  王保平
+            "NDIxMjIyMTk5MDAzMTQwMTEz": {
+                receptionistId: "61908845",
+                receptionistName: "李泊绪",
+                receptionDepartment: "QA01測試組",
+                receptionistPhone: "15133557787",
+                visitReason: "设备维护与保养",
+                keepNormal: false,           // 🌟 核心：设为 true，同样双开！
+                renewThreshold: 2,            // 独立：剩0天时触发专属包
+                renewDays: 7                  // 独立：一次续2天
+            },
         },
 
         // A08 的独立老组包逻辑 (已加入指定接待人合并支持)
