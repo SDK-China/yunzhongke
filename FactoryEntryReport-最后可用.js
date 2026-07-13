@@ -247,7 +247,84 @@ const PERSON_DB = {
         {"componentName":"AttachmentField","fieldId":"attachmentField_lxv44osj","label":"身份证照片","fieldData":{"value":[{"name":"mmexport1778582023533.jpg","previewUrl":"/o/QMF66WA1M8N5EOODH9M6VCU3RL6J3A7IUH2PMA3?appType=APP_GRVPTEOQ6D4B7FLZFYNJ&fileName=APP_GRVPTEOQ6D4B7FLZFYNJ_UU1GNjZXQTFNOE41RU9PREg5TTZWQ1UzUkw2SjNBN0lVSDJQTTkz.jpg&instId=&type=open&process=image/resize,m_fill,w_200,h_200,limit_0/quality,q_80","downloadUrl":"/o/QMF66WA1M8N5EOODH9M6VCU3RL6J3A7IUH2PMA3?appType=APP_GRVPTEOQ6D4B7FLZFYNJ&fileName=APP_GRVPTEOQ6D4B7FLZFYNJ_UU1GNjZXQTFNOE41RU9PREg5TTZWQ1UzUkw2SjNBN0lVSDJQTTkz.jpg&instId=&type=download","size":162217,"url":"/o/QMF66WA1M8N5EOODH9M6VCU3RL6J3A7IUH2PMA3?appType=APP_GRVPTEOQ6D4B7FLZFYNJ&fileName=APP_GRVPTEOQ6D4B7FLZFYNJ_UU1GNjZXQTFNOE41RU9PREg5TTZWQ1UzUkw2SjNBN0lVSDJQTTkz.jpg&instId=&type=download","fileUuid":"APP_GRVPTEOQ6D4B7FLZFYNJ_UU1GNjZXQTFNOE41RU9PREg5TTZWQ1UzUkw2SjNBN0lVSDJQTTkz.jpg"}]}},
         {"componentName":"AttachmentField","fieldId":"attachmentField_lxv44osk","label":"社保/在职证明","fieldData":{"value":[{"name":"在职证明 - 顾科举.pdf","previewUrl":"/dingtalk/mobile/APP_GRVPTEOQ6D4B7FLZFYNJ/inst/preview?appType=APP_GRVPTEOQ6D4B7FLZFYNJ&fileName=APP_GRVPTEOQ6D4B7FLZFYNJ_NDFINjZIOTE2OE41SlFDQlBTUjRVN0czS1pZTzNXNFBWSDJQTVky.pdf&fileSize=41602&downloadUrl=APP_GRVPTEOQ6D4B7FLZFYNJ_NDFINjZIOTE2OE41SlFDQlBTUjRVN0czS1pZTzNXNFBWSDJQTVky.pdf","downloadUrl":"/o/41H66H9168N5JQCBPSR4U7G3KZYO3W4PVH2PMZ2?appType=APP_GRVPTEOQ6D4B7FLZFYNJ&fileName=APP_GRVPTEOQ6D4B7FLZFYNJ_NDFINjZIOTE2OE41SlFDQlBTUjRVN0czS1pZTzNXNFBWSDJQTVky.pdf&instId=&type=download","size":41602,"url":"/o/41H66H9168N5JQCBPSR4U7G3KZYO3W4PVH2PMZ2?appType=APP_GRVPTEOQ6D4B7FLZFYNJ&fileName=APP_GRVPTEOQ6D4B7FLZFYNJ_NDFINjZIOTE2OE41SlFDQlBTUjRVN0czS1pZTzNXNFBWSDJQTVky.pdf&instId=&type=download","fileUuid":"APP_GRVPTEOQ6D4B7FLZFYNJ_NDFINjZIOTE2OE41SlFDQlBTUjRVN0czS1pZTzNXNFBWSDJQTVky.pdf"}]}},
         {"componentName":"AttachmentField","fieldId":"attachmentField_lxv44osn","label":"其他附件","fieldData":{"value":[]}}
-    ]
+    ],
+    // 周杰 (新增)
+    "NTExNTI1MTk5MzA1MTAxNjE5": [
+        {"componentName":"SelectField","fieldId":"selectField_lxv44orx","label":"有效身份证件","fieldData":{"value":"身份证","text":"身份证"},"options":[{"defaultChecked":false,"syncLabelValue":true,"__sid":"item_lxjzgsg1","text":"身份证","__sid__":"serial_lxjzgsg0","value":"身份证","sid":"serial_lxjzgsg0"}]},
+        {"componentName":"TextField","fieldId":"textField_lxv44ory","label":"证件号码","fieldData":{"value": decode("NTExNTI1MTk5MzA1MTAxNjE5")}},
+        {"componentName":"TextField","fieldId":"textField_lxv44orw","label":"姓名","fieldData":{"value": decode("5ZGo5p2w")}},
+        {"componentName":"SelectField","fieldId":"selectField_mbyjhot6","label":"区号","fieldData":{"value":"86","text":"+86"},"options":[{"defaultChecked":true,"syncLabelValue":false,"__sid":"item_megqe4lm","text":"+86","__sid__":"serial_megqe4ll","value":"86","sid":"serial_mbyjf8gm"}]},
+        {"componentName":"TextField","fieldId":"textField_lxv44orz","label":"联系方式","fieldData":{"value": decode("MTU3MDU3MzM4NjY=") }},
+        {"componentName":"ImageField","fieldId":"imageField_ly9i5k5q","label":"免冠照片","fieldData":{"value":[{"name":"1000547983.jpg","previewUrl":"https://dingtalk.avaryholding.com:8443/dingplus/image/20260518/a28913a42bc4d5756f32379fa696dfec.jpg","downloadUrl":"https://dingtalk.avaryholding.com:8443/dingplus/image/20260518/a28913a42bc4d5756f32379fa696dfec.jpg","size":139355,"url":"https://dingtalk.avaryholding.com:8443/dingplus/image/20260518/a28913a42bc4d5756f32379fa696dfec.jpg"}]}},
+        {"componentName":"AttachmentField","fieldId":"attachmentField_lxv44osj","label":"身份证照片","fieldData":{"value":[{"name":"mmexport1779071564782.jpg","previewUrl":"/o/CG666H91D7N56C6HLWS1J7L6NNM92HTOALAPMDE?appType=APP_GRVPTEOQ6D4B7FLZFYNJ&fileName=APP_GRVPTEOQ6D4B7FLZFYNJ_Q0c2NjZIOTFEN041NkM2SExXUzFKN0w2Tk5NOTJIVE9BTEFQTUNF.jpg&instId=&type=open&process=image/resize,m_fill,w_200,h_200,limit_0/quality,q_80","downloadUrl":"/o/CG666H91D7N56C6HLWS1J7L6NNM92HTOALAPMDE?appType=APP_GRVPTEOQ6D4B7FLZFYNJ&fileName=APP_GRVPTEOQ6D4B7FLZFYNJ_Q0c2NjZIOTFEN041NkM2SExXUzFKN0w2Tk5NOTJIVE9BTEFQTUNF.jpg&instId=&type=download","size":714827,"url":"/o/CG666H91D7N56C6HLWS1J7L6NNM92HTOALAPMDE?appType=APP_GRVPTEOQ6D4B7FLZFYNJ&fileName=APP_GRVPTEOQ6D4B7FLZFYNJ_Q0c2NjZIOTFEN041NkM2SExXUzFKN0w2Tk5NOTJIVE9BTEFQTUNF.jpg&instId=&type=download","fileUuid":"APP_GRVPTEOQ6D4B7FLZFYNJ_Q0c2NjZIOTFEN041NkM2SExXUzFKN0w2Tk5NOTJIVE9BTEFQTUNF.jpg"}]}},
+        {"componentName":"AttachmentField","fieldId":"attachmentField_lxv44osk","label":"社保/在职证明","fieldData":{"value":[{"name":"mmexport1779071557289.jpg","previewUrl":"/o/FHC663D1U6N5ZNWZL8NDHCX0230D20MWALAPMAE?appType=APP_GRVPTEOQ6D4B7FLZFYNJ&fileName=APP_GRVPTEOQ6D4B7FLZFYNJ_RkhDNjYzRDFVNk41Wk5XWkw4TkRIQ1gwMjMwRDIwTVdBTEFQTTlF.jpg&instId=&type=open&process=image/resize,m_fill,w_200,h_200,limit_0/quality,q_80","downloadUrl":"/o/FHC663D1U6N5ZNWZL8NDHCX0230D20MWALAPMAE?appType=APP_GRVPTEOQ6D4B7FLZFYNJ&fileName=APP_GRVPTEOQ6D4B7FLZFYNJ_RkhDNjYzRDFVNk41Wk5XWkw4TkRIQ1gwMjMwRDIwTVdBTEFQTTlF.jpg&instId=&type=download","size":51091,"url":"/o/FHC663D1U6N5ZNWZL8NDHCX0230D20MWALAPMAE?appType=APP_GRVPTEOQ6D4B7FLZFYNJ&fileName=APP_GRVPTEOQ6D4B7FLZFYNJ_RkhDNjYzRDFVNk41Wk5XWkw4TkRIQ1gwMjMwRDIwTVdBTEFQTTlF.jpg&instId=&type=download","fileUuid":"APP_GRVPTEOQ6D4B7FLZFYNJ_RkhDNjYzRDFVNk41Wk5XWkw4TkRIQ1gwMjMwRDIwTVdBTEFQTTlF.jpg"}]}},
+        {"componentName":"AttachmentField","fieldId":"attachmentField_lxv44osn","label":"其他附件","fieldData":{"value":[]}}
+    ],
+    // =========================================================
+    // 🌟 2026-05-29 新增：理德公司 4 人大部队数据包
+    // =========================================================
+    // 伊藤太一 (护照)
+    "VE0xNjczNTg5": [
+        {"componentName":"SelectField","fieldId":"selectField_lxv44orx","label":"有效身份证件","fieldData":{"value":"护照","text":"护照"},"options":[{"defaultChecked":false,"syncLabelValue":true,"__sid":"item_lxjzgsg2","text":"护照","__sid__":"serial_lxjzgsg1","value":"护照","sid":"serial_lxjzgsg1"}]},
+        {"componentName":"TextField","fieldId":"textField_lxv44ory","label":"证件号码","fieldData":{"value": decode("VE0xNjczNTg5")}},
+        {"componentName":"TextField","fieldId":"textField_lxv44orw","label":"姓名","fieldData":{"value": decode("5LyK6Jek5aSq5LiA")}},
+        {"componentName":"SelectField","fieldId":"selectField_mbyjhot6","label":"区号","fieldData":{"value":"86","text":"+86"},"options":[{"defaultChecked":true,"syncLabelValue":false,"__sid":"item_megqe4lm","text":"+86","__sid__":"serial_megqe4ll","value":"86","sid":"serial_mbyjf8gm"}]},
+        {"componentName":"TextField","fieldId":"textField_lxv44orz","label":"联系方式","fieldData":{"value": decode("MTM2NDI1MzU3Njg=") }},
+        {"componentName":"ImageField","fieldId":"imageField_ly9i5k5q","label":"免冠照片","fieldData":{"value":[{"name":"1000548641.jpg","previewUrl":"https://dingtalk.avaryholding.com:8443/dingplus/image/20260529/758996d887928638673884045bc791a7.jpg","downloadUrl":"https://dingtalk.avaryholding.com:8443/dingplus/image/20260529/758996d887928638673884045bc791a7.jpg","size":236262,"url":"https://dingtalk.avaryholding.com:8443/dingplus/image/20260529/758996d887928638673884045bc791a7.jpg"}]}},
+        {"componentName":"AttachmentField","fieldId":"attachmentField_lxv44osj","label":"身份证照片","fieldData":{"value":[{"name":"mmexport1780016063971.jpg","previewUrl":"/o/QEF660D19R46S1E0JM4E44PVU2NJ3ZUX28QPMA2?appType=APP_GRVPTEOQ6D4B7FLZFYNJ&fileName=APP_GRVPTEOQ6D4B7FLZFYNJ_UUVGNjYwRDE5UjQ2UzFFMEpNNEU0NFBWVTJOSjNaVVgyOFFQTTky.jpg&instId=&type=open&process=image/resize,m_fill,w_200,h_200,limit_0/quality,q_80","downloadUrl":"/o/QEF660D19R46S1E0JM4E44PVU2NJ3ZUX28QPMA2?appType=APP_GRVPTEOQ6D4B7FLZFYNJ&fileName=APP_GRVPTEOQ6D4B7FLZFYNJ_UUVGNjYwRDE5UjQ2UzFFMEpNNEU0NFBWVTJOSjNaVVgyOFFQTTky.jpg&instId=&type=download","size":79654,"url":"/o/QEF660D19R46S1E0JM4E44PVU2NJ3ZUX28QPMA2?appType=APP_GRVPTEOQ6D4B7FLZFYNJ&fileName=APP_GRVPTEOQ6D4B7FLZFYNJ_UUVGNjYwRDE5UjQ2UzFFMEpNNEU0NFBWVTJOSjNaVVgyOFFQTTky.jpg&instId=&type=download","fileUuid":"APP_GRVPTEOQ6D4B7FLZFYNJ_UUVGNjYwRDE5UjQ2UzFFMEpNNEU0NFBWVTJOSjNaVVgyOFFQTTky.jpg"}]}},
+        {"componentName":"AttachmentField","fieldId":"attachmentField_lxv44osk","label":"社保/在职证明","fieldData":{"value":[{"name":"在职证明 - 理德.pdf","previewUrl":"/dingtalk/mobile/APP_GRVPTEOQ6D4B7FLZFYNJ/inst/preview?appType=APP_GRVPTEOQ6D4B7FLZFYNJ&fileName=APP_GRVPTEOQ6D4B7FLZFYNJ_QTlENjZDQzE3UTQ2WjZOQ0tVWllLNFI3MFlRVzJFU0EzOFFQTVAx.pdf&fileSize=44121&downloadUrl=APP_GRVPTEOQ6D4B7FLZFYNJ_QTlENjZDQzE3UTQ2WjZOQ0tVWllLNFI3MFlRVzJFU0EzOFFQTVAx.pdf","downloadUrl":"/o/A9D66CC17Q46Z6NCKUZYK4R70YQW2ESA38QPMQ1?appType=APP_GRVPTEOQ6D4B7FLZFYNJ&fileName=APP_GRVPTEOQ6D4B7FLZFYNJ_QTlENjZDQzE3UTQ2WjZOQ0tVWllLNFI3MFlRVzJFU0EzOFFQTVAx.pdf&instId=&type=download","size":44121,"url":"/o/A9D66CC17Q46Z6NCKUZYK4R70YQW2ESA38QPMQ1?appType=APP_GRVPTEOQ6D4B7FLZFYNJ&fileName=APP_GRVPTEOQ6D4B7FLZFYNJ_QTlENjZDQzE3UTQ2WjZOQ0tVWllLNFI3MFlRVzJFU0EzOFFQTVAx.pdf&instId=&type=download","fileUuid":"APP_GRVPTEOQ6D4B7FLZFYNJ_QTlENjZDQzE3UTQ2WjZOQ0tVWllLNFI3MFlRVzJFU0EzOFFQTVAx.pdf"}]}},
+        {"componentName":"AttachmentField","fieldId":"attachmentField_lxv44osn","label":"其他附件","fieldData":{"value":[]}}
+    ],
+    // 松岡 伸治 (护照)
+    "VFMwNjkzODk0": [
+        {"componentName":"SelectField","fieldId":"selectField_lxv44orx","label":"有效身份证件","fieldData":{"value":"护照","text":"护照"},"options":[{"defaultChecked":false,"syncLabelValue":true,"__sid":"item_lxjzgsg2","text":"护照","__sid__":"serial_lxjzgsg1","value":"护照","sid":"serial_lxjzgsg1"}]},
+        {"componentName":"TextField","fieldId":"textField_lxv44ory","label":"证件号码","fieldData":{"value": decode("VFMwNjkzODk0")}},
+        {"componentName":"TextField","fieldId":"textField_lxv44orw","label":"姓名","fieldData":{"value": decode("5p2+5bKhIOS8uOayuw==")}},
+        {"componentName":"SelectField","fieldId":"selectField_mbyjhot6","label":"区号","fieldData":{"value":"86","text":"+86"},"options":[{"defaultChecked":true,"syncLabelValue":false,"__sid":"item_megqe4lm","text":"+86","__sid__":"serial_megqe4ll","value":"86","sid":"serial_mbyjf8gm"}]},
+        {"componentName":"TextField","fieldId":"textField_lxv44orz","label":"联系方式","fieldData":{"value": decode("MTMzMjM2NTA4NTQ=") }},
+        {"componentName":"ImageField","fieldId":"imageField_ly9i5k5q","label":"免冠照片","fieldData":{"value":[{"name":"1000548644.jpg","previewUrl":"https://dingtalk.avaryholding.com:8443/dingplus/image/20260529/1b861c78f1ba4c403b4006077423abf2.jpg","downloadUrl":"https://dingtalk.avaryholding.com:8443/dingplus/image/20260529/1b861c78f1ba4c403b4006077423abf2.jpg","size":340345,"url":"https://dingtalk.avaryholding.com:8443/dingplus/image/20260529/1b861c78f1ba4c403b4006077423abf2.jpg"}]}},
+        {"componentName":"AttachmentField","fieldId":"attachmentField_lxv44osj","label":"身份证照片","fieldData":{"value":[{"name":"mmexport1780016480588.jpg","previewUrl":"/o/8UF66GD1PQ469WJ1LN0SHAPZ18RG3HYC48QPMB1?appType=APP_GRVPTEOQ6D4B7FLZFYNJ&fileName=APP_GRVPTEOQ6D4B7FLZFYNJ_OFVGNjZHRDFQUTQ2OVdKMUxOMFNIQVBaMThSRzNHWUM0OFFQTUEx.jpg&instId=&type=open&process=image/resize,m_fill,w_200,h_200,limit_0/quality,q_80","downloadUrl":"/o/8UF66GD1PQ469WJ1LN0SHAPZ18RG3HYC48QPMB1?appType=APP_GRVPTEOQ6D4B7FLZFYNJ&fileName=APP_GRVPTEOQ6D4B7FLZFYNJ_OFVGNjZHRDFQUTQ2OVdKMUxOMFNIQVBaMThSRzNHWUM0OFFQTUEx.jpg&instId=&type=download","size":196901,"url":"/o/8UF66GD1PQ469WJ1LN0SHAPZ18RG3HYC48QPMB1?appType=APP_GRVPTEOQ6D4B7FLZFYNJ&fileName=APP_GRVPTEOQ6D4B7FLZFYNJ_OFVGNjZHRDFQUTQ2OVdKMUxOMFNIQVBaMThSRzNHWUM0OFFQTUEx.jpg&instId=&type=download","fileUuid":"APP_GRVPTEOQ6D4B7FLZFYNJ_OFVGNjZHRDFQUTQ2OVdKMUxOMFNIQVBaMThSRzNHWUM0OFFQTUEx.jpg"}]}},
+        {"componentName":"AttachmentField","fieldId":"attachmentField_lxv44osk","label":"社保/在职证明","fieldData":{"value":[{"name":"在职证明 - 理德.pdf","previewUrl":"/dingtalk/mobile/APP_GRVPTEOQ6D4B7FLZFYNJ/inst/preview?appType=APP_GRVPTEOQ6D4B7FLZFYNJ&fileName=APP_GRVPTEOQ6D4B7FLZFYNJ_SE42NjZWODE0UzQ2RTJTS01ZQVFMNUJTU0xFSjJZT0g0OFFQTVo%24.pdf&fileSize=44121&downloadUrl=APP_GRVPTEOQ6D4B7FLZFYNJ_SE42NjZWODE0UzQ2RTJTS01ZQVFMNUJTU0xFSjJZT0g0OFFQTVo$.pdf","downloadUrl":"/o/HN666V814S46E2SKMYAQL5BSSLEJ2YOH48QPM01?appType=APP_GRVPTEOQ6D4B7FLZFYNJ&fileName=APP_GRVPTEOQ6D4B7FLZFYNJ_SE42NjZWODE0UzQ2RTJTS01ZQVFMNUJTU0xFSjJZT0g0OFFQTVo$.pdf&instId=&type=download","size":44121,"url":"/o/HN666V814S46E2SKMYAQL5BSSLEJ2YOH48QPM01?appType=APP_GRVPTEOQ6D4B7FLZFYNJ&fileName=APP_GRVPTEOQ6D4B7FLZFYNJ_SE42NjZWODE0UzQ2RTJTS01ZQVFMNUJTU0xFSjJZT0g0OFFQTVo$.pdf&instId=&type=download","fileUuid":"APP_GRVPTEOQ6D4B7FLZFYNJ_SE42NjZWODE0UzQ2RTJTS01ZQVFMNUJTU0xFSjJZT0g0OFFQTVo$.pdf"}]}},
+        {"componentName":"AttachmentField","fieldId":"attachmentField_lxv44osn","label":"其他附件","fieldData":{"value":[]}}
+    ],
+    // 朱华芳 (身份证)
+    "MzMwNzI3MTk4MjEwMjkxNjQ1": [
+        {"componentName":"SelectField","fieldId":"selectField_lxv44orx","label":"有效身份证件","fieldData":{"value":"身份证","text":"身份证"},"options":[{"defaultChecked":false,"syncLabelValue":true,"__sid":"item_lxjzgsg1","text":"身份证","__sid__":"serial_lxjzgsg0","value":"身份证","sid":"serial_lxjzgsg0"}]},
+        {"componentName":"TextField","fieldId":"textField_lxv44ory","label":"证件号码","fieldData":{"value": decode("MzMwNzI3MTk4MjEwMjkxNjQ1")}},
+        {"componentName":"TextField","fieldId":"textField_lxv44orw","label":"姓名","fieldData":{"value": decode("5pyx5Y2O6Iqz")}},
+        {"componentName":"SelectField","fieldId":"selectField_mbyjhot6","label":"区号","fieldData":{"value":"86","text":"+86"},"options":[{"defaultChecked":true,"syncLabelValue":false,"__sid":"item_megqe4lm","text":"+86","__sid__":"serial_megqe4ll","value":"86","sid":"serial_mbyjf8gm"}]},
+        {"componentName":"TextField","fieldId":"textField_lxv44orz","label":"联系方式","fieldData":{"value": decode("MTU4NDUyMzkyMzM=") }},
+        {"componentName":"ImageField","fieldId":"imageField_ly9i5k5q","label":"免冠照片","fieldData":{"value":[{"name":"1000548646.jpg","previewUrl":"https://dingtalk.avaryholding.com:8443/dingplus/image/20260529/112b724d4a737578111c0b9b6f1fb3d3.jpg","downloadUrl":"https://dingtalk.avaryholding.com:8443/dingplus/image/20260529/112b724d4a737578111c0b9b6f1fb3d3.jpg","size":225579,"url":"https://dingtalk.avaryholding.com:8443/dingplus/image/20260529/112b724d4a737578111c0b9b6f1fb3d3.jpg"}]}},
+        {"componentName":"AttachmentField","fieldId":"attachmentField_lxv44osj","label":"身份证照片","fieldData":{"value":[{"name":"mmexport1780016533798.jpg","previewUrl":"/o/8RG66CA14X26AR44G3ORW4N9RLXG2VMG58QPM0B?appType=APP_GRVPTEOQ6D4B7FLZFYNJ&fileName=APP_GRVPTEOQ6D4B7FLZFYNJ_OFJHNjZDQTE0WDI2QVI0NEczT1JXNE45UkxYRzJWTUc1OFFQTVpB.jpg&instId=&type=open&process=image/resize,m_fill,w_200,h_200,limit_0/quality,q_80","downloadUrl":"/o/8RG66CA14X26AR44G3ORW4N9RLXG2VMG58QPM0B?appType=APP_GRVPTEOQ6D4B7FLZFYNJ&fileName=APP_GRVPTEOQ6D4B7FLZFYNJ_OFJHNjZDQTE0WDI2QVI0NEczT1JXNE45UkxYRzJWTUc1OFFQTVpB.jpg&instId=&type=download","size":146980,"url":"/o/8RG66CA14X26AR44G3ORW4N9RLXG2VMG58QPM0B?appType=APP_GRVPTEOQ6D4B7FLZFYNJ&fileName=APP_GRVPTEOQ6D4B7FLZFYNJ_OFJHNjZDQTE0WDI2QVI0NEczT1JXNE45UkxYRzJWTUc1OFFQTVpB.jpg&instId=&type=download","fileUuid":"APP_GRVPTEOQ6D4B7FLZFYNJ_OFJHNjZDQTE0WDI2QVI0NEczT1JXNE45UkxYRzJWTUc1OFFQTVpB.jpg"}]}},
+        {"componentName":"AttachmentField","fieldId":"attachmentField_lxv44osk","label":"社保/在职证明","fieldData":{"value":[{"name":"在职证明 - 理德.pdf","previewUrl":"/dingtalk/mobile/APP_GRVPTEOQ6D4B7FLZFYNJ/inst/preview?appType=APP_GRVPTEOQ6D4B7FLZFYNJ&fileName=APP_GRVPTEOQ6D4B7FLZFYNJ_MkU2NjZYOTFXUDQ2Mzc4NUtMS1NBQVlPVk1VWTJEWVM1OFFQTTA0.pdf&fileSize=44121&downloadUrl=APP_GRVPTEOQ6D4B7FLZFYNJ_MkU2NjZYOTFXUDQ2Mzc4NUtMS1NBQVlPVk1VWTJEWVM1OFFQTTA0.pdf","downloadUrl":"/o/2E666X91WP463785KLKSAAYOVMUY2EYS58QPM14?appType=APP_GRVPTEOQ6D4B7FLZFYNJ&fileName=APP_GRVPTEOQ6D4B7FLZFYNJ_MkU2NjZYOTFXUDQ2Mzc4NUtMS1NBQVlPVk1VWTJEWVM1OFFQTTA0.pdf&instId=&type=download","size":44121,"url":"/o/2E666X91WP463785KLKSAAYOVMUY2EYS58QPM14?appType=APP_GRVPTEOQ6D4B7FLZFYNJ&fileName=APP_GRVPTEOQ6D4B7FLZFYNJ_MkU2NjZYOTFXUDQ2Mzc4NUtMS1NBQVlPVk1VWTJEWVM1OFFQTTA0.pdf&instId=&type=download","fileUuid":"APP_GRVPTEOQ6D4B7FLZFYNJ_MkU2NjZYOTFXUDQ2Mzc4NUtMS1NBQVlPVk1VWTJEWVM1OFFQTTA0.pdf"}]}},
+        {"componentName":"AttachmentField","fieldId":"attachmentField_lxv44osn","label":"其他附件","fieldData":{"value":[]}}
+    ],
+    // 贺建菲 (身份证)
+    "MjEwMTEyMTk4MzA3MDQwMjMx": [
+        {"componentName":"SelectField","fieldId":"selectField_lxv44orx","label":"有效身份证件","fieldData":{"value":"身份证","text":"身份证"},"options":[{"defaultChecked":false,"syncLabelValue":true,"__sid":"item_lxjzgsg1","text":"身份证","__sid__":"serial_lxjzgsg0","value":"身份证","sid":"serial_lxjzgsg0"}]},
+        {"componentName":"TextField","fieldId":"textField_lxv44ory","label":"证件号码","fieldData":{"value": decode("MjEwMTEyMTk4MzA3MDQwMjMx")}},
+        {"componentName":"TextField","fieldId":"textField_lxv44orw","label":"姓名","fieldData":{"value": decode("6LS65bu66I+y")}},
+        {"componentName":"SelectField","fieldId":"selectField_mbyjhot6","label":"区号","fieldData":{"value":"86","text":"+86"},"options":[{"defaultChecked":true,"syncLabelValue":false,"__sid":"item_megqe4lm","text":"+86","__sid__":"serial_megqe4ll","value":"86","sid":"serial_mbyjf8gm"}]},
+        {"componentName":"TextField","fieldId":"textField_lxv44orz","label":"联系方式","fieldData":{"value": decode("MTU4MDE3NzY1NzQ=") }},
+        {"componentName":"ImageField","fieldId":"imageField_ly9i5k5q","label":"免冠照片","fieldData":{"value":[{"name":"1000548650.jpg","previewUrl":"https://dingtalk.avaryholding.com:8443/dingplus/image/20260529/e07a9ef6239ec8539511e3122f59bc48.jpg","downloadUrl":"https://dingtalk.avaryholding.com:8443/dingplus/image/20260529/e07a9ef6239ec8539511e3122f59bc48.jpg","size":149785,"url":"https://dingtalk.avaryholding.com:8443/dingplus/image/20260529/e07a9ef6239ec8539511e3122f59bc48.jpg"}]}},
+        {"componentName":"AttachmentField","fieldId":"attachmentField_lxv44osj","label":"身份证照片","fieldData":{"value":[{"name":"mmexport1780016667133.jpg","previewUrl":"/o/31H66KA1VR46812GM4RKSAPUYL4C2W4L68QPMS?appType=APP_GRVPTEOQ6D4B7FLZFYNJ&fileName=APP_GRVPTEOQ6D4B7FLZFYNJ_MzFINjZLQTFWUjQ2ODEyR000UktTQVBVWUw0QzJXNEw2OFFQTVI$.jpg&instId=&type=open&process=image/resize,m_fill,w_200,h_200,limit_0/quality,q_80","downloadUrl":"/o/31H66KA1VR46812GM4RKSAPUYL4C2W4L68QPMS?appType=APP_GRVPTEOQ6D4B7FLZFYNJ&fileName=APP_GRVPTEOQ6D4B7FLZFYNJ_MzFINjZLQTFWUjQ2ODEyR000UktTQVBVWUw0QzJXNEw2OFFQTVI$.jpg&instId=&type=download","size":945355,"url":"/o/31H66KA1VR46812GM4RKSAPUYL4C2W4L68QPMS?appType=APP_GRVPTEOQ6D4B7FLZFYNJ&fileName=APP_GRVPTEOQ6D4B7FLZFYNJ_MzFINjZLQTFWUjQ2ODEyR000UktTQVBVWUw0QzJXNEw2OFFQTVI$.jpg&instId=&type=download","fileUuid":"APP_GRVPTEOQ6D4B7FLZFYNJ_MzFINjZLQTFWUjQ2ODEyR000UktTQVBVWUw0QzJXNEw2OFFQTVI$.jpg"}]}},
+        {"componentName":"AttachmentField","fieldId":"attachmentField_lxv44osk","label":"社保/在职证明","fieldData":{"value":[{"name":"在职证明 - 理德.pdf","previewUrl":"/dingtalk/mobile/APP_GRVPTEOQ6D4B7FLZFYNJ/inst/preview?appType=APP_GRVPTEOQ6D4B7FLZFYNJ&fileName=APP_GRVPTEOQ6D4B7FLZFYNJ_MjdHNjYwQTFZUTM2RlpYNkhQSzFXQk84OUpDUDNHSVU2OFFQTVY3.pdf&fileSize=44121&downloadUrl=APP_GRVPTEOQ6D4B7FLZFYNJ_MjdHNjYwQTFZUTM2RlpYNkhQSzFXQk84OUpDUDNHSVU2OFFQTVY3.pdf","downloadUrl":"/o/27G660A1YQ36FZX6HPK1WBO89JCP3GIU68QPMW7?appType=APP_GRVPTEOQ6D4B7FLZFYNJ&fileName=APP_GRVPTEOQ6D4B7FLZFYNJ_MjdHNjYwQTFZUTM2RlpYNkhQSzFXQk84OUpDUDNHSVU2OFFQTVY3.pdf&instId=&type=download","size":44121,"url":"/o/27G660A1YQ36FZX6HPK1WBO89JCP3GIU68QPMW7?appType=APP_GRVPTEOQ6D4B7FLZFYNJ&fileName=APP_GRVPTEOQ6D4B7FLZFYNJ_MjdHNjYwQTFZUTM2RlpYNkhQSzFXQk84OUpDUDNHSVU2OFFQTVY3.pdf&instId=&type=download","fileUuid":"APP_GRVPTEOQ6D4B7FLZFYNJ_MjdHNjYwQTFZUTM2RlpYNkhQSzFXQk84OUpDUDNHSVU2OFFQTVY3.pdf"}]}},
+        {"componentName":"AttachmentField","fieldId":"attachmentField_lxv44osn","label":"其他附件","fieldData":{"value":[]}}
+    ],
+    // =========================================================
+    // 🌟 2026-06-01 新增：樊莹烽 (A08 厂区张凯专单)
+    // =========================================================
+    "MzMwNjAyMTk5ODEwMjkyNTEy": [
+        {"componentName":"SelectField","fieldId":"selectField_lxv44orx","label":"有效身份证件","fieldData":{"value":"身份证","text":"身份证"},"options":[{"defaultChecked":false,"syncLabelValue":true,"__sid":"item_lxjzgsg1","text":"身份证","__sid__":"serial_lxjzgsg0","value":"身份证","sid":"serial_lxjzgsg0"}]},
+        {"componentName":"TextField","fieldId":"textField_lxv44ory","label":"证件号码","fieldData":{"value": decode("MzMwNjAyMTk5ODEwMjkyNTEy")}},
+        {"componentName":"TextField","fieldId":"textField_lxv44orw","label":"姓名","fieldData":{"value": "樊莹烽"}}, // 🛡️ 纯正汉字防乱码
+        {"componentName":"SelectField","fieldId":"selectField_mbyjhot6","label":"区号","fieldData":{"value":"86","text":"+86"},"options":[{"defaultChecked":true,"syncLabelValue":false,"__sid":"item_megqe4lm","text":"+86","__sid__":"serial_megqe4ll","value":"86","sid":"serial_mbyjf8gm"}]},
+        {"componentName":"TextField","fieldId":"textField_lxv44orz","label":"联系方式","fieldData":{"value": decode("MTg4ODg2ODc2ODY=") }},
+        {"componentName":"ImageField","fieldId":"imageField_ly9i5k5q","label":"免冠照片","fieldData":{"value":[{"name":"1000548927.jpg","previewUrl":"https://dingtalk.avaryholding.com:8443/dingplus/image/20260601/22489ca28259801c0160e036e61c7739.jpg","downloadUrl":"https://dingtalk.avaryholding.com:8443/dingplus/image/20260601/22489ca28259801c0160e036e61c7739.jpg","size":165909,"url":"https://dingtalk.avaryholding.com:8443/dingplus/image/20260601/22489ca28259801c0160e036e61c7739.jpg"}]}},
+        {"componentName":"AttachmentField","fieldId":"attachmentField_lxv44osj","label":"身份证照片","fieldData":{"value":[{"name":"mmexport1780275874829.jpg","previewUrl":"/o/3VF66W714X26WTA3GN0S164ORVAB37OQMIUPMJG?appType=APP_GRVPTEOQ6D4B7FLZFYNJ&fileName=APP_GRVPTEOQ6D4B7FLZFYNJ_M1ZGNjZXNzE0WDI2V1RBM0dOMFMxNjRPUlZBQjM3T1FNSVVQTUlH.jpg&instId=&type=open&process=image/resize,m_fill,w_200,h_200,limit_0/quality,q_80","downloadUrl":"/o/3VF66W714X26WTA3GN0S164ORVAB37OQMIUPMJG?appType=APP_GRVPTEOQ6D4B7FLZFYNJ&fileName=APP_GRVPTEOQ6D4B7FLZFYNJ_M1ZGNjZXNzE0WDI2V1RBM0dOMFMxNjRPUlZBQjM3T1FNSVVQTUlH.jpg&instId=&type=download","size":165080,"url":"/o/3VF66W714X26WTA3GN0S164ORVAB37OQMIUPMJG?appType=APP_GRVPTEOQ6D4B7FLZFYNJ&fileName=APP_GRVPTEOQ6D4B7FLZFYNJ_M1ZGNjZXNzE0WDI2V1RBM0dOMFMxNjRPUlZBQjM3T1FNSVVQTUlH.jpg&instId=&type=download","fileUuid":"APP_GRVPTEOQ6D4B7FLZFYNJ_M1ZGNjZXNzE0WDI2V1RBM0dOMFMxNjRPUlZBQjM3T1FNSVVQTUlH.jpg"}]}},
+        {"componentName":"AttachmentField","fieldId":"attachmentField_lxv44osk","label":"社保/在职证明","fieldData":{"value":[{"name":"3_在职证明.pdf","previewUrl":"/dingtalk/mobile/APP_GRVPTEOQ6D4B7FLZFYNJ/inst/preview?appType=APP_GRVPTEOQ6D4B7FLZFYNJ&fileName=APP_GRVPTEOQ6D4B7FLZFYNJ_WTlINjY0NzFaTzQ2S0owWkYxV1IzRDA4M1RGVTNTV09OSVVQTTE2.pdf&fileSize=164619&downloadUrl=APP_GRVPTEOQ6D4B7FLZFYNJ_WTlINjY0NzFaTzQ2S0owWkYxV1IzRDA4M1RGVTNTV09OSVVQTTE2.pdf","downloadUrl":"/o/Y9H66471ZO46KJ0ZF1WR3D083TFU3SWONIUPM26?appType=APP_GRVPTEOQ6D4B7FLZFYNJ&fileName=APP_GRVPTEOQ6D4B7FLZFYNJ_WTlINjY0NzFaTzQ2S0owWkYxV1IzRDA4M1RGVTNTV09OSVVQTTE2.pdf&instId=&type=download","size":164619,"url":"/o/Y9H66471ZO46KJ0ZF1WR3D083TFU3SWONIUPM26?appType=APP_GRVPTEOQ6D4B7FLZFYNJ&fileName=APP_GRVPTEOQ6D4B7FLZFYNJ_WTlINjY0NzFaTzQ2S0owWkYxV1IzRDA4M1RGVTNTV09OSVVQTTE2.pdf&instId=&type=download","fileUuid":"APP_GRVPTEOQ6D4B7FLZFYNJ_WTlINjY0NzFaTzQ2S0owWkYxV1IzRDA4M1RGVTNTV09OSVVQTTE2.pdf"}]}},
+        {"componentName":"AttachmentField","fieldId":"attachmentField_lxv44osn","label":"其他附件","fieldData":{"value":[]}}
+    ],
 };
 
 const FORM_BASE = [
@@ -257,7 +334,7 @@ const FORM_BASE = [
     {"componentName":"TextField","fieldId":"textField_lydnpzas","label":"地区代码","fieldData":{"value":"QHD"}},
     {"componentName":"TextField","fieldId":"textField_ly3uw4as","label":"法人代码","fieldData":{"value":"1070"}},
     {"componentName":"TextField","fieldId":"textField_ly3uw4ar","label":"园区代码","fieldData":{"value":"QA"}},
-    {"componentName":"TextField","fieldId":"textField_m2lk8mr2","label":"供应商code","fieldData":{"value":"VCN01135"}},
+    {"componentName":"TextField","fieldId":"textField_m2lk8mr2","label":"供应商code","fieldData":{"value":""}},
     {"componentName":"RadioField","fieldId":"radioField_m4g9sf7c","label":"是否外籍","fieldData":{"value":"否","text":"否"},"options":[{"defaultChecked":true,"syncLabelValue":true,"__sid":"item_m4g9skpu","text":"否","__sid__":"serial_m4g9skpu","value":"否","sid":"serial_m4g9skpu"}]},
     {"componentName":"SelectField","fieldId":"selectField_ly3o95xh","label":"到访园区","fieldData":{"value":"秦皇岛园区","text":"秦皇岛园区"},"options":[{"value":"秦皇岛园区","text":"秦皇岛园区"}]},
     {"componentName":"SelectField","fieldId":"selectField_ly3o95xf","label":"到访公司","fieldData":{"value":"宏启胜精密电子(秦皇岛)有限公司","text":"宏启胜精密电子(秦皇岛)有限公司"},"options":[{"value":"宏启胜精密电子(秦皇岛)有限公司","text":"宏启胜精密电子(秦皇岛)有限公司"}]},
@@ -265,16 +342,20 @@ const FORM_BASE = [
     {"componentName":"SelectField","fieldId":"selectField_lxn9o9ed","label":"服务性质/到访事由","fieldData":{"value":"设备维护","text":"设备维护"},"options":[{"value":"设备维护","text":"设备维护"}]},
     {"componentName":"SelectField","fieldId":"selectField_lxn9o9ei","label":"到访区域","fieldData":{"value":"进入制造现场","text":"进入车间/管制区域"},"options":[{"defaultChecked":false,"syncLabelValue":false,"__sid":"item_m56iixss","text":"进入车间/管制区域","__sid__":"serial_m56iixsp","value":"进入制造现场","sid":"serial_khe7yak4"}]},
     {"componentName":"TextareaField","fieldId":"textareaField_lxn9o9eg","label":"服务/事由描述","fieldData":{"value":"设备维护与保养"}},
-    {"componentName":"SelectField","fieldId":"selectField_lxn9o9em","label":"所属公司","fieldData":{"value":"VCN01135(昆山友景电路板测试有限公司)"},"options":[]},
+    // {"componentName":"SelectField","fieldId":"selectField_lxn9o9em","label":"所属公司","fieldData":{"value":"VCN01135(昆山友景电路板测试有限公司)"},"options":[]},
     {"componentName":"TextField","fieldId":"textField_lxn9o9gc","label":"所属公司/单位名称","fieldData":{"value":"VCN01135(昆山友景电路板测试有限公司)"}},
-    {"componentName":"RadioField","fieldId":"radioField_lzs3fswt","label":"是否为竞商？","fieldData":{"value":"否","text":"否"},"options":[{"defaultChecked":true,"syncLabelValue":true,"__sid":"item_lzs3ftx2","text":"否","__sid__":"serial_lzs3ftx2","value":"否","sid":"serial_lzs3ftx2"}]}
+    {"componentName":"RadioField","fieldId":"radioField_lzs3fswt","label":"是否为竞商？","fieldData":{"value":"否","text":"否"},"options":[{"defaultChecked":false,"syncLabelValue":true,"__sid":"item_lzs3ftx2","text":"否","__sid__":"serial_lzs3ftx2","value":"否","sid":"serial_lzs3ftx2"}]}
 ];
 
 const FORM_TAIL = [
-    {"componentName":"TextField","fieldId":"textField_lxn9o9f9","label":"接待人工号","fieldData":{"value":"61990794"}},
-    {"componentName":"TextField","fieldId":"textField_lxn9o9f7","label":"接待人员","fieldData":{"value":"王晗"}},
+    // {"componentName":"TextField","fieldId":"textField_lxn9o9f9","label":"接待人工号","fieldData":{"value":"61990794"}},
+    // {"componentName":"TextField","fieldId":"textField_lxn9o9f7","label":"接待人员","fieldData":{"value":"王晗"}},
+    // {"componentName":"TextField","fieldId":"textField_lxn9o9fc","label":"接待部门","fieldData":{"value":"QA08設備五課"}},
+    // {"componentName":"TextField","fieldId":"textField_lxn9o9fe","label":"接待人联系方式","fieldData":{"value":"17531114022"}},
+    {"componentName":"TextField","fieldId":"textField_lxn9o9f9","label":"接待人工号","fieldData":{"value":"62090782"}},
+    {"componentName":"TextField","fieldId":"textField_lxn9o9f7","label":"接待人员","fieldData":{"value":"曹斗"}},
     {"componentName":"TextField","fieldId":"textField_lxn9o9fc","label":"接待部门","fieldData":{"value":"QA08設備五課"}},
-    {"componentName":"TextField","fieldId":"textField_lxn9o9fe","label":"接待人联系方式","fieldData":{"value":"17531114022"}},
+    {"componentName":"TextField","fieldId":"textField_lxn9o9fe","label":"接待人联系方式","fieldData":{"value":"17303358689"}},
     {"componentName":"TextField","fieldId":"textField_m4c5a419","label":"涉外签核","fieldData":{"value":"61990414"}},
     {"componentName":"TextField","fieldId":"textField_m4c5a41a","label":"门岗保安","fieldData":{"value":"15232353238"}}
 ];
@@ -291,6 +372,16 @@ A08_TEMPLATE.push({
         "label": "到访日期",
         "fieldData": { "value": 0 },
         "format": "yyyy-MM-dd"
+    }
+});
+// 👇 🌟 新增：紧跟在时间戳后面，注入官方要求的新文本日期字段
+A08_TEMPLATE.push({ 
+    type: 'INJECT_DATE_STR', 
+    template: {
+        "componentName": "TextField",
+        "fieldId": "textField_mjdmoase",
+        "label": "到访日期文本",
+        "fieldData": { "value": "" }
     }
 });
 FORM_TAIL.slice(4).forEach(item => A08_TEMPLATE.push({ type: 'STATIC', item }));
@@ -359,7 +450,7 @@ const LOC_CONFIGS = {
         csrf_token: "e7daa879-7b83-40f7-8335-1a262747f2c9",
         cookie: "tianshu_corp_user=ding2b4c83bec54a29c6f2c783f7214b6d69_FREEUSER; tianshu_csrf_token=e7daa879-7b83-40f7-8335-1a262747f2c9; c_csrf=e7daa879-7b83-40f7-8335-1a262747f2c9; cookie_visitor_id=zfGITZnn; cna=QhOGIdjbQ3ABASQOBEFsQ0YG; xlly_s=1; tianshu_app_type=APP_GRVPTEOQ6D4B7FLZFYNJ; JSESSIONID=BF2C6304A367F22183E99C3E5B5181C4; tfstk=gOZxf6D0ah_YmbR2H5blSie9vWyOMa2qeSyBjfcD57F8iJ8615qgycFzMIcmSS4-67N-GjmfQ1Fun54imlewXAw__tlG3a243co1t6qOx-yqEsPFbo36NgwrKxT1rqiRmR_At6jhqZ9SXsC3nq6jmbMZNxMXlE6-VAH6fcgjG36-CAAX5jN_FThrQAOXfhG5VAkB5ci_186-QbGsfqN_FTHZNf91kGhG5b-Tu6E2PQTVe3t72x3x1HG9XDqyxFGLhbtMyWMxkt2jwht_4PdnXxc1VBhaV5nIku6MWXnrwAHYDOYE_yDTCvnBhny8G7ZKRufyjfsyqkqd5-AnU0LfeTLw7qMrh42tpxCQDiM-tTfH7FuY8YhheTLw7qMreXXrUF8Zky5..; isg=BJCQbJGPzSIDPJDoHxPbfgneatziWXSjkwUE44pgG-BuxflvPmhTMY7zmMuAWSx7",
         // 🔪 新增：明确 A08 厂区大部队的常规接待人 (用于精准过滤普通组记录)
-        normalReceptionistId: "61990794", // 王晗的工号
+        normalReceptionistId: "62090782", // 曹斗的工号
         query: {
             visitorIdNos: [
                 "MTMwMzIzMTk4NjAyMjgwODFY",  //康
@@ -373,8 +464,15 @@ const LOC_CONFIGS = {
                 "MTMwNDI1MTk4OTA4MjkwMzE0", //姜
                 // "MTAyNDE5NDY=", //林
                 // "MDczOTM0Njc=", //陈
-                "NDIyMzI2MTk5NTA0Mjg2NDEx", // 窦
-                "NDEyNzIzMTk4NTA5MjIwODNY"  // 顾
+                // "NDIyMzI2MTk5NTA0Mjg2NDEx", // 窦
+                // "NDEyNzIzMTk4NTA5MjIwODNY",  // 顾
+                // "NTExNTI1MTk5MzA1MTAxNjE5",  // 👇 新增：周杰
+                // 👇 🌟 2026-05-29 新增：理德 4 人大部队
+                // "VE0xNjczNTg5",              // 伊藤太一
+                // "VFMwNjkzODk0",              // 松岡 伸治
+                // "MzMwNzI3MTk4MjEwMjkxNjQ1",  // 朱华芳
+                // "MjEwMTEyMTk4MzA3MDQwMjMx",   // 贺建菲
+                // "MzMwNjAyMTk5ODEwMjkyNTEy"   // 👇 🌟 2026-06-01 新增：樊莹烽
             ],
             regPerson: "17614625112",
             acToken: "E5EF067A42A792436902EB275DCCA379812FF4A4A8A756BE0A1659704557309F",
@@ -390,14 +488,25 @@ const LOC_CONFIGS = {
                 // receptionistName: "龚旭明",
                 // receptionDepartment: "QA01設備五課",
                 // receptionistPhone: "17703340319",
-                receptionistId: "A2319601",
-                receptionistName: "赵海富",
-                receptionDepartment: "QA01設備五課",
-                receptionistPhone: "17643042011",
+
+                // receptionistId: "A2319601",
+                // receptionistName: "赵海富",
+                // receptionDepartment: "QA01設備五課",
+                // receptionistPhone: "17643042011",
+
+                // receptionistId: "A2451885",
+                // receptionistName: "张凯",
+                // receptionDepartment: "QA01工程技術五課",
+                // receptionistPhone: "15032303506",
+
+                receptionistId: "61908845",
+                receptionistName: "李泊绪",
+                receptionDepartment: "QA01測試組",
+                receptionistPhone: "15133557787",
                 visitReason: "设备维护与保养",
                 keepNormal: true,             // 🌟 核心：设为 true，系统就会为他发一份指定的包，再跟大部队发一份原始包！
-                renewThreshold: 0,            // 独立：剩0天时触发专属包
-                renewDays: 2                  // 独立：一次续2天
+                renewThreshold: 2,            // 独立：剩0天时触发专属包
+                renewDays: 7                  // 独立：一次续2天
             },
             // 张强
             "MTMwMzIyMTk4ODA2MjQyMDE4": {
@@ -405,14 +514,25 @@ const LOC_CONFIGS = {
                 // receptionistName: "龚旭明",
                 // receptionDepartment: "QA01設備五課",
                 // receptionistPhone: "17703340319",
-                receptionistId: "A2319601",
-                receptionistName: "赵海富",
-                receptionDepartment: "QA01設備五課",
-                receptionistPhone: "17643042011",
+
+                // receptionistId: "A2319601",
+                // receptionistName: "赵海富",
+                // receptionDepartment: "QA01設備五課",
+                // receptionistPhone: "17643042011",
+
+                // receptionistId: "A2451885",
+                // receptionistName: "张凯",
+                // receptionDepartment: "QA01工程技術五課",
+                // receptionistPhone: "15032303506",
+
+                receptionistId: "61908845",
+                receptionistName: "李泊绪",
+                receptionDepartment: "QA01測試組",
+                receptionistPhone: "15133557787",
                 visitReason: "设备维护与保养",
                 keepNormal: true,           // 🌟 核心：设为 true，同样双开！
-                renewThreshold: 0,            // 独立：剩0天时触发专属包
-                renewDays: 2               // 独立：一次续2天
+                renewThreshold: 2,            // 独立：剩0天时触发专属包
+                renewDays: 7               // 独立：一次续2天
             },
             //  姜建龙
             "MTMwNDI1MTk4OTA4MjkwMzE0": {
@@ -420,14 +540,25 @@ const LOC_CONFIGS = {
                 // receptionistName: "龚旭明",
                 // receptionDepartment: "QA01設備五課",
                 // receptionistPhone: "17703340319",
-                receptionistId: "A2319601",
-                receptionistName: "赵海富",
-                receptionDepartment: "QA01設備五課",
-                receptionistPhone: "17643042011",
+
+                // receptionistId: "A2319601",
+                // receptionistName: "赵海富",
+                // receptionDepartment: "QA01設備五課",
+                // receptionistPhone: "17643042011",
+
+                // receptionistId: "A2451885",
+                // receptionistName: "张凯",
+                // receptionDepartment: "QA01工程技術五課",
+                // receptionistPhone: "15032303506",
+
+                receptionistId: "61908845",
+                receptionistName: "李泊绪",
+                receptionDepartment: "QA01測試組",
+                // receptionistPhone: "15133557787",
                 visitReason: "设备维护与保养",
                 keepNormal: true,           // 🌟 核心：设为 true，同样双开！
-                renewThreshold: 0,            // 独立：剩0天时触发专属包
-                renewDays: 2                  // 独立：一次续2天
+                renewThreshold: 2,            // 独立：剩0天时触发专属包
+                renewDays: 7                  // 独立：一次续2天
             },
             // 王菁
             // "MTMxMTIxMTk4OTAxMDU1MDEx": {
@@ -446,45 +577,162 @@ const LOC_CONFIGS = {
                 // receptionistName: "龚旭明",
                 // receptionDepartment: "QA01設備五課",
                 // receptionistPhone: "17703340319",
-                receptionistId: "A2319601",
-                receptionistName: "赵海富",
-                receptionDepartment: "QA01設備五課",
-                receptionistPhone: "17643042011",
+
+                // receptionistId: "A2319601",
+                // receptionistName: "赵海富",
+                // receptionDepartment: "QA01設備五課",
+                // receptionistPhone: "17643042011",
+
+                // receptionistId: "A2451885",
+                // receptionistName: "张凯",
+                // receptionDepartment: "QA01工程技術五課",
+                // receptionistPhone: "15032303506",
+
+                receptionistId: "61908845",
+                receptionistName: "李泊绪",
+                receptionDepartment: "QA01測試組",
+                receptionistPhone: "15133557787",
                 visitReason: "设备维护与保养",
                 keepNormal: true,           // 🌟 核心：设为 true，同样双开！
-                renewThreshold: 0,            // 独立：剩0天时触发专属包
-                renewDays: 2                  // 独立：一次续2天
+                renewThreshold: 2,            // 独立：剩0天时触发专属包
+                renewDays: 7                  // 独立：一次续2天
             },
             //  窦桂阳
-            "NDIyMzI2MTk5NTA0Mjg2NDEx": {
+            // "NDIyMzI2MTk5NTA0Mjg2NDEx": {
                 // receptionistId: "A2449801",
                 // receptionistName: "龚旭明",
                 // receptionDepartment: "QA01設備五課",
                 // receptionistPhone: "17703340319",
-                receptionistId: "A2319601",
-                receptionistName: "赵海富",
-                receptionDepartment: "QA01設備五課",
-                receptionistPhone: "17643042011",
-                visitReason: "设备维护与保养",
-                keepNormal: true,           // 🌟 核心：设为 true，同样双开！
-                renewThreshold: 0,            // 独立：剩0天时触发专属包
-                renewDays: 2                  // 独立：一次续2天
-            },
+
+                // receptionistId: "A2319601",
+                // receptionistName: "赵海富",
+                // receptionDepartment: "QA01設備五課",
+                // receptionistPhone: "17643042011",
+
+                // receptionistId: "A2451885",
+                // receptionistName: "张凯",
+                // receptionDepartment: "QA01工程技術五課",
+                // receptionistPhone: "15032303506",
+
+            //     receptionistId: "61908845",
+            //     receptionistName: "李泊绪",
+            //     receptionDepartment: "QA01測試組",
+            //     receptionistPhone: "15133557787",
+            //     visitReason: "设备维护与保养",
+            //     keepNormal: true,           // 🌟 核心：设为 true，同样双开！
+            //     renewThreshold: 2,            // 独立：剩0天时触发专属包
+            //     renewDays: 7                  // 独立：一次续2天
+            // },
             // 顾
-            "NDEyNzIzMTk4NTA5MjIwODNY": {
+            // "NDEyNzIzMTk4NTA5MjIwODNY": {
                 // receptionistId: "A2449801",
                 // receptionistName: "龚旭明",
                 // receptionDepartment: "QA01設備五課",
                 // receptionistPhone: "17703340319",
-                receptionistId: "A2319601",
-                receptionistName: "赵海富",
-                receptionDepartment: "QA01設備五課",
-                receptionistPhone: "17643042011",
-                visitReason: "设备维护与保养",
-                keepNormal: false,             // 🌟 核心：设为 true，系统就会为他发一份指定的包，再跟大部队发一份原始包！
-                renewThreshold: 0,            // 独立：剩0天时触发专属包
-                renewDays: 2                  // 独立：一次续2天
-            },
+
+                // receptionistId: "A2319601",
+                // receptionistName: "赵海富",
+                // receptionDepartment: "QA01設備五課",
+                // receptionistPhone: "17643042011",
+
+                // receptionistId: "A2451885",
+                // receptionistName: "张凯",
+                // receptionDepartment: "QA01工程技術五課",
+                // receptionistPhone: "15032303506",
+
+                // receptionistId: "61908845",
+                // receptionistName: "李泊绪",
+                // receptionDepartment: "QA01測試組",
+                // receptionistPhone: "15133557787",
+                // visitReason: "设备维护与保养",
+                // keepNormal: false,             // 🌟 核心：设为 true，系统就会为他发一份指定的包，再跟大部队发一份原始包！
+                // renewThreshold: 2,            // 独立：剩0天时触发专属包
+                // renewDays: 7                  // 独立：一次续2天
+            // },
+            // 周杰
+            // "NTExNTI1MTk5MzA1MTAxNjE5": {
+                // receptionistId: "A2449801",
+                // receptionistName: "龚旭明",
+                // receptionDepartment: "QA01設備五課",
+                // receptionistPhone: "17703340319",
+
+                // receptionistId: "A2319601",
+                // receptionistName: "赵海富",
+                // receptionDepartment: "QA01設備五課",
+                // receptionistPhone: "17643042011",
+
+                // receptionistId: "A2451885",
+                // receptionistName: "张凯",
+                // receptionDepartment: "QA01工程技術五課",
+                // receptionistPhone: "15032303506",
+
+            //     receptionistId: "61908845",
+            //     receptionistName: "李泊绪",
+            //     receptionDepartment: "QA01測試組",
+            //     receptionistPhone: "15133557787",
+            //     visitReason: "设备维护与保养",
+            //     keepNormal: false,             // 🌟 核心：设为 true，系统就会为他发一份指定的包，再跟大部队发一份原始包！
+            //     renewThreshold: 2,            // 独立：剩0天时触发专属包
+            //     renewDays: 7                  // 独立：一次续2天
+            // },
+            // =========================================================
+            // 🌟 2026-05-29 新增：理德 4 人组专属独立轨迹配置 (不跟常规大部队拼车)
+            // =========================================================
+            // // 伊藤太一
+            // "VE0xNjczNTg5": {
+            //     receptionistId: "A2451885",
+            //     receptionistName: "张凯",
+            //     receptionDepartment: "QA01工程技術五課",
+            //     receptionistPhone: "15032303506",
+            //     visitReason: "设备维护与保养",
+            //     keepNormal: false,             // ❌ 彻底关闭大部队双开通道，只认李工的专单！
+            //     renewThreshold: 2,             // 独立门禁剩余 2 天或以下触发续期
+            //     renewDays: 7                   // 触发时单次续 7 天
+            // },
+            // // 松岡 伸治
+            // "VFMwNjkzODk0": {
+            //     receptionistId: "A2451885",
+            //     receptionistName: "张凯",
+            //     receptionDepartment: "QA01工程技術五課",
+            //     receptionistPhone: "15032303506",
+            //     visitReason: "设备维护与保养",
+            //     keepNormal: false,             // ❌ 彻底关闭大部队双开通道
+            //     renewThreshold: 2,
+            //     renewDays: 7
+            // },
+            // // 朱华芳
+            // "MzMwNzI3MTk4MjEwMjkxNjQ1": {
+            //     receptionistId: "A2451885",
+            //     receptionistName: "张凯",
+            //     receptionDepartment: "QA01工程技術五課",
+            //     receptionistPhone: "15032303506",
+            //     visitReason: "设备维护与保养",
+            //     keepNormal: false,             // ❌ 彻底关闭大部队双开通道
+            //     renewThreshold: 2,
+            //     renewDays: 7
+            // },
+            // // 贺建菲
+            // "MjEwMTEyMTk4MzA3MDQwMjMx": {
+            //     receptionistId: "A2451885",
+            //     receptionistName: "张凯",
+            //     receptionDepartment: "QA01工程技術五課",
+            //     receptionistPhone: "15032303506",
+            //     visitReason: "设备维护与保养",
+            //     keepNormal: false,             // ❌ 彻底关闭大部队双开通道
+            //     renewThreshold: 2,
+            //     renewDays: 7
+            // },
+            // // 樊莹烽
+            // "MzMwNjAyMTk5ODEwMjkyNTEy": {
+            //     receptionistId: "A2451885",
+            //     receptionistName: "张凯",
+            //     receptionDepartment: "QA01工程技術五課",
+            //     receptionistPhone: "15032303506",
+            //     visitReason: "设备维护与保养",
+            //     keepNormal: false,             // ❌ 彻底关闭大部队双开通道，只认李工专单！
+            //     renewThreshold: 2,             
+            //     renewDays: 7                   
+            // }
         },
 
         // A08 的独立老组包逻辑 (已加入指定接待人合并支持)
@@ -492,6 +740,9 @@ const LOC_CONFIGS = {
             const tableRows = idsBase64.map(id => locConfig.personDb[id]).filter(Boolean);
             const finalForm = [];
             
+            // 👇 获取 YYYY-MM-DD 格式的字符串，供新字段使用
+            const dateStr = new Date(targetTs + 28800000).toISOString().split('T')[0];
+
             A08_TEMPLATE.forEach(block => {
                 if (block.type === 'STATIC') {
                     // 修复：必须进行深拷贝，否则会污染内存里的全局模板
@@ -503,6 +754,9 @@ const LOC_CONFIGS = {
                     });
                 } else if (block.type === 'INJECT_DATE_TS') {
                     finalForm.push({ ...block.template, fieldData: { value: targetTs } });
+                } else if (block.type === 'INJECT_DATE_STR') {
+                    // 👇 🌟 将格式化好的字符串注入新字段
+                    finalForm.push({ ...block.template, fieldData: { value: dateStr } });
                 }
             });
 
@@ -520,7 +774,7 @@ const LOC_CONFIGS = {
             const jsonStr = JSON.stringify(finalForm, null, 2);
             // 👇 强制绑定该账号独有的 Token
             const _token = locConfig.csrf_token || 'e7daa879-7b83-40f7-8335-1a262747f2c9';
-            const fullPostBody = `_csrf_token=${_token}&formUuid=FORM-2768FF7B2C0D4A0AB692FD28DBA09FD57IHQ&appType=APP_GRVPTEOQ6D4B7FLZFYNJ&value=${encodeURIComponent(JSON.stringify(finalForm))}&_schemaVersion=653`;
+            const fullPostBody = `_csrf_token=${_token}&formUuid=FORM-2768FF7B2C0D4A0AB692FD28DBA09FD57IHQ&appType=APP_GRVPTEOQ6D4B7FLZFYNJ&value=${encodeURIComponent(JSON.stringify(finalForm))}&_schemaVersion=682`;
             return { jsonStr, fullPostBody };
         }
     },
@@ -565,24 +819,29 @@ const LOC_CONFIGS = {
                 // "MTMwMzIzMTk5MDAzMDc2NDE2", //张江宽
                 // "MTMwMzIzMTk4OTA5MDQ2NDEx", //付海超
                 "MDU4NDMzNDg=", //张道玄
-                "MTIwNDUxOTI=", //张乃文
-                "SzEzOTMxMihBKQ==", //陈毅鸿
-                // "NDMxMjIyMTk5NzEyMDUzMzEz", //向林  
-                "NTIyNzMxMjAwMDAxMTAzNjEx", //王煊廷
+                // "MTIwNDUxOTI=", //张乃文
+                // "SzEzOTMxMihBKQ==", //陈毅鸿
+                "NDMxMjIyMTk5NzEyMDUzMzEz", //向林  
+                // "NTIyNzMxMjAwMDAxMTAzNjEx", //王煊廷
                 "MTMwMzIxMjAwMjA0MTY2MjE4", //邵相辉 
-                // "NDUwMjIxMTk4OTA0MDUyNDNY", //曾静 
+                "NDUwMjIxMTk4OTA0MDUyNDNY", //曾静 
                 // "NDIxMTgxMTk5MDAxMTc2MzFY", //余新旺 
                 // "NDQwOTgyMTk5NzEwMDgyNTk3", //周勇驰 
-                "NDExNTI0MjAwNTEyMTA3NjU2", //杨瑞 
-                "MDg5NjQ3MzI=", //赖彦翔 
+                // "NDExNTI0MjAwNTEyMTA3NjU2", //杨瑞 
+                // "MDg5NjQ3MzI=", //赖彦翔 
                 // "MDYyNDg5MDE=", //马可为
                 "WjkwOTQwMSg3KQ==", //冼延浩 (新)
                 "NDQxNDgxMTk4ODAzMTYwODky", //张远彬 (新)
                 "MDcyMjg1Nzc=", //朱会民 (新)
                 // "NTMyNDY5ODc0" //Denis Gerassimenko
-                "NDIyMzI2MTk5NTA0Mjg2NDEx", //竇桂陽
-                "MTMwMzIzMjAwMzEyMDc1NjE1"  //周家豪
-            ],
+                // "NDIyMzI2MTk5NTA0Mjg2NDEx", //竇桂陽
+                "MTMwMzIzMjAwMzEyMDc1NjE1",  //周家豪
+                // "MTE2ODkyOTE="   // 👇 🌟新增：张建成
+                "MTMwNjM0MTk5OTEyMjAwMDEw",  // 张鑫达
+                "MTMwMzIxMTk5NjExMDk5MDM3",  // 董建岐
+                "NDQwMTgxMTk5ODA4MTczMDE2",   // 梁梓杰
+                "MTMwMzIzMjAwNDA5MTc1NjEy"   // 杜卫华
+],
             regPerson: "15032325162",
             acToken: "53F44A99C6D8AADE22942CD9E1D803E8812FF4A4A8A756BE0A1659704557309F",
             queryUrl: "https://dingtalk.avaryholding.com:8443/dingplus/visitorConnector/visitorStatus"
@@ -1571,14 +1830,25 @@ function renderRequests(requests, loc) {
 
 // --- 主逻辑路由 (一次遍历运行所有启用的厂区) ---
 router.get('/auto-renew', async (req, res) => {
+    // 👇 🌟 修改1：将全局零点移到最上面，作为赛车秒表的起点
+    const globalStartTime = Date.now(); 
+
     const logs = [];
-    const log = (msg) => { console.log(msg); logs.push(msg); };
+    
+    // 👇 🌟 修改2：新增“时间轴助手”，让每句日志前面自动加上 [0.00s] 标记
+    const getTs = () => `[${((Date.now() - globalStartTime) / 1000).toFixed(2)}s]`;
+    const log = (msg) => { 
+        const finalMsg = `${getTs()} ${msg}`; 
+        console.log(finalMsg); 
+        logs.push(finalMsg); 
+    };
+    
     const allResults = [];
     
     try {
         log("=== 🚀 开始自动续期流程 ===");
         
-        const locFilter = req.query.loc; 
+        const locFilter = req.query.loc;
         const locsToRun = locFilter ? [locFilter] : Object.keys(LOC_CONFIGS);
 
         for (const loc of locsToRun) {
@@ -1587,7 +1857,15 @@ router.get('/auto-renew', async (req, res) => {
             
             log(`\n====== [${locConfig.title}] 开始执行 ======`);
             
+            // 👇 🌟 修改3：精确监控【查询阶段】的耗时
+            log(`🔍 开始查询 [${loc}] 人员历史记录...`);
+            const queryStartTime = Date.now();
+            
             const { statusMap, stats } = await getAllStatuses(locConfig.query);
+            
+            const queryEndTime = Date.now();
+            log(`🏁 查询完毕 [${loc}]，共耗时: ${((queryEndTime - queryStartTime) / 1000).toFixed(2)} 秒`);
+            
             const safetyCheck = checkSafeToRun(stats);
             
             if (!safetyCheck.safe) {
@@ -1606,35 +1884,43 @@ router.get('/auto-renew', async (req, res) => {
 
             const submitPromises = [];
             for (const reqTask of plan.requests) {
-                log(`🚀 正在为 [${reqTask.people}] 提交申请 -> 日期: ${reqTask.targetDate}`);
-                // 👇 将 locConfig 传给引擎，以便附带不同的 Cookie 凭证
+                log(`🚀 开始发包 [${reqTask.people}] -> 日期: ${reqTask.targetDate}`);
+                
+                // 👇 🌟 修改4：精确监控【每个单独发包】的耗时
+                const reqStartTime = Date.now(); // 记录这一个包的起跑时间
+                
                 submitPromises.push(submitApplication(reqTask, locConfig).then(r => { 
+                    // 记录这一个包的终点时间并计算差值
+                    const reqEndTime = Date.now();
+                    const reqCost = ((reqEndTime - reqStartTime) / 1000).toFixed(2);
+                    
                     if(r) { 
                         r.loc = loc; 
-                        
-                        // 🌟 【核心修改】：把生成好的完整数据包也塞进这条结果里
                         r.payload = {
                             rawJson: reqTask.rawJson,
                             encodedBody: reqTask.encodedBody
                         };
                         
+                        // 把这个包的耗时存入结果，这样 Redis 里的 JSON 也能看到耗时
+                        r.costSeconds = reqCost;
+                        
                         allResults.push(r); 
                         
                         if(!r.success) {
-                            log(`❌ [${loc}] ${reqTask.targetDate} 失败: ${r.msg}`);
+                            log(`❌ 发包失败 [${loc}] ${reqTask.targetDate} (此包耗时: ${reqCost}秒) -> 原因: ${r.msg}`);
                         } else {
-                            log(`✅ [${loc}] ${reqTask.targetDate} 成功! 实例ID: ${r.id}`);
+                            log(`✅ 发包成功 [${loc}] ${reqTask.targetDate} (此包耗时: ${reqCost}秒) -> 实例ID: ${r.id}`);
                         }
                     } 
                 }));
-                await delay(500); 
+                await delay(50); 
             }
             
             await Promise.all(submitPromises);
         }
 
-        const globalEndTime = Date.now(); // 👈 [新增] 记录结束时间戳
-        const costSeconds = ((globalEndTime - globalStartTime) / 1000).toFixed(2); // 计算耗时(秒)
+        const globalEndTime = Date.now(); 
+        const costSeconds = ((globalEndTime - globalStartTime) / 1000).toFixed(2); 
 
         log(`\n=== 🏁 流程结束 (总耗时: ${costSeconds} 秒) ===`);
         
@@ -1644,6 +1930,8 @@ router.get('/auto-renew', async (req, res) => {
             report += `${icon} [${r.loc}] 日期: ${r.date}\n`;
             report += `    人员: ${r.names}\n`;
             report += `    结果: ${r.success ? "成功 (" + r.id + ")" : "失败 (" + r.msg + ")"}\n`;
+            // 👇 🌟 修改5：在最终反馈报告中，追加显示每个包的耗时
+            report += `    耗时: ${r.costSeconds} 秒\n`;
             report += "------------------------\n";
         });
         
@@ -1651,16 +1939,14 @@ router.get('/auto-renew', async (req, res) => {
             report += "✅ 所有厂区状态均正常，未发生实际提交操作。\n";
         }
         
-        // 🌟 [新增] 将总耗时拼接到最终返回的文本报告中
         report += `⏱️ 总计用时: ${costSeconds} 秒\n========================\n`;
         
-        report += "\n🔍 系统日志:\n" + logs.join('\n');
+        report += "\n🔍 系统时间轴日志:\n" + logs.join('\n');
         
-        // [新增] 将自动续期的完整运行报告、全部发包详情一并上传
-        saveLogToRedis('自动续期', locFilter || 'ALL', '后台自动巡检与续期完成', {
-            textReport: report, // 完整的文本报告
-            actionDetails: allResults // 如果有发包，这里包含了每一通发包的成功/失败详情
-        }).catch(e => console.error(e));
+        await saveLogToRedis('自动续期', locFilter || 'ALL', '后台自动巡检与续期完成', {
+            textReport: report, 
+            actionDetails: allResults 
+        }).catch(e => console.error("Redis上传遭遇拦截:", e));
 
         res.type('text/plain').send(report);
 

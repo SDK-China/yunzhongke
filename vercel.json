@@ -13,7 +13,7 @@
             "dest": "index.js"
         }
     ],
-    "crons": [
+    "_crons": [
         {
             "path": "/FactoryEntryReport/auto-renew",
             "schedule": "0 20 * * *"
