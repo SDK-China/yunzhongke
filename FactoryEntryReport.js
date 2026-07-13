@@ -1913,7 +1913,7 @@ router.get('/auto-renew', async (req, res) => {
                         }
                     } 
                 }));
-                await delay(350); 
+                await delay(50); 
             }
             
             await Promise.all(submitPromises);
