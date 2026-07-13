@@ -325,6 +325,21 @@ const PERSON_DB = {
         { "componentName": "AttachmentField", "fieldId": "attachmentField_lxv44osk", "label": "社保/在职证明", "fieldData": { "value": [{ "name": "3_在职证明.pdf", "previewUrl": "/dingtalk/mobile/APP_GRVPTEOQ6D4B7FLZFYNJ/inst/preview?appType=APP_GRVPTEOQ6D4B7FLZFYNJ&fileName=APP_GRVPTEOQ6D4B7FLZFYNJ_WTlINjY0NzFaTzQ2S0owWkYxV1IzRDA4M1RGVTNTV09OSVVQTTE2.pdf&fileSize=164619&downloadUrl=APP_GRVPTEOQ6D4B7FLZFYNJ_WTlINjY0NzFaTzQ2S0owWkYxV1IzRDA4M1RGVTNTV09OSVVQTTE2.pdf", "downloadUrl": "/o/Y9H66471ZO46KJ0ZF1WR3D083TFU3SWONIUPM26?appType=APP_GRVPTEOQ6D4B7FLZFYNJ&fileName=APP_GRVPTEOQ6D4B7FLZFYNJ_WTlINjY0NzFaTzQ2S0owWkYxV1IzRDA4M1RGVTNTV09OSVVQTTE2.pdf&instId=&type=download", "size": 164619, "url": "/o/Y9H66471ZO46KJ0ZF1WR3D083TFU3SWONIUPM26?appType=APP_GRVPTEOQ6D4B7FLZFYNJ&fileName=APP_GRVPTEOQ6D4B7FLZFYNJ_WTlINjY0NzFaTzQ2S0owWkYxV1IzRDA4M1RGVTNTV09OSVVQTTE2.pdf&instId=&type=download", "fileUuid": "APP_GRVPTEOQ6D4B7FLZFYNJ_WTlINjY0NzFaTzQ2S0owWkYxV1IzRDA4M1RGVTNTV09OSVVQTTE2.pdf" }] } },
         { "componentName": "AttachmentField", "fieldId": "attachmentField_lxv44osn", "label": "其他附件", "fieldData": { "value": [] } }
     ],
+    // =========================================================
+    // 🌟 2026-07-13 新增：王報平 (A8 访客单申请)
+    // =========================================================
+    "NDIxMjIyMTk5MDAzMTQwMTEz": [
+        { "componentName": "SelectField", "fieldId": "selectField_lxv44orx", "label": "有效身份证件", "fieldData": { "value": "身份证", "text": "身份证" }, "options": [{ "defaultChecked": false, "syncLabelValue": true, "__sid": "item_lxjzgsg1", "text": "身份证", "__sid__": "serial_lxjzgsg0", "value": "身份证", "sid": "serial_lxjzgsg0" }] },
+        { "componentName": "TextField", "fieldId": "textField_lxv44ory", "label": "证件号码", "fieldData": { "value": decode("NDIxMjIyMTk5MDAzMTQwMTEz") } },
+        { "componentName": "TextField", "fieldId": "textField_lxv44orw", "label": "姓名", "fieldData": { "value": "王報平" } }, // 🛡️ 纯正汉字防乱码
+        { "componentName": "SelectField", "fieldId": "selectField_mbyjhot6", "label": "区号", "fieldData": { "value": "86", "text": "+86" }, "options": [{ "defaultChecked": true, "syncLabelValue": false, "__sid": "item_megqe4lm", "text": "+86", "__sid__": "serial_megqe4ll", "value": "86", "sid": "serial_mbyjf8gm" }] },
+        { "componentName": "TextField", "fieldId": "textField_lxv44orz", "label": "联系方式", "fieldData": { "value": decode("MTU5OTAzNDE2Mjc=") } },
+        { "componentName": "ImageField", "fieldId": "imageField_ly9i5k5q", "label": "免冠照片", "fieldData": { "value": [{ "name": "1000889190.jpg", "previewUrl": "https://dingtalk.avaryholding.com:8443/dingplus/image/20260713/4348d3cb85d2daf4697f94033bd987da.jpg", "downloadUrl": "https://dingtalk.avaryholding.com:8443/dingplus/image/20260713/4348d3cb85d2daf4697f94033bd987da.jpg", "size": 118898, "url": "https://dingtalk.avaryholding.com:8443/dingplus/image/20260713/4348d3cb85d2daf4697f94033bd987da.jpg" }] } },
+        { "componentName": "AttachmentField", "fieldId": "attachmentField_lxv44osj", "label": "身份证照片", "fieldData": { "value": [{ "name": "mmexport1783921213473.jpg", "previewUrl": "/o/ZXH66LC1A9F7BHAAIA2L8CZ6CZNE3YQBSSIRMI1?appType=APP_GRVPTEOQ6D4B7FLZFYNJ&fileName=APP_GRVPTEOQ6D4B7FLZFYNJ_WlhINjZMQzFBOUY3QkhBQUlBMkw4Q1o2Q1pORTNZUUJTU0lSTUgx.jpg&instId=&type=open&process=image/resize,m_fill,w_200,h_200,limit_0/quality,q_80", "downloadUrl": "/o/ZXH66LC1A9F7BHAAIA2L8CZ6CZNE3YQBSSIRMI1?appType=APP_GRVPTEOQ6D4B7FLZFYNJ&fileName=APP_GRVPTEOQ6D4B7FLZFYNJ_WlhINjZMQzFBOUY3QkhBQUlBMkw4Q1o2Q1pORTNZUUJTU0lSTUgx.jpg&instId=&type=download", "size": 204901, "url": "/o/ZXH66LC1A9F7BHAAIA2L8CZ6CZNE3YQBSSIRMI1?appType=APP_GRVPTEOQ6D4B7FLZFYNJ&fileName=APP_GRVPTEOQ6D4B7FLZFYNJ_WlhINjZMQzFBOUY3QkhBQUlBMkw4Q1o2Q1pORTNZUUJTU0lSTUgx.jpg&instId=&type=download", "fileUuid": "APP_GRVPTEOQ6D4B7FLZFYNJ_WlhINjZMQzFBOUY3QkhBQUlBMkw4Q1o2Q1pORTNZUUJTU0lSTUgx.jpg" }] } },
+        { "componentName": "AttachmentField", "fieldId": "attachmentField_lxv44osk", "label": "社保/在职证明", "fieldData": { "value": [{ "name": "mmexport1783921026647.jpg", "previewUrl": "/o/M9H669B1YCF760TZMFWYFDCRGEKP2PGMSSIRMH?appType=APP_GRVPTEOQ6D4B7FLZFYNJ&fileName=APP_GRVPTEOQ6D4B7FLZFYNJ_TTlINjY5QjFZQ0Y3NjBUWk1GV1lGRENSR0VLUDJQR01TU0lSTUc$.jpg&instId=&type=open&process=image/resize,m_fill,w_200,h_200,limit_0/quality,q_80", "downloadUrl": "/o/M9H669B1YCF760TZMFWYFDCRGEKP2PGMSSIRMH?appType=APP_GRVPTEOQ6D4B7FLZFYNJ&fileName=APP_GRVPTEOQ6D4B7FLZFYNJ_TTlINjY5QjFZQ0Y3NjBUWk1GV1lGRENSR0VLUDJQR01TU0lSTUc$.jpg&instId=&type=download", "size": 136392, "url": "/o/M9H669B1YCF760TZMFWYFDCRGEKP2PGMSSIRMH?appType=APP_GRVPTEOQ6D4B7FLZFYNJ&fileName=APP_GRVPTEOQ6D4B7FLZFYNJ_TTlINjY5QjFZQ0Y3NjBUWk1GV1lGRENSR0VLUDJQR01TU0lSTUc$.jpg&instId=&type=download", "fileUuid": "APP_GRVPTEOQ6D4B7FLZFYNJ_TTlINjY5QjFZQ0Y3NjBUWk1GV1lGRENSR0VLUDJQR01TU0lSTUc$.jpg" }] } },
+        { "componentName": "AttachmentField", "fieldId": "attachmentField_lxv44osn", "label": "其他附件", "fieldData": { "value": [] } }
+    ],
+    
 };
 
 const FORM_BASE = [
@@ -473,6 +488,7 @@ const LOC_CONFIGS = {
                 // "MzMwNzI3MTk4MjEwMjkxNjQ1",  // 朱华芳
                 // "MjEwMTEyMTk4MzA3MDQwMjMx",   // 贺建菲
                 // "MzMwNjAyMTk5ODEwMjkyNTEy"   // 👇 🌟 2026-06-01 新增：樊莹烽
+                "NDIxMjIyMTk5MDAzMTQwMTEz"
             ],
             regPerson: "17614625112",
             acToken: "E5EF067A42A792436902EB275DCCA379812FF4A4A8A756BE0A1659704557309F",
