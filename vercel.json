@@ -12,11 +12,5 @@
             "src": "/(.*)",
             "dest": "index.js"
         }
-    ],
-    "_crons": [
-        {
-            "path": "/FactoryEntryReport/auto-renew",
-            "schedule": "0 20 * * *"
-        }
     ]
 }
